@@ -1,4 +1,16 @@
 services:
+  test:
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+    command: uv run python -m unittest discover -v
+
+  lint:
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+    command: sh -c "uv run ruff check . && uv run ruff format --check ."
+
   mlflow:
     build:
       context: .
@@ -46,6 +58,7 @@ services:
       MLFLOW_TRACKING_URI: http://mlflow:5000
     volumes:
       - ./data:/workspace/data:ro
+      - ./checkpoints:/workspace/checkpoints
       - ./experiments:/workspace/experiments
       - ./reports:/workspace/reports
     tmpfs:

@@ -23,7 +23,8 @@ data/raw/
 data/interim/
 data/processed/
 checkpoints/
-models/
+training-runs/
+/models/
 outputs/
 *.ckpt
 *.pt
