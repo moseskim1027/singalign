@@ -32,3 +32,21 @@ be reported.
 Each metric must document its implementation, version, input normalization,
 directionality, and known limitations. No single automatic metric will be
 treated as a substitute for perceptual evaluation.
+
+## Reconstruction baseline protocol
+
+The initial mel-autoencoder is evaluated once after checkpoint selection. The
+checkpoint is selected exclusively by validation loss; evaluation code then
+loads only IDs listed in the immutable test partition. Each report records the
+checkpoint SHA-256 and split fingerprint.
+
+The initial objective metrics are mean squared error, mean absolute error, and
+spectral convergence on per-segment normalized log-mel spectrograms. Reports
+include per-example values, aggregate means, and deterministic percentile-
+bootstrap 95% confidence intervals. These metrics measure reconstruction error
+only and do not establish pitch accuracy, intelligibility, naturalness, or
+human preference.
+
+Inference latency is measured around the model forward pass after feature
+extraction, with accelerator synchronization where applicable. Parameter count
+and serialized checkpoint size are reported as efficiency descriptors.

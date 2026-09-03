@@ -34,3 +34,14 @@ checkpoints remain in ignored local storage and are attached to the MLflow run.
 The trainer accepts only the `train` and `validation` partitions. The test
 partition remains sealed until the evaluation pipeline is run against a
 selected checkpoint.
+
+## Held-out evaluation
+
+`configs/evaluation/baseline.yaml` defines the evaluation seed, device policy,
+bootstrap procedure, and output location. `singalign-evaluate` restores the
+validation-selected checkpoint and evaluates only the immutable test IDs.
+
+Reports are written beneath ignored `reports/evaluation/<run-id>/` directories
+and attached to MLflow. Every report includes per-example measurements,
+aggregate confidence intervals, checkpoint and split fingerprints, latency,
+model size, and the training and evaluation configurations.

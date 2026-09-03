@@ -21,6 +21,7 @@ dependencies = [
 
 [project.scripts]
 singalign-data = "singalign.cli:main"
+singalign-evaluate = "singalign.evaluate:main"
 singalign-track = "singalign.tracking:main"
 singalign-train = "singalign.train:main"
 
