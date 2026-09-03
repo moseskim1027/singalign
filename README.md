@@ -305,6 +305,25 @@ Changing the configured split to `test` additionally requires
 `--confirm-test-use`. Test evaluation should occur only after the comparison
 metrics and decision rules have been preregistered.
 
+### Inspect a comparison in the UI
+
+Start the minimal TypeScript comparison interface after generating a report:
+
+```bash
+docker compose up --build -d ui
+```
+
+Open [http://localhost:4173](http://localhost:4173), enter the comparison run
+ID printed by `singalign-compare`, and select **Load comparison**. The report
+directory is mounted read-only. The interface displays aggregate paired
+metrics and side-by-side reference, baseline, and aligned audio for each
+available example.
+
+The listening view is an inspection aid, not a blinded perceptual study. Its
+generated audio is approximate Griffin-Lim reconstruction and must not be used
+alone to support claims about perceptual quality. See [`ui/README.md`](ui/README.md)
+for development and troubleshooting instructions.
+
 Stop the services without removing tracked runs:
 
 ```bash
@@ -345,6 +364,7 @@ docs/          Research questions, protocols, and responsible-use analysis
 experiments/   Experiment manifests and reproducibility records
 reports/       Generated tables, figures, and research reports
 src/           Data, tracking, model, and research utilities
+ui/            Dockerized TypeScript comparison interface
 ```
 
 Model code and training configurations will be introduced through separate

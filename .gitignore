@@ -40,3 +40,7 @@ wandb/
 mlruns/
 .mlflow/
 mlflow.db
+
+# Frontend build artifacts
+ui/node_modules/
+ui/dist/
