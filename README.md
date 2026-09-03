@@ -170,6 +170,54 @@ docker compose run --rm research \
   --experiment singalign-smoke
 ```
 
+### Train the reconstruction baseline
+
+The first baseline is a compact convolutional autoencoder trained on short
+log-mel segments from the PJS singing recordings. It validates the training,
+checkpointing, and experiment-tracking pipeline; it is not yet a
+score-conditioned singing synthesizer.
+
+The trainer uses the training split for parameter updates and the validation
+split for checkpoint selection. It deliberately cannot load the held-out test
+split, which is reserved for the separate evaluation workflow.
+
+Run locally on MPS when available, with CPU as the automatic fallback:
+
+```bash
+uv run singalign-train \
+  --config configs/training/baseline.yaml \
+  --index data/interim/pjs/index.jsonl \
+  --splits data/interim/pjs/splits.json
+```
+
+Local MPS execution requires an ARM64 build of Python and `uv`. The Docker
+workflow below is the portable fallback when host tooling runs through Rosetta
+or otherwise resolves incompatible wheels.
+
+Start MLflow and run the same experiment in Docker:
+
+```bash
+docker compose up -d mlflow
+docker compose run --rm research \
+  singalign-train \
+  --config configs/training/baseline.yaml \
+  --index data/interim/pjs/index.jsonl \
+  --splits data/interim/pjs/splits.json
+```
+
+For a short end-to-end smoke run, add `--epochs 1 --max-train-items 4
+--max-validation-items 2`. Checkpoints are written beneath the ignored
+`checkpoints/` directory and also attached to the MLflow run.
+
+Build and run the dedicated test image, whose dependencies are installed by
+the pinned version of `uv` from the committed lockfile:
+
+```bash
+docker compose build test
+docker compose run --rm lint
+docker compose run --rm test
+```
+
 Stop the services without removing tracked runs:
 
 ```bash

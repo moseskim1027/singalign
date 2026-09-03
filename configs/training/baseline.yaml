@@ -1,0 +1,23 @@
+experiment:
+  name: singalign-baseline
+  run_name: mel-autoencoder
+  run_kind: exploratory
+
+audio:
+  sample_rate: 16000
+  segment_seconds: 1.0
+  n_fft: 512
+  hop_length: 160
+  mel_bins: 80
+
+model:
+  latent_channels: 32
+
+training:
+  seed: 2026
+  batch_size: 4
+  epochs: 20
+  learning_rate: 0.001
+  device: auto
+  num_workers: 0
+  checkpoint_dir: checkpoints/baseline

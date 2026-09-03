@@ -23,3 +23,14 @@ flattened into stable dotted names.
 Use `exploratory` for development, debugging, and hypothesis-generating work.
 Use `confirmatory` only for experiments whose hypotheses, metrics, exclusions,
 and success thresholds were registered before inspecting their results.
+
+## Baseline training
+
+`configs/training/baseline.yaml` defines the compact mel-autoencoder baseline.
+Training and validation losses are logged once per epoch. The lowest
+validation loss selects `best.pt`; `last.pt` records the final epoch. Both
+checkpoints remain in ignored local storage and are attached to the MLflow run.
+
+The trainer accepts only the `train` and `validation` partitions. The test
+partition remains sealed until the evaluation pipeline is run against a
+selected checkpoint.

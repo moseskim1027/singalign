@@ -87,7 +87,7 @@ def flatten_parameters(
         name = f"{prefix}.{key}" if prefix else str(key)
         if isinstance(value, Mapping):
             flattened.update(flatten_parameters(value, name))
-        elif isinstance(value, (str, int, float, bool)):
+        elif isinstance(value, str | int | float | bool):
             flattened[name] = value
         elif value is None:
             flattened[name] = "null"
