@@ -26,3 +26,9 @@ identities.
 
 This assessment will be updated whenever the project adds a dataset, model,
 human study, public demonstration, or distributable checkpoint.
+
+Synthetic preference labels are explicitly identified as proxy supervision.
+They encode researcher-selected degradation severity and must not be described
+as listener preference, aesthetic judgment, cultural preference, or evidence
+of human alignment. Any later human study requires separate consent,
+documentation, and analysis.

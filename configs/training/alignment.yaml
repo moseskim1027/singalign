@@ -1,0 +1,20 @@
+experiment:
+  name: singalign-preference-alignment
+  run_name: dpo-style-mel-alignment
+  run_kind: exploratory
+
+preferences:
+  chosen_severity: 0.03
+  rejected_severity: 0.12
+
+alignment:
+  seed: 2026
+  batch_size: 4
+  epochs: 10
+  learning_rate: 0.0001
+  device: auto
+  num_workers: 0
+  beta: 0.1
+  temperature: 0.1
+  anchor_weight: 1.0
+  checkpoint_dir: checkpoints/aligned

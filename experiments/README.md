@@ -45,3 +45,15 @@ Reports are written beneath ignored `reports/evaluation/<run-id>/` directories
 and attached to MLflow. Every report includes per-example measurements,
 aggregate confidence intervals, checkpoint and split fingerprints, latency,
 model size, and the training and evaluation configurations.
+
+## Proxy preference alignment
+
+`configs/training/alignment.yaml` defines deterministic synthetic preference
+pairs and the DPO-style energy objective. Chosen candidates receive mild
+controlled degradation; rejected candidates receive a stronger version of the
+same degradation family. A frozen baseline supplies the reference margin and
+an MSE anchor constrains reconstruction drift.
+
+Runs log DPO loss, anchor loss, preference accuracy, relative margin, baseline
+checkpoint hash, and split fingerprint. The resulting checkpoint is a research
+instrument for studying post-training mechanics, not a human-aligned model.

@@ -255,6 +255,31 @@ attaches the report to MLflow. The report contains aggregate metrics with
 bootstrap confidence intervals, per-example metrics, latency, checkpoint and
 split fingerprints, and the exact evaluation configuration.
 
+### Run proxy preference alignment
+
+The first post-training study constructs deterministic synthetic preference
+pairs from training and validation log-mel segments. A chosen candidate has a
+milder controlled degradation than its rejected counterpart. The trainer uses
+a DPO-style energy objective relative to a frozen baseline and a reconstruction
+anchor that limits fidelity loss:
+
+```bash
+docker compose run --rm research \
+  singalign-align \
+  --config configs/training/alignment.yaml \
+  --checkpoint checkpoints/baseline/best.pt \
+  --index data/interim/pjs/index.jsonl \
+  --splits data/interim/pjs/splits.json
+```
+
+For a smoke run, add `--epochs 1 --max-train-items 4
+--max-validation-items 2`. The best validation checkpoint is written beneath
+`checkpoints/aligned/` and attached to MLflow. The test split remains sealed
+during post-training.
+
+This is an energy-based DPO proxy for controlled experimentation, not standard
+autoregressive DPO and not evidence of alignment with human preferences.
+
 Stop the services without removing tracked runs:
 
 ```bash

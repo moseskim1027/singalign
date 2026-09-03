@@ -33,3 +33,12 @@ Thresholds will be registered before confirmatory experiments begin.
 Initial risks include preference-label shortcuts, reward hacking, dependence on
 imperfect proxy metrics, limited listener diversity, dataset leakage, and weak
 generalization beyond the language and vocal style represented by the data.
+
+## Pilot post-training experiment
+
+The first alignment pilot uses synthetic chosen/rejected pairs constructed by
+controlled log-mel degradation. It tests whether the repository can reproduce
+an energy-based DPO-style update relative to a frozen baseline while preserving
+reconstruction through an anchor loss. It does not test human preference
+alignment. Its purpose is to validate instrumentation and expose trade-offs
+before collecting or modeling listener judgments.
