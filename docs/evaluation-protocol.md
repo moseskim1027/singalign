@@ -50,3 +50,18 @@ human preference.
 Inference latency is measured around the model forward pass after feature
 extraction, with accelerator synchronization where applicable. Parameter count
 and serialized checkpoint size are reported as efficiency descriptors.
+
+## Paired model comparison
+
+Development comparisons use identical validation examples for the baseline
+and aligned checkpoints. Reports define delta as aligned minus baseline, so a
+negative reconstruction-error delta is favorable. Paired bootstrap confidence
+intervals and per-example win/tie/loss counts accompany aggregate means.
+
+Test comparison requires an explicit command-line acknowledgement. Two test
+examples used during pipeline smoke testing are considered inspected and may
+not be described as pristine unseen observations in later confirmatory claims.
+
+Listening artifacts are approximate Griffin-Lim inversions, not neural-vocoder
+outputs. They support debugging and interface development but are not suitable
+for claims about perceptual quality.

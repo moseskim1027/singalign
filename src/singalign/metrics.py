@@ -61,3 +61,32 @@ def bootstrap_mean_interval(
         upper=float(upper),
         confidence_level=confidence_level,
     )
+
+
+def paired_summary(
+    baseline: list[float],
+    aligned: list[float],
+    seed: int,
+    samples: int,
+    confidence_level: float,
+    tolerance: float = 1e-8,
+) -> dict[str, object]:
+    """Summarize paired aligned-minus-baseline changes for lower-is-better metrics."""
+
+    if len(baseline) != len(aligned) or not baseline:
+        raise ValueError("paired values must have equal non-zero lengths")
+    deltas = [new - old for old, new in zip(baseline, aligned, strict=True)]
+    interval = bootstrap_mean_interval(deltas, seed, samples, confidence_level)
+    return {
+        "baseline_mean": float(np.mean(baseline)),
+        "aligned_mean": float(np.mean(aligned)),
+        "delta": {
+            "mean": interval.mean,
+            "lower": interval.lower,
+            "upper": interval.upper,
+            "confidence_level": interval.confidence_level,
+        },
+        "wins": sum(delta < -tolerance for delta in deltas),
+        "ties": sum(abs(delta) <= tolerance for delta in deltas),
+        "losses": sum(delta > tolerance for delta in deltas),
+    }

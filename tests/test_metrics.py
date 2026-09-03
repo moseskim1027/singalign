@@ -4,7 +4,11 @@ import unittest
 
 import torch
 
-from singalign.metrics import bootstrap_mean_interval, reconstruction_metrics
+from singalign.metrics import (
+    bootstrap_mean_interval,
+    paired_summary,
+    reconstruction_metrics,
+)
 
 
 class MetricsTest(unittest.TestCase):
@@ -26,3 +30,9 @@ class MetricsTest(unittest.TestCase):
     def test_bootstrap_rejects_empty_values(self) -> None:
         with self.assertRaisesRegex(ValueError, "must not be empty"):
             bootstrap_mean_interval([], seed=1)
+
+    def test_paired_summary_reports_improvements(self) -> None:
+        summary = paired_summary([2.0, 3.0], [1.0, 2.0], 2, 100, 0.95)
+        self.assertEqual(summary["wins"], 2)
+        self.assertEqual(summary["losses"], 0)
+        self.assertEqual(summary["delta"]["mean"], -1.0)  # type: ignore[index]

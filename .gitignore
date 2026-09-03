@@ -25,6 +25,7 @@ data/processed/
 checkpoints/
 training-runs/
 /reports/evaluation/
+/reports/comparisons/
 /models/
 outputs/
 *.ckpt

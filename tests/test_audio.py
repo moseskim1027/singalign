@@ -8,7 +8,13 @@ import numpy as np
 import torch
 from scipy.io import wavfile
 
-from singalign.audio import crop_or_pad, load_audio, log_mel_spectrogram
+from singalign.audio import (
+    crop_or_pad,
+    invert_log_mel_spectrogram,
+    load_audio,
+    log_mel_spectrogram,
+    raw_log_mel_spectrogram,
+)
 
 
 class AudioTest(unittest.TestCase):
@@ -28,3 +34,14 @@ class AudioTest(unittest.TestCase):
     def test_crop_or_pad_rejects_invalid_length(self) -> None:
         with self.assertRaisesRegex(ValueError, "positive"):
             crop_or_pad(torch.zeros(4), 0)
+
+    def test_log_mel_inversion_returns_requested_length(self) -> None:
+        waveform = torch.sin(torch.linspace(0, 30, 2048))
+        raw = raw_log_mel_spectrogram(waveform, 8000, 128, 40, 16)
+        mean, deviation = raw.mean(), raw.std()
+        normalized = (raw - mean) / deviation
+        reconstructed = invert_log_mel_spectrogram(
+            normalized, mean, deviation, 8000, 128, 40, 16, 2048, 2, 7
+        )
+        self.assertEqual(reconstructed.shape, waveform.shape)
+        self.assertTrue(torch.isfinite(reconstructed).all())

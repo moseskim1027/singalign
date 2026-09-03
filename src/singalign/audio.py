@@ -77,6 +77,22 @@ def log_mel_spectrogram(
 ) -> torch.Tensor:
     """Convert a mono waveform to a normalized log-mel spectrogram."""
 
+    features = raw_log_mel_spectrogram(
+        waveform, sample_rate, n_fft, hop_length, mel_bins
+    )
+    mean = features.mean()
+    return (features - mean) / features.std().clamp_min(1e-6)
+
+
+def raw_log_mel_spectrogram(
+    waveform: torch.Tensor,
+    sample_rate: int,
+    n_fft: int,
+    hop_length: int,
+    mel_bins: int,
+) -> torch.Tensor:
+    """Convert a mono waveform to an unnormalized log-mel spectrogram."""
+
     spectrum = (
         torch.stft(
             waveform,
@@ -90,6 +106,49 @@ def log_mel_spectrogram(
         .square()
     )
     filters = mel_filterbank(sample_rate, n_fft, mel_bins).to(waveform.device)
-    features = torch.log1p(filters @ spectrum)
-    mean = features.mean()
-    return (features - mean) / features.std().clamp_min(1e-6)
+    return torch.log1p(filters @ spectrum)
+
+
+def invert_log_mel_spectrogram(
+    normalized: torch.Tensor,
+    mean: torch.Tensor,
+    standard_deviation: torch.Tensor,
+    sample_rate: int,
+    n_fft: int,
+    hop_length: int,
+    mel_bins: int,
+    length: int,
+    iterations: int,
+    seed: int,
+) -> torch.Tensor:
+    """Approximately invert normalized log-mel features with Griffin-Lim."""
+
+    log_mel = normalized * standard_deviation + mean
+    mel_power = torch.expm1(log_mel).clamp_min(0.0)
+    filters = mel_filterbank(sample_rate, n_fft, mel_bins)
+    linear_power = (torch.linalg.pinv(filters) @ mel_power).clamp_min(0.0)
+    magnitude = linear_power.sqrt()
+    generator = torch.Generator().manual_seed(seed)
+    angles = torch.rand(magnitude.shape, generator=generator) * 2 * math.pi
+    phase = torch.polar(torch.ones_like(angles), angles)
+    window = torch.hann_window(n_fft)
+    waveform = torch.zeros(length)
+    for _ in range(iterations):
+        waveform = torch.istft(
+            magnitude * phase,
+            n_fft=n_fft,
+            hop_length=hop_length,
+            win_length=n_fft,
+            window=window,
+            length=length,
+        )
+        rebuilt = torch.stft(
+            waveform,
+            n_fft=n_fft,
+            hop_length=hop_length,
+            win_length=n_fft,
+            window=window,
+            return_complex=True,
+        )
+        phase = rebuilt / rebuilt.abs().clamp_min(1e-8)
+    return waveform.clamp(-1.0, 1.0)

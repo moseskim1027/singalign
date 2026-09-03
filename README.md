@@ -280,6 +280,31 @@ during post-training.
 This is an energy-based DPO proxy for controlled experimentation, not standard
 autoregressive DPO and not evidence of alignment with human preferences.
 
+### Compare baseline and aligned checkpoints
+
+Generate paired validation metrics and local listening artifacts without using
+the held-out test split:
+
+```bash
+docker compose run --rm research \
+  singalign-compare \
+  --config configs/evaluation/comparison.yaml \
+  --baseline-checkpoint checkpoints/baseline/best.pt \
+  --aligned-checkpoint checkpoints/aligned/best.pt \
+  --index data/interim/pjs/index.jsonl \
+  --splits data/interim/pjs/splits.json
+```
+
+Reports are written beneath `reports/comparisons/<run-id>/`. They contain
+paired deltas, bootstrap confidence intervals, win/tie/loss counts, and a
+manifest referencing local reference, baseline, and aligned WAV files.
+Generated model audio uses approximate mel pseudoinversion and Griffin-Lim and
+must not be treated as a production-quality vocoder result.
+
+Changing the configured split to `test` additionally requires
+`--confirm-test-use`. Test evaluation should occur only after the comparison
+metrics and decision rules have been preregistered.
+
 Stop the services without removing tracked runs:
 
 ```bash
