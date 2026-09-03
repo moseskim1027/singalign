@@ -130,6 +130,19 @@ const render = (
   metadata.textContent = `${summary.split} split · ${summary.examples} paired examples · lower is better`;
   heading.append(title, metadata);
 
+  const durationsMatch =
+    Math.abs(summary.training_segment_seconds - summary.comparison_segment_seconds) <
+    Number.EPSILON;
+  const durationSummary = document.createElement("div");
+  durationSummary.className = `duration-summary ${durationsMatch ? "matched" : "warning"}`;
+  const durationStatus = document.createElement("strong");
+  durationStatus.textContent = durationsMatch
+    ? "Matched duration"
+    : "Out-of-training-window";
+  const durationDetails = document.createElement("span");
+  durationDetails.textContent = `Training window: ${duration(summary.training_segment_seconds)} seconds · Listening window: ${duration(summary.comparison_segment_seconds)} seconds`;
+  durationSummary.append(durationStatus, durationDetails);
+
   const tableWrap = document.createElement("div");
   tableWrap.className = "table-wrap";
   const table = document.createElement("table");
@@ -187,7 +200,7 @@ const render = (
     update();
   });
 
-  results.append(heading, tableWrap);
+  results.append(heading, durationSummary, tableWrap);
   if (manifest.examples.length > 0) {
     results.append(listening);
     update();

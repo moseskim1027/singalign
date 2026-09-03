@@ -73,6 +73,12 @@ architecture is fully convolutional, but results outside the training-window
 duration must be labeled as such and must not be treated as evidence of
 duration generalization.
 
+Baseline training may override the versioned default with
+`--segment-seconds`. The resolved value, rather than only the source-file
+default, must be tracked and embedded in the checkpoint. Alignment inherits
+that checkpoint duration, and comparison defaults to it unless an explicit
+inference-only override is registered.
+
 Listening windows are selected deterministically by maximum reference-audio
 RMS on a fixed time grid. The selection rule cannot inspect baseline or aligned
 outputs. Each manifest records the grid spacing and chosen offset so that the
