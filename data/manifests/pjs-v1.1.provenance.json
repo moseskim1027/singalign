@@ -1,0 +1,20 @@
+{
+  "dataset": "PJS: Phoneme-balanced Japanese Singing-voice corpus",
+  "version": "1.1",
+  "retrieved_at": "2026-09-03",
+  "source_page": "https://sites.google.com/site/shinnosuketakamichi/research-topics/pjs_corpus",
+  "google_drive_file_id": "1hPHwOkSe2Vnq6hXrhVtzNskJjVMQmvN_",
+  "archive_filename": "PJS_corpus_ver1.1.zip",
+  "archive_sha256": "683c00253ee35a62d50de0375bb9d8e003a74338d4ce3495ac3f7ad096abc1ca",
+  "license": "CC-BY-SA-4.0",
+  "citation": {
+    "authors": [
+      "Junya Koguchi",
+      "Shinnosuke Takamichi"
+    ],
+    "title": "PJS: Phoneme-balanced Japanese singing voice corpus",
+    "year": 2020,
+    "identifier": "arXiv:2006.02959"
+  },
+  "raw_data_versioned_in_git": false
+}

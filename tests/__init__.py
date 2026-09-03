@@ -1,0 +1,1 @@
+"""SingAlign test suite."""

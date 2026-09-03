@@ -70,6 +70,29 @@ The principal recording and score categories are expected to contain 100
 examples each. Confirm any discrepancy against the included release notes
 before changing the data.
 
+After setting up the Python 3.11 environment with `uv sync`, run the repository
+validator for structural and format-level checks:
+
+```bash
+uv run singalign-data validate \
+  --root data/raw/pjs/PJS_corpus_ver1.1
+```
+
+Build the metadata-only local index and deterministic 80/10/10 split:
+
+```bash
+uv run singalign-data index \
+  --root data/raw/pjs/PJS_corpus_ver1.1 \
+  --output data/interim/pjs/index.jsonl
+uv run singalign-data split \
+  --index data/interim/pjs/index.jsonl \
+  --output data/interim/pjs/splits.json \
+  --seed 2026
+```
+
+PJS contains one vocalist. These partitions are song-disjoint, but they cannot
+measure generalization to unseen singers.
+
 ## Data handling
 
 Raw corpus files are immutable inputs. Future preprocessing will write to
