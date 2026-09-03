@@ -10,6 +10,7 @@ from scipy.io import wavfile
 
 from singalign.audio import (
     crop_or_pad,
+    highest_rms_offset,
     invert_log_mel_spectrogram,
     load_audio,
     log_mel_spectrogram,
@@ -34,6 +35,14 @@ class AudioTest(unittest.TestCase):
     def test_crop_or_pad_rejects_invalid_length(self) -> None:
         with self.assertRaisesRegex(ValueError, "positive"):
             crop_or_pad(torch.zeros(4), 0)
+
+    def test_highest_rms_offset_selects_earliest_loud_window(self) -> None:
+        waveform = torch.zeros(20)
+        waveform[8:16] = 0.5
+        self.assertEqual(highest_rms_offset(waveform, 4, 2), 8)
+
+    def test_highest_rms_offset_uses_zero_for_short_audio(self) -> None:
+        self.assertEqual(highest_rms_offset(torch.ones(3), 4, 1), 0)
 
     def test_log_mel_inversion_returns_requested_length(self) -> None:
         waveform = torch.sin(torch.linspace(0, 30, 2048))

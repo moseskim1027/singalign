@@ -3,6 +3,7 @@ import type {
   ComparisonExample,
   ComparisonManifest,
   ComparisonSummary,
+  LatestComparison,
 } from "./types";
 
 const app = document.querySelector<HTMLElement>("#app");
@@ -25,7 +26,7 @@ app.innerHTML = `
     <form id="run-form">
       <label for="run-id">Run ID</label>
       <div class="input-row">
-        <input id="run-id" name="run-id" autocomplete="off" spellcheck="false" placeholder="4076ed4be6ce4f8590c1c86a768ed570" required />
+        <input id="run-id" name="run-id" autocomplete="off" spellcheck="false" placeholder="Latest comparison loads automatically" required />
         <button type="submit">Load comparison</button>
       </div>
     </form>
@@ -51,6 +52,9 @@ const number = (value: number): string =>
     maximumSignificantDigits: 5,
     signDisplay: "exceptZero",
   }).format(value);
+
+const duration = (value: number): string =>
+  new Intl.NumberFormat("en", { maximumFractionDigits: 3 }).format(value);
 
 const label = (name: string): string => name.replaceAll("_", " ");
 
@@ -97,7 +101,7 @@ const renderExample = (
   const title = document.createElement("h3");
   title.textContent = `Example ${index + 1} of ${total}: ${example.id}`;
   const disclosure = document.createElement("p");
-  disclosure.textContent = example.disclosure;
+  disclosure.textContent = `${example.disclosure} Selected reference offset: ${duration(example.offset_seconds)} seconds.`;
   header.append(title, disclosure);
 
   const grid = document.createElement("div");
@@ -227,4 +231,18 @@ const initialRun = new URLSearchParams(location.search).get("run");
 if (initialRun) {
   input.value = initialRun;
   form.requestSubmit();
+} else {
+  status.textContent = "Loading the latest local comparison…";
+  fetch("/reports/latest.json", { cache: "no-store" })
+    .then(async (response) => {
+      if (!response.ok) throw new Error("No latest comparison is available yet.");
+      return (await response.json()) as LatestComparison;
+    })
+    .then((latest) => {
+      input.value = latest.run_id;
+      form.requestSubmit();
+    })
+    .catch(() => {
+      status.textContent = "Enter a run ID after generating a comparison report.";
+    });
 }
