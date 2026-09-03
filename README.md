@@ -218,6 +218,37 @@ docker compose run --rm lint
 docker compose run --rm test
 ```
 
+### Evaluate the selected baseline
+
+Held-out evaluation is a separate command so that test examples cannot be
+loaded by the trainer. Select `best.pt` using validation loss, then evaluate it
+once against the immutable test partition:
+
+```bash
+uv run singalign-evaluate \
+  --config configs/evaluation/baseline.yaml \
+  --checkpoint checkpoints/baseline/best.pt \
+  --index data/interim/pjs/index.jsonl \
+  --splits data/interim/pjs/splits.json
+```
+
+Run the same evaluation through the tracked Docker environment:
+
+```bash
+docker compose up -d mlflow
+docker compose run --rm research \
+  singalign-evaluate \
+  --config configs/evaluation/baseline.yaml \
+  --checkpoint checkpoints/baseline/best.pt \
+  --index data/interim/pjs/index.jsonl \
+  --splits data/interim/pjs/splits.json
+```
+
+Each run writes an ignored report beneath `reports/evaluation/<run-id>/` and
+attaches the report to MLflow. The report contains aggregate metrics with
+bootstrap confidence intervals, per-example metrics, latency, checkpoint and
+split fingerprints, and the exact evaluation configuration.
+
 Stop the services without removing tracked runs:
 
 ```bash
