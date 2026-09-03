@@ -11,7 +11,9 @@ Preference-aligned singing voice synthesis.
 
 SingAlign studies whether preference-based post-training can improve singing
 voice synthesis without sacrificing musical accuracy, lyric intelligibility,
-or singer identity.
+or singer identity. Its initial experiments focus on low-resource preference
+alignment: methods that can be investigated reproducibly without training a
+large generative audio model from scratch.
 
 The project will evaluate multidimensional reward modeling and preference
 optimization methods for generative singing systems. Initial experiments will
@@ -37,8 +39,11 @@ SingAlign is organized around four primary questions:
 
 ## Scope
 
-The initial study will focus on score-conditioned singing voice synthesis and
-the following perceptual dimensions:
+The initial study will focus on compact, score-conditioned singing voice
+synthesis using the PJS corpus. Experiments will operate on short
+mel-spectrogram segments so that data preparation, baseline development, and
+pilot studies remain practical on Apple Silicon. The study will address the
+following perceptual dimensions:
 
 - vocal naturalness
 - pitch and rhythm accuracy
@@ -68,8 +73,18 @@ material changes will be documented in the research plan and experiment logs.
 
 ## Dataset plan
 
-OpenCpop is the initial dataset candidate because it provides audio, lyrics,
-phonemes, notes, note durations, phoneme durations, and slur annotations.
+The initial dataset is the PJS phoneme-balanced Japanese singing voice corpus.
+PJS is an approximately 0.26 GB public dataset containing 100 short singing
+recordings, their spoken counterparts, MIDI and MusicXML scores, phoneme
+labels, and supporting metadata. This compact, paired design supports
+score-conditioned modeling and low-resource preference experiments on a local
+M1 machine.
+
+Download PJS version 1.1 from the
+[official corpus page](https://sites.google.com/site/shinnosuketakamichi/research-topics/pjs_corpus).
+The corpus is licensed under
+[CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/), which requires
+attribution and ShareAlike distribution of adapted material.
 
 Before training begins, the project will document:
 
@@ -79,11 +94,12 @@ Before training begins, the project will document:
 - singer- and song-level split construction
 - known demographic, linguistic, and recording limitations
 
-Datasets will not be committed to this repository. Dataset selection remains
-provisional until its terms and suitability have been reviewed.
+Dataset files will not be committed to this repository. The raw corpus must
+remain unchanged in the ignored local data directory, and any distributed
+adaptations must comply with the corpus license.
 
-See [`data/README.md`](data/README.md) for the planned data interface and
-provenance requirements.
+See [`data/README.md`](data/README.md) for download, installation, verification,
+and provenance instructions.
 
 ## Evaluation plan
 
