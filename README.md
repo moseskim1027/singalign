@@ -301,6 +301,14 @@ manifest referencing local reference, baseline, and aligned WAV files.
 Generated model audio uses approximate mel pseudoinversion and Griffin-Lim and
 must not be treated as a production-quality vocoder result.
 
+The default comparison configuration generates three-second listening clips.
+This is an inference-only override: the current checkpoints were trained on
+one-second segments. Both durations and that mismatch are recorded in the
+report so longer examples cannot be mistaken for in-distribution training
+windows. Set `comparison.audio_segment_seconds` between 0 and 30 seconds to
+change the inspection duration; longer clips increase inversion time and
+memory use.
+
 Changing the configured split to `test` additionally requires
 `--confirm-test-use`. Test evaluation should occur only after the comparison
 metrics and decision rules have been preregistered.

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import sys
 import time
 from pathlib import Path
@@ -39,12 +40,21 @@ def load_comparison_config(path: Path) -> dict[str, Any]:
     split = config["comparison"]["split"]
     if split not in {"validation", "test"}:
         raise ValueError("comparison split must be validation or test")
+    duration = config["comparison"].get("audio_segment_seconds")
+    if duration is not None and (
+        not isinstance(duration, (int, float))
+        or not math.isfinite(duration)
+        or not 0 < duration <= 30
+    ):
+        raise ValueError("audio_segment_seconds must be between 0 and 30")
     return config
 
 
-def _prepare(record: dict[str, Any], audio: dict[str, Any]) -> tuple[torch.Tensor, ...]:
+def _prepare(
+    record: dict[str, Any], audio: dict[str, Any], segment_seconds: float
+) -> tuple[torch.Tensor, ...]:
     sample_rate = int(audio["sample_rate"])
-    length = round(sample_rate * float(audio["segment_seconds"]))
+    length = round(sample_rate * segment_seconds)
     waveform = crop_or_pad(load_audio(Path(record["song_audio"]), sample_rate), length)
     raw = raw_log_mel_spectrogram(
         waveform,
@@ -108,12 +118,20 @@ def compare_checkpoints(
     manifest_examples: list[dict[str, Any]] = []
     audio_limit = min(int(settings["audio_examples"]), len(item_ids))
     sample_rate = int(audio["sample_rate"])
-    segment_length = round(sample_rate * float(audio["segment_seconds"]))
+    training_segment_seconds = float(audio["segment_seconds"])
+    comparison_segment_seconds = float(
+        settings.get("audio_segment_seconds", training_segment_seconds)
+    )
+    segment_length = round(sample_rate * comparison_segment_seconds)
+    duration_disclosure = (
+        f"Inference uses {comparison_segment_seconds:g}-second segments; the "
+        f"checkpoints were trained on {training_segment_seconds:g}-second segments."
+    )
 
     with torch.inference_mode():
         for position, item_id in enumerate(item_ids):
             waveform, features, mean, standard_deviation = _prepare(
-                records[item_id], audio
+                records[item_id], audio, comparison_segment_seconds
             )
             features = features.to(device)
             _synchronize(device)
@@ -179,7 +197,8 @@ def compare_checkpoints(
                         "baseline": str(relative / "baseline.wav"),
                         "aligned": str(relative / "aligned.wav"),
                         "disclosure": (
-                            "Approximate synthetic Griffin-Lim reconstruction"
+                            "Approximate synthetic Griffin-Lim reconstruction. "
+                            + duration_disclosure
                         ),
                     }
                 )
@@ -199,6 +218,8 @@ def compare_checkpoints(
         "split": split_name,
         "split_fingerprint": split_data["fingerprint_sha256"],
         "examples": len(rows),
+        "training_segment_seconds": training_segment_seconds,
+        "comparison_segment_seconds": comparison_segment_seconds,
         "baseline_checkpoint_sha256": file_sha256(baseline_path),
         "aligned_checkpoint_sha256": file_sha256(aligned_path),
         "metrics": comparisons,
@@ -213,6 +234,9 @@ def compare_checkpoints(
     manifest = {
         "title": "SingAlign baseline versus proxy-aligned comparison",
         "split": split_name,
+        "training_segment_seconds": training_segment_seconds,
+        "comparison_segment_seconds": comparison_segment_seconds,
+        "duration_disclosure": duration_disclosure,
         "examples": manifest_examples,
     }
     (output_dir / "manifest.json").write_text(
