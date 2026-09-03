@@ -16,6 +16,7 @@ models
 outputs
 mlruns
 .mlflow
+reports/comparisons
 *.ckpt
 *.pt
 *.pth
