@@ -1,0 +1,14 @@
+experiment:
+  name: singalign-model-comparison
+  run_name: baseline-versus-aligned
+  run_kind: exploratory
+
+comparison:
+  split: validation
+  seed: 2026
+  device: auto
+  bootstrap_samples: 2000
+  confidence_level: 0.95
+  audio_examples: 3
+  griffin_lim_iterations: 16
+  output_dir: reports/comparisons

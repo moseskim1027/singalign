@@ -57,3 +57,10 @@ an MSE anchor constrains reconstruction drift.
 Runs log DPO loss, anchor loss, preference accuracy, relative margin, baseline
 checkpoint hash, and split fingerprint. The resulting checkpoint is a research
 instrument for studying post-training mechanics, not a human-aligned model.
+
+## Paired comparison
+
+`configs/evaluation/comparison.yaml` defaults to validation data and generates
+paired baseline-versus-aligned statistics plus a UI-ready local audio manifest.
+The command records both checkpoint hashes, the split fingerprint, metric
+directionality, paired confidence intervals, and per-example outcomes.
