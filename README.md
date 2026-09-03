@@ -209,14 +209,20 @@ For a short end-to-end smoke run, add `--epochs 1 --max-train-items 4
 --max-validation-items 2`. Checkpoints are written beneath the ignored
 `checkpoints/` directory and also attached to the MLflow run.
 
-Build and run the dedicated test image, whose dependencies are installed by
-the pinned version of `uv` from the committed lockfile:
+Build and run the test target, whose dependencies are installed by the pinned
+version of `uv` from the committed lockfile:
 
 ```bash
 docker compose build test
 docker compose run --rm lint
 docker compose run --rm test
 ```
+
+The root `Dockerfile` uses shared multi-stage targets. Production dependencies,
+including PyTorch and MLflow, are installed once in `runtime-dependencies`;
+the `research` and `test` targets inherit that layer. The test target adds only
+development tools. Source-only edits therefore reuse the large locked
+dependency layer instead of reinstalling it for every service.
 
 ### Evaluate the selected baseline
 
