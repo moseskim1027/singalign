@@ -7,3 +7,19 @@ random seed, environment, hardware assumptions, outputs, and result status.
 Exploratory and confirmatory experiments must be labeled separately. Generated
 logs and large artifacts remain local; compact manifests and auditable summaries
 may be versioned.
+
+## MLflow
+
+Local runs are tracked through the Dockerized MLflow server. Experiment code
+should use `singalign.tracking.tracked_run` and provide a `RunMetadata` object
+containing the experiment name, run name, research classification, dataset
+version, split fingerprint, and seed.
+
+The tracking wrapper automatically records the Git revision, dirty state,
+Python and platform versions, elapsed time, and standardized dataset tags.
+Nested configuration mappings should be passed as run parameters; they are
+flattened into stable dotted names.
+
+Use `exploratory` for development, debugging, and hypothesis-generating work.
+Use `confirmatory` only for experiments whose hypotheses, metrics, exclusions,
+and success thresholds were registered before inspecting their results.
