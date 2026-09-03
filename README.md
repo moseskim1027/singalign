@@ -128,6 +128,59 @@ the test suite without accessing the real corpus:
 uv run python -m unittest discover -v
 ```
 
+## Reproducible environment and tracking
+
+The Docker workflow provides the same Python 3.11 environment for data
+validation, future training, evaluation, and MLflow experiment tracking. It
+supports Apple Silicon natively.
+
+Build the research image and start the local tracking server:
+
+```bash
+SINGALIGN_GIT_REVISION="$(git rev-parse HEAD)" \
+SINGALIGN_GIT_DIRTY="$(test -n "$(git status --porcelain --untracked-files=no)" \
+  && echo true || echo false)" \
+docker compose build
+docker compose up -d mlflow
+docker compose ps
+```
+
+Passing the revision at build time lets containerized runs retain their exact
+source identity without copying repository Git metadata into the image.
+
+MLflow is available at [http://localhost:5000](http://localhost:5000). The
+server binds only to the host loopback interface. Its SQLite database and
+artifacts persist in the ignored local directory `.mlflow/`.
+
+Validate the locally mounted PJS corpus and run all tests inside Docker:
+
+```bash
+docker compose run --rm research \
+  singalign-data validate \
+  --root /workspace/data/raw/pjs/PJS_corpus_ver1.1
+docker compose run --rm research \
+  python -m unittest discover -v
+```
+
+Verify experiment tracking end to end with a minimal run:
+
+```bash
+docker compose run --rm research \
+  singalign-track smoke \
+  --experiment singalign-smoke
+```
+
+Stop the services without removing tracked runs:
+
+```bash
+docker compose down
+```
+
+Do not remove `.mlflow/` unless you intend to permanently delete the local
+MLflow database and artifacts. See
+[`configs/mlflow/README.md`](configs/mlflow/README.md) for storage and network
+details.
+
 ## Evaluation plan
 
 Evaluation will combine objective and perceptual evidence.
@@ -156,12 +209,12 @@ data/          Dataset documentation and local data conventions
 docs/          Research questions, protocols, and responsible-use analysis
 experiments/   Experiment manifests and reproducibility records
 reports/       Generated tables, figures, and research reports
-src/           Future implementation of models and research utilities
+src/           Data, tracking, model, and research utilities
 ```
 
-This initial repository contains documentation only. Source code, model
-configuration files, and dataset tooling will be introduced through separate
-reviewed changes.
+Model code and training configurations will be introduced through separate
+reviewed changes after their research claims and evaluation contracts are
+registered.
 
 ## Reproducibility principles
 
