@@ -11,8 +11,9 @@ From the repository root, generate a comparison report and start the UI:
 docker compose up --build -d ui
 ```
 
-Open <http://localhost:4173> and enter the comparison run ID. Docker mounts
-`reports/comparisons/` into Nginx read-only.
+Open <http://localhost:4173>. The latest successfully completed comparison is
+loaded by default; an explicit URL query or entered run ID takes precedence.
+Docker mounts `reports/comparisons/` into Nginx read-only.
 
 ## Develop locally
 

@@ -65,3 +65,16 @@ not be described as pristine unseen observations in later confirmatory claims.
 Listening artifacts are approximate Griffin-Lim inversions, not neural-vocoder
 outputs. They support debugging and interface development but are not suitable
 for claims about perceptual quality.
+
+Comparison reports record the training segment duration embedded in each
+checkpoint and the independently configured inference duration. Longer
+listening clips are permitted for qualitative debugging because the baseline
+architecture is fully convolutional, but results outside the training-window
+duration must be labeled as such and must not be treated as evidence of
+duration generalization.
+
+Listening windows are selected deterministically by maximum reference-audio
+RMS on a fixed time grid. The selection rule cannot inspect baseline or aligned
+outputs. Each manifest records the grid spacing and chosen offset so that the
+audibility-oriented sampling remains reproducible and distinct from random or
+cherry-picked evaluation.

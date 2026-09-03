@@ -42,6 +42,25 @@ def crop_or_pad(waveform: torch.Tensor, length: int, offset: int = 0) -> torch.T
     return torch.nn.functional.pad(waveform, (0, length - waveform.numel()))
 
 
+def highest_rms_offset(waveform: torch.Tensor, length: int, hop_length: int) -> int:
+    """Select the earliest highest-energy window on a fixed deterministic grid."""
+
+    if length < 1 or hop_length < 1:
+        raise ValueError("length and hop_length must be positive")
+    if waveform.numel() <= length:
+        return 0
+    energies = torch.nn.functional.avg_pool1d(
+        waveform.square().view(1, 1, -1), length, stride=hop_length
+    ).flatten()
+    offsets = torch.arange(energies.numel(), device=waveform.device) * hop_length
+    final_offset = waveform.numel() - length
+    if int(offsets[-1]) != final_offset:
+        final_energy = waveform[final_offset:].square().mean().view(1)
+        energies = torch.cat((energies, final_energy))
+        offsets = torch.cat((offsets, offsets.new_tensor([final_offset])))
+    return int(offsets[torch.argmax(energies)].item())
+
+
 def _hz_to_mel(frequency: torch.Tensor) -> torch.Tensor:
     return 2595.0 * torch.log10(1.0 + frequency / 700.0)
 

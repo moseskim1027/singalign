@@ -10,7 +10,11 @@ import numpy as np
 import torch
 from scipy.io import wavfile
 
-from singalign.compare import compare_checkpoints, load_comparison_config
+from singalign.compare import (
+    compare_checkpoints,
+    load_comparison_config,
+    write_latest_pointer,
+)
 from singalign.models import MelAutoencoder
 
 
@@ -19,7 +23,8 @@ class CompareTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             audio_path = root / "song.wav"
-            signal = np.sin(np.linspace(0, 20, 3000))
+            signal = np.zeros(6000)
+            signal[2000:6000] = np.sin(np.linspace(0, 20, 4000))
             wavfile.write(audio_path, 8000, (signal * 16000).astype(np.int16))
             index_path = root / "index.jsonl"
             index_path.write_text(
@@ -61,6 +66,8 @@ class CompareTest(unittest.TestCase):
                     "bootstrap_samples": 20,
                     "confidence_level": 0.95,
                     "audio_examples": 1,
+                    "audio_segment_seconds": 0.5,
+                    "audio_selection_hop_seconds": 0.125,
                     "griffin_lim_iterations": 1,
                 }
             }
@@ -74,19 +81,49 @@ class CompareTest(unittest.TestCase):
                 output_dir,
             )
             self.assertEqual(summary["examples"], 1)
+            self.assertEqual(summary["training_segment_seconds"], 0.25)
+            self.assertEqual(summary["comparison_segment_seconds"], 0.5)
+            self.assertEqual(
+                summary["audio_selection_method"], "highest_rms_reference_window"
+            )
             self.assertEqual(summary["metrics"]["log_mel_mse"]["ties"], 1)
             manifest = json.loads((output_dir / "manifest.json").read_text())
             self.assertEqual(len(manifest["examples"]), 1)
+            self.assertIn("trained on 0.25-second", manifest["duration_disclosure"])
+            self.assertEqual(
+                manifest["examples"][0]["selection_method"],
+                "highest_rms_reference_window",
+            )
+            self.assertGreater(manifest["examples"][0]["offset_seconds"], 0)
             for filename in ("reference.wav", "baseline.wav", "aligned.wav"):
                 audio_file = output_dir / "audio" / "pjs001" / filename
                 self.assertTrue(audio_file.is_file())
                 with wave.open(str(audio_file)) as stream:
                     self.assertEqual(stream.getframerate(), 8000)
                     self.assertEqual(stream.getsampwidth(), 2)
+                    self.assertEqual(stream.getnframes(), 4000)
 
     def test_config_rejects_training_split(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "comparison.yaml"
             path.write_text("experiment: {}\ncomparison: {split: train}\n")
             with self.assertRaisesRegex(ValueError, "validation or test"):
+                load_comparison_config(path)
+
+    def test_latest_pointer_identifies_run(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            write_latest_pointer(root, "run-123")
+            self.assertEqual(
+                json.loads((root / "latest.json").read_text()), {"run_id": "run-123"}
+            )
+
+    def test_config_rejects_invalid_audio_duration(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "comparison.yaml"
+            path.write_text(
+                "experiment: {}\n"
+                "comparison: {split: validation, audio_segment_seconds: 0}\n"
+            )
+            with self.assertRaisesRegex(ValueError, "between 0 and 30"):
                 load_comparison_config(path)

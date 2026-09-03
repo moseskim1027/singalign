@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import sys
 import time
 from pathlib import Path
@@ -17,6 +18,7 @@ from scipy.io import wavfile
 
 from singalign.audio import (
     crop_or_pad,
+    highest_rms_offset,
     invert_log_mel_spectrogram,
     load_audio,
     raw_log_mel_spectrogram,
@@ -39,13 +41,35 @@ def load_comparison_config(path: Path) -> dict[str, Any]:
     split = config["comparison"]["split"]
     if split not in {"validation", "test"}:
         raise ValueError("comparison split must be validation or test")
+    duration = config["comparison"].get("audio_segment_seconds")
+    if duration is not None and (
+        not isinstance(duration, (int, float))
+        or not math.isfinite(duration)
+        or not 0 < duration <= 30
+    ):
+        raise ValueError("audio_segment_seconds must be between 0 and 30")
+    selection_hop = config["comparison"].get("audio_selection_hop_seconds", 0.25)
+    if (
+        not isinstance(selection_hop, (int, float))
+        or not math.isfinite(selection_hop)
+        or selection_hop <= 0
+    ):
+        raise ValueError("audio_selection_hop_seconds must be positive")
     return config
 
 
-def _prepare(record: dict[str, Any], audio: dict[str, Any]) -> tuple[torch.Tensor, ...]:
+def _prepare(
+    record: dict[str, Any],
+    audio: dict[str, Any],
+    segment_seconds: float,
+    selection_hop_seconds: float,
+) -> tuple[torch.Tensor, ...]:
     sample_rate = int(audio["sample_rate"])
-    length = round(sample_rate * float(audio["segment_seconds"]))
-    waveform = crop_or_pad(load_audio(Path(record["song_audio"]), sample_rate), length)
+    length = round(sample_rate * segment_seconds)
+    full_waveform = load_audio(Path(record["song_audio"]), sample_rate)
+    selection_hop = max(1, round(sample_rate * selection_hop_seconds))
+    offset = highest_rms_offset(full_waveform, length, selection_hop)
+    waveform = crop_or_pad(full_waveform, length, offset)
     raw = raw_log_mel_spectrogram(
         waveform,
         sample_rate,
@@ -55,7 +79,22 @@ def _prepare(record: dict[str, Any], audio: dict[str, Any]) -> tuple[torch.Tenso
     )
     mean, standard_deviation = raw.mean(), raw.std().clamp_min(1e-6)
     normalized = (raw - mean) / standard_deviation
-    return waveform, normalized.unsqueeze(0).unsqueeze(0), mean, standard_deviation
+    return (
+        waveform,
+        normalized.unsqueeze(0).unsqueeze(0),
+        mean,
+        standard_deviation,
+        torch.tensor(offset),
+    )
+
+
+def write_latest_pointer(output_root: Path, run_id: str) -> None:
+    """Atomically identify the latest completed local comparison run."""
+
+    pointer = output_root / "latest.json"
+    temporary = output_root / ".latest.json.tmp"
+    temporary.write_text(json.dumps({"run_id": run_id}, sort_keys=True) + "\n")
+    temporary.replace(pointer)
 
 
 def _write_wave(path: Path, waveform: torch.Tensor, sample_rate: int) -> None:
@@ -108,13 +147,26 @@ def compare_checkpoints(
     manifest_examples: list[dict[str, Any]] = []
     audio_limit = min(int(settings["audio_examples"]), len(item_ids))
     sample_rate = int(audio["sample_rate"])
-    segment_length = round(sample_rate * float(audio["segment_seconds"]))
+    training_segment_seconds = float(audio["segment_seconds"])
+    comparison_segment_seconds = float(
+        settings.get("audio_segment_seconds", training_segment_seconds)
+    )
+    selection_hop_seconds = float(settings.get("audio_selection_hop_seconds", 0.25))
+    segment_length = round(sample_rate * comparison_segment_seconds)
+    duration_disclosure = (
+        f"Inference uses {comparison_segment_seconds:g}-second segments; the "
+        f"checkpoints were trained on {training_segment_seconds:g}-second segments."
+    )
 
     with torch.inference_mode():
         for position, item_id in enumerate(item_ids):
-            waveform, features, mean, standard_deviation = _prepare(
-                records[item_id], audio
+            waveform, features, mean, standard_deviation, offset = _prepare(
+                records[item_id],
+                audio,
+                comparison_segment_seconds,
+                selection_hop_seconds,
             )
+            offset_seconds = int(offset) / sample_rate
             features = features.to(device)
             _synchronize(device)
             started = time.perf_counter()
@@ -131,6 +183,7 @@ def compare_checkpoints(
             rows.append(
                 {
                     "id": item_id,
+                    "offset_seconds": offset_seconds,
                     "baseline": baseline_metrics,
                     "aligned": aligned_metrics,
                     "delta": {
@@ -175,11 +228,14 @@ def compare_checkpoints(
                 manifest_examples.append(
                     {
                         "id": item_id,
+                        "offset_seconds": offset_seconds,
+                        "selection_method": "highest_rms_reference_window",
                         "reference": str(relative / "reference.wav"),
                         "baseline": str(relative / "baseline.wav"),
                         "aligned": str(relative / "aligned.wav"),
                         "disclosure": (
-                            "Approximate synthetic Griffin-Lim reconstruction"
+                            "Approximate synthetic Griffin-Lim reconstruction. "
+                            + duration_disclosure
                         ),
                     }
                 )
@@ -199,6 +255,10 @@ def compare_checkpoints(
         "split": split_name,
         "split_fingerprint": split_data["fingerprint_sha256"],
         "examples": len(rows),
+        "training_segment_seconds": training_segment_seconds,
+        "comparison_segment_seconds": comparison_segment_seconds,
+        "audio_selection_method": "highest_rms_reference_window",
+        "audio_selection_hop_seconds": selection_hop_seconds,
         "baseline_checkpoint_sha256": file_sha256(baseline_path),
         "aligned_checkpoint_sha256": file_sha256(aligned_path),
         "metrics": comparisons,
@@ -213,6 +273,11 @@ def compare_checkpoints(
     manifest = {
         "title": "SingAlign baseline versus proxy-aligned comparison",
         "split": split_name,
+        "training_segment_seconds": training_segment_seconds,
+        "comparison_segment_seconds": comparison_segment_seconds,
+        "audio_selection_method": "highest_rms_reference_window",
+        "audio_selection_hop_seconds": selection_hop_seconds,
+        "duration_disclosure": duration_disclosure,
         "examples": manifest_examples,
     }
     (output_dir / "manifest.json").write_text(
@@ -268,6 +333,7 @@ def main() -> int:
         for name, result in summary["metrics"].items():
             mlflow.log_metric(f"comparison.{name}.delta", result["delta"]["mean"])
         mlflow.log_artifacts(str(output_dir), artifact_path="comparison")
+        write_latest_pointer(Path(settings["output_dir"]), run.info.run_id)
     print(json.dumps(summary, sort_keys=True))
     return 0
 

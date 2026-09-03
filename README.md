@@ -301,6 +301,19 @@ manifest referencing local reference, baseline, and aligned WAV files.
 Generated model audio uses approximate mel pseudoinversion and Griffin-Lim and
 must not be treated as a production-quality vocoder result.
 
+The default comparison configuration generates three-second listening clips.
+This is an inference-only override: the current checkpoints were trained on
+one-second segments. Both durations and that mismatch are recorded in the
+report so longer examples cannot be mistaken for in-distribution training
+windows. Set `comparison.audio_segment_seconds` between 0 and 30 seconds to
+change the inspection duration; longer clips increase inversion time and
+memory use.
+
+For audible inspection, each clip is selected as the highest-RMS reference
+window on the configured deterministic time grid. Selection never examines
+model outputs. Reports record the method, grid spacing, and selected offset for
+every example.
+
 Changing the configured split to `test` additionally requires
 `--confirm-test-use`. Test evaluation should occur only after the comparison
 metrics and decision rules have been preregistered.
@@ -314,7 +327,9 @@ docker compose up --build -d ui
 ```
 
 Open [http://localhost:4173](http://localhost:4173), enter the comparison run
-ID printed by `singalign-compare`, and select **Load comparison**. The report
+ID printed by `singalign-compare`, and select **Load comparison**. When no run
+is specified, the latest successfully completed local comparison loads by
+default. The report
 directory is mounted read-only. The interface displays aggregate paired
 metrics and side-by-side reference, baseline, and aligned audio for each
 available example.

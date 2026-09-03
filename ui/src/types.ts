@@ -4,6 +4,12 @@ export interface ComparisonExample {
   baseline: string;
   aligned: string;
   disclosure: string;
+  offset_seconds: number;
+  selection_method: string;
+}
+
+export interface LatestComparison {
+  run_id: string;
 }
 
 export interface ComparisonManifest {
