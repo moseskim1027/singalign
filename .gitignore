@@ -1,0 +1,37 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Environments and secrets
+.env
+.env.*
+.venv/
+venv/
+
+# Notebooks and editors
+.ipynb_checkpoints/
+.idea/
+.vscode/
+.DS_Store
+
+# Local data, models, and generated audio
+data/raw/
+data/interim/
+data/processed/
+checkpoints/
+models/
+outputs/
+*.ckpt
+*.pt
+*.pth
+*.safetensors
+
+# Experiment artifacts (manifests remain versioned)
+experiments/**/artifacts/
+experiments/**/logs/
+wandb/
+mlruns/
