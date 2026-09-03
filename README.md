@@ -101,6 +101,33 @@ adaptations must comply with the corpus license.
 See [`data/README.md`](data/README.md) for download, installation, verification,
 and provenance instructions.
 
+### Validate and index PJS
+
+SingAlign provides a dependency-light CLI for validating the local corpus,
+building a metadata-only index, and creating deterministic song-disjoint
+splits. With Python 3.11 and
+[`uv`](https://docs.astral.sh/uv/) installed, run:
+
+```bash
+uv sync
+uv run singalign-data validate \
+  --root data/raw/pjs/PJS_corpus_ver1.1
+uv run singalign-data index \
+  --root data/raw/pjs/PJS_corpus_ver1.1 \
+  --output data/interim/pjs/index.jsonl
+uv run singalign-data split \
+  --index data/interim/pjs/index.jsonl \
+  --output data/interim/pjs/splits.json \
+  --seed 2026
+```
+
+The generated index and split files remain local and are ignored by Git. Run
+the test suite without accessing the real corpus:
+
+```bash
+uv run python -m unittest discover -v
+```
+
 ## Evaluation plan
 
 Evaluation will combine objective and perceptual evidence.
@@ -166,7 +193,8 @@ evolving risk assessment.
 ## Roadmap
 
 - [ ] Finalize the research hypotheses and success criteria
-- [ ] Review dataset terms and create immutable data splits
+- [x] Review the PJS dataset terms and document local installation
+- [ ] Validate the corpus and create immutable data splits
 - [ ] Select and reproduce a baseline model
 - [ ] Implement controlled preference-pair construction
 - [ ] Establish objective evaluation baselines
