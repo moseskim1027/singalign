@@ -37,6 +37,8 @@ export interface MetricSummary {
 export interface ComparisonSummary {
   split: string;
   examples: number;
+  training_segment_seconds: number;
+  comparison_segment_seconds: number;
   metric_direction: string;
   metrics: Record<string, MetricSummary>;
 }

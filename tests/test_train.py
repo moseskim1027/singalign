@@ -1,13 +1,22 @@
 from __future__ import annotations
 
 import unittest
+from copy import deepcopy
 
 import torch
 from torch.optim import Adam
 from torch.utils.data import DataLoader, TensorDataset
 
 from singalign.models import MelAutoencoder
-from singalign.train import resolve_device, run_epoch
+from singalign.train import resolve_device, resolve_training_config, run_epoch
+
+
+TRAINING_CONFIG = {
+    "experiment": {},
+    "audio": {"segment_seconds": 1.0},
+    "model": {},
+    "training": {},
+}
 
 
 class TrainTest(unittest.TestCase):
@@ -27,3 +36,15 @@ class TrainTest(unittest.TestCase):
     def test_unknown_device_is_rejected(self) -> None:
         with self.assertRaisesRegex(ValueError, "unsupported"):
             resolve_device("tpu")
+
+    def test_training_duration_override_is_resolved_without_mutation(self) -> None:
+        original = deepcopy(TRAINING_CONFIG)
+        resolved = resolve_training_config(original, 3)
+        self.assertEqual(resolved["audio"]["segment_seconds"], 3.0)
+        self.assertEqual(original["audio"]["segment_seconds"], 1.0)
+
+    def test_training_duration_must_be_bounded(self) -> None:
+        for duration in (0, 31, float("nan")):
+            with self.subTest(duration=duration):
+                with self.assertRaisesRegex(ValueError, "between 0 and 30"):
+                    resolve_training_config(TRAINING_CONFIG, duration)

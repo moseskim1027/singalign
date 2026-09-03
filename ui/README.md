@@ -15,6 +15,10 @@ Open <http://localhost:4173>. The latest successfully completed comparison is
 loaded by default; an explicit URL query or entered run ID takes precedence.
 Docker mounts `reports/comparisons/` into Nginx read-only.
 
+The report header shows the resolved training and listening-window durations.
+Matching values are labeled **Matched duration**; an intentional comparison
+override is labeled **Out-of-training-window**.
+
 ## Develop locally
 
 ```bash

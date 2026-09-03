@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import argparse
+import copy
 import json
+import math
 import random
 import sys
 from pathlib import Path
@@ -28,7 +30,26 @@ def load_config(path: Path) -> dict[str, Any]:
     required = {"experiment", "audio", "model", "training"}
     if not isinstance(config, dict) or not required.issubset(config):
         raise ValueError(f"configuration must contain {sorted(required)}")
-    return config
+    return resolve_training_config(config)
+
+
+def resolve_training_config(
+    config: dict[str, Any], segment_seconds: float | None = None
+) -> dict[str, Any]:
+    """Return a validated copy containing the resolved segment duration."""
+
+    resolved = copy.deepcopy(config)
+    if segment_seconds is not None:
+        resolved["audio"]["segment_seconds"] = segment_seconds
+    duration = resolved["audio"]["segment_seconds"]
+    if (
+        not isinstance(duration, (int, float))
+        or not math.isfinite(duration)
+        or not 0 < duration <= 30
+    ):
+        raise ValueError("segment_seconds must be between 0 and 30")
+    resolved["audio"]["segment_seconds"] = float(duration)
+    return resolved
 
 
 def seed_everything(seed: int) -> None:
@@ -149,6 +170,7 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--index", type=Path, required=True)
     parser.add_argument("--splits", type=Path, required=True)
     parser.add_argument("--epochs", type=int)
+    parser.add_argument("--segment-seconds", type=float)
     parser.add_argument("--max-train-items", type=int)
     parser.add_argument("--max-validation-items", type=int)
     return parser
@@ -156,7 +178,7 @@ def _parser() -> argparse.ArgumentParser:
 
 def main() -> int:
     args = _parser().parse_args()
-    config = load_config(args.config)
+    config = resolve_training_config(load_config(args.config), args.segment_seconds)
     training = config["training"]
     seed = int(training["seed"])
     train_dataset = PJSMelDataset(

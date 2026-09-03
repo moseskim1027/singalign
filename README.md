@@ -205,6 +205,28 @@ docker compose run --rm research \
   --splits data/interim/pjs/splits.json
 ```
 
+Set the training and UI listening-window duration to any positive value up to
+30 seconds with `--segment-seconds N`. The resolved value is logged to MLflow and
+embedded in every checkpoint. For example, an M1-friendly three-second run is:
+
+```bash
+docker compose run --rm research \
+  singalign-train \
+  --config configs/training/baseline.yaml \
+  --index data/interim/pjs/index.jsonl \
+  --splits data/interim/pjs/splits.json \
+  --segment-seconds 3 \
+  --epochs 1 \
+  --max-train-items 4 \
+  --max-validation-items 2
+```
+
+Post-training inherits the resolved duration from this baseline checkpoint.
+The comparison command also defaults to the checkpoint duration, so the UI
+shows matching training and listening windows. Set
+`comparison.audio_segment_seconds` only when intentionally inspecting a
+different inference duration.
+
 For a short end-to-end smoke run, add `--epochs 1 --max-train-items 4
 --max-validation-items 2`. Checkpoints are written beneath the ignored
 `checkpoints/` directory and also attached to the MLflow run.
@@ -301,13 +323,11 @@ manifest referencing local reference, baseline, and aligned WAV files.
 Generated model audio uses approximate mel pseudoinversion and Griffin-Lim and
 must not be treated as a production-quality vocoder result.
 
-The default comparison configuration generates three-second listening clips.
-This is an inference-only override: the current checkpoints were trained on
-one-second segments. Both durations and that mismatch are recorded in the
-report so longer examples cannot be mistaken for in-distribution training
-windows. Set `comparison.audio_segment_seconds` between 0 and 30 seconds to
-change the inspection duration; longer clips increase inversion time and
-memory use.
+The default comparison duration is read from the checkpoints, matching the
+training window. An optional positive `comparison.audio_segment_seconds` value
+up to 30 seconds can override it for deliberate out-of-window inspection.
+Both durations and any mismatch are recorded in the report. Longer clips
+increase inversion time and memory use.
 
 For audible inspection, each clip is selected as the highest-RMS reference
 window on the configured deterministic time grid. Selection never examines
