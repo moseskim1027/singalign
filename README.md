@@ -693,6 +693,9 @@ conditioned, and vocoder outputs; missing outputs are reported as pending
 rather than silently treated as results.
 Run `singalign-matrix-status --config configs/evaluation/comparison-matrix.yaml`
 to audit readiness before producing the aggregate report.
+The completion UI will consume these reports with condition filtering and show
+available uncertainty/effect-size fields without inventing values for reports
+that predate the aggregate schema.
 
 PR 1 is implementing learned reward baselines on top of the existing
 deterministic preference-pair generator. The learned models are exploratory:
