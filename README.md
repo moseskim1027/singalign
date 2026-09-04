@@ -507,71 +507,18 @@ loaded, making the dependency order visible during reproducible experiments.
 
 ### Candidate-generation sandbox
 
-The next engineering stage is defined in
-[`experiments/candidate-generation-v1.md`](experiments/candidate-generation-v1.md).
-It will generate deterministic candidates from a shared mel input, score them
-with explicitly labeled proxy rewards, and retain provenance for every output.
-The first implementation will cover controlled perturbations before learned
-decoder outputs are added.
-The deterministic generator is implemented in `singalign.candidates`; its
-candidate records include method, seed, severity, and tensor provenance.
-The reranker in `singalign.rerank` currently uses normalized mel reconstruction
-error as an explicitly labeled proxy reward, with deterministic ranking and
-stable provenance. It is not a human-preference model.
-`singalign.rewards` now exposes the same scalar reward plus an auditable
-multidimensional reward combining reconstruction, smoothness, and amplitude
-components. Both are diagnostic proxies and their weights are recorded.
-The candidate-generation and reranking foundations are tracked as completed
-engineering milestones in [`docs/research-plan.md`](docs/research-plan.md).
-`singalign.candidate_report.write_candidate_report` provides the next
-integration point for writing deterministic ranked-candidate manifests before
-MLflow logging and UI display are added.
-For a standalone local/Docker invocation, save a mel tensor with
-`torch.save` and run `singalign-candidates --input input.pt --output
-reports/candidates/example.json`.
-Add `--mlflow-experiment singalign-candidate-sandbox` to log the manifest and
-reproducibility metadata to the local MLflow server.
-The corresponding exploratory configuration is
-`configs/evaluation/candidates.yaml`; it fixes the initial methods, seed, and
-proxy-reward version for repeatable runs.
-The preference-objective sandbox also exposes a compact KTO-style loss in
-`singalign.preference_objectives`, alongside the existing proxy-DPO loss. These
-objectives operate on synthetic/proxy scores and do not establish human
-preference alignment.
-The initial objective settings are frozen in
-`configs/training/preference-objectives.yaml` so DPO/KTO comparisons can be
-run as explicit exploratory conditions.
-`pair_to_kto_batch` adapts the existing chosen/rejected synthetic pairs to the
-binary labels expected by the KTO objective.
-The separate exploratory KTO condition is specified in
-`configs/training/kto.yaml`; a trainer and MLflow run remain to be implemented.
-The Docker trainer is now available with `singalign-kto-train`; it initializes
-from the supervised checkpoint, trains only on synthetic training pairs, and
-logs the exploratory checkpoint to MLflow.
-The first 10-epoch pilot is MLflow run `3c9de2f603d2419683f6bfe2502fdc9d`
-in experiment `singalign-kto-proxy`.
-The trainer validates required sections and positive beta/temperature before
-starting a run.
-The held-out diagnostic command `singalign-kto-evaluate` measures synthetic
-preference loss and accuracy on the sealed test split without changing the
-checkpoint or tuning the objective.
-The evaluator is the only workflow that passes the dataset's explicit
-`allow_test=True` opt-in; training commands remain unable to consume test IDs.
-The first held-out diagnostic evaluated 10 test examples with proxy preference
-accuracy `1.0` and mean proxy loss `0.3955`; these are engineering diagnostics,
-not perceptual or population-level claims.
-The multi-condition comparison work now uses `singalign.conditions.ConditionSpec`
-to preserve stable names, methods, checkpoint paths, and declared ordering.
-`compare_condition_outputs` applies the same reconstruction diagnostics to each
-declared output, keeping baseline/aligned/DPO/KTO comparisons on one metric
-contract.
-The research checklist distinguishes the completed proxy-reward/KTO
-infrastructure from the still-pending learned reward-model baselines and
-cross-condition statistical diagnostics.
-The `singalign-multi-compare` CLI now compares saved mel tensors with repeated
-`--condition name=output.pt:method` arguments and writes one ordered report.
-The frozen comparison metadata is in `configs/evaluation/multi-condition.yaml`.
-For example:
+Candidate generation is supporting infrastructure for the two primary studies.
+It creates deterministic variants of a synthesis or transfer condition so we
+can compare pitch, timing, lyric intelligibility, audio quality, and alignment
+failures. Each candidate records its seed, method, input condition, and output
+provenance.
+
+The sandbox can also apply transparent proxy scores and stable reranking, but
+these scores are engineering diagnostics—not human-preference models. DPO, KTO,
+and reward-model code remains optional exploratory infrastructure and is not a
+primary research direction.
+
+Example Docker invocation:
 
 ```bash
 docker compose run --rm research \
@@ -582,12 +529,8 @@ docker compose run --rm research \
   --condition kto=kto.pt:kto \
   --output reports/multi-condition/example.json
 ```
-Add `--mlflow-experiment singalign-multi-condition` to attach the report to a
-tracked exploratory MLflow run.
-The UI integration stage loads this deterministic JSON report separately from
-the legacy paired comparison report.
-`write_condition_report` serializes the same results to a deterministic JSON
-artifact suitable for MLflow attachment and later UI display.
+Candidate reports can be logged to MLflow with their condition metadata so
+results remain reproducible.
 `log_condition_report` attaches an existing report to the active MLflow run
 under a stable `conditions` artifact path.
 The evaluation settings are frozen in `configs/evaluation/kto.yaml`; the
