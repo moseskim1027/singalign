@@ -10,14 +10,15 @@ synthesis.
 
 ## Overview
 
-SingAlign compares singing-voice generation, reconstruction, conditioning,
-reranking, and preference-optimization methods. It is an engineering and
-simulation environment rather than a confirmatory human-subjects study.
+SingAlign focuses on two PJS-supported research directions: same-singer,
+score-conditioned singing synthesis, and preservation of vocal content and
+melody when a source vocal is placed over a different instrumental track. It
+is an engineering and simulation environment rather than a confirmatory
+human-subjects study.
 
-The project will evaluate multidimensional reward modeling and preference
-optimization methods for generative singing systems. Initial experiments will
-compare supervised fine-tuning, candidate reranking, Direct Preference
-Optimization (DPO), and Kahneman-Tversky Optimization (KTO).
+Reward modeling, candidate reranking, supervised fine-tuning, DPO, and KTO are
+retained as exploratory alignment infrastructure. They are not currently the
+primary research claim because PJS is small and contains one vocalist.
 
 This repository is structured as a reproducible research artifact. It will
 contain experiment definitions, evaluation protocols, statistical analyses,
@@ -25,16 +26,17 @@ and research documentation alongside the eventual implementation.
 
 ## Research questions
 
-SingAlign is organized around four primary questions:
+SingAlign is organized around two primary questions:
 
-1. Can a multidimensional reward model predict human preferences for generated
-   singing?
-2. Do preference-optimization methods improve perceived singing quality over
-   supervised fine-tuning and candidate reranking?
-3. What trade-offs arise between perceptual quality, score fidelity, lyric
-   intelligibility, and singer similarity?
-4. Do learned preferences generalize to unseen singers, songs, and generation
-   conditions?
+1. Can a compact model synthesize the PJS vocalist from lyrics, phonemes,
+   musical score, timing, and pitch conditioning?
+2. Can source vocal content, phoneme timing, and melody be preserved when the
+   vocal is transferred onto a different instrumental track?
+
+Reward-model and preference-optimization experiments remain optional
+engineering diagnostics. Human-preference prediction and unseen-singer
+generalization are deferred until a suitable multi-singer dataset and
+evaluation design exist.
 
 ## Scope
 
@@ -52,37 +54,44 @@ The two focused research directions are now consolidated in
 [`README_newresearch.md`](README_newresearch.md): same-singer score-conditioned
 synthesis and content-and-melody transfer over a different instrumental.
 
-The initial study will focus on compact, score-conditioned singing voice
-synthesis using the PJS corpus. Experiments will operate on short
+The initial studies use the PJS corpus. Experiments will operate on short
 mel-spectrogram segments so that data preparation, baseline development, and
-pilot studies remain practical on Apple Silicon. The study will address the
-following perceptual dimensions:
+pilot studies remain practical on Apple Silicon. They will address:
 
 - vocal naturalness
 - pitch and rhythm accuracy
 - lyric intelligibility
-- singer similarity
 - expressiveness
 - audio fidelity
+
+Singer similarity is not a generalization target because PJS contains one
+vocalist; it is only a same-singer reconstruction diagnostic.
 
 The first version will intentionally favor controlled, interpretable
 experiments over model scale.
 
 ## Planned methodology
 
-The planned research pipeline consists of:
+The primary research pipeline consists of:
 
-1. Reproduce or adapt a public singing voice synthesis baseline.
-2. Generate multiple candidates for each lyric and score condition.
-3. Construct preference pairs using controlled degradations, objective
-   measurements, and a limited human listening study.
-4. Train scalar and multidimensional reward-model baselines.
-5. Apply reward-based reranking and preference optimization.
-6. Evaluate models using objective measurements and blinded human judgments.
-7. Report uncertainty, failure cases, and relevant ablations.
+1. Validate PJS phonemes, scores, lyrics, and deterministic song-disjoint
+   splits.
+2. Extract observed F0 and construct versioned conditioning records.
+3. Train and evaluate a same-singer score-conditioned synthesis baseline.
+4. Render reproducible target instrumentals from PJS MIDI/MusicXML.
+5. Implement original-vocal content-and-melody remix controls, including
+   tempo/key alignment and intentionally misaligned controls.
+6. Add synthesized-vocal transfer using the Study 1 checkpoint.
+7. Report lyric, pitch, timing, audio-quality, and mix diagnostics with full
+   provenance.
+
+Reward modeling, reranking, DPO, and KTO are optional exploratory extensions;
+they should not be used to imply human preference alignment without suitable
+data and evaluation.
 
 The methodology may change as preliminary experiments reveal limitations. Any
 material changes will be documented in the research plan and experiment logs.
+The complete focused plan is in [`README_newresearch.md`](README_newresearch.md).
 
 ### Score and lyric conditioning prototype
 
@@ -670,15 +679,22 @@ evolving risk assessment.
 
 ## Roadmap
 
-- [ ] Finalize the research hypotheses and success criteria
+- [x] Define the PJS-supported research direction in `README_newresearch.md`
 - [x] Review the PJS dataset terms and document local installation
 - [ ] Validate the corpus and create immutable data splits
 - [ ] Select and reproduce a baseline model
 - [ ] Implement controlled preference-pair construction
 - [ ] Establish objective evaluation baselines
-- [ ] Train and evaluate reward models
-- [ ] Compare reranking, supervised fine-tuning, DPO, and KTO
+- [ ] Extract and validate observed F0 conditioning
+- [ ] Complete same-singer score-conditioned synthesis evaluation
+- [ ] Implement MIDI-based target-instrument rendering
+- [ ] Implement content-and-melody transfer baselines
+- [ ] Evaluate synthesized-vocal transfer over target instrumentals
+- [ ] Train and evaluate reward models as optional exploratory extensions
+- [ ] Compare reranking, supervised fine-tuning, DPO, and KTO as optional
+      diagnostics
 - [x] Exclude participant-based listening claims from the simulation-sandbox scope
+- [ ] Add a suitable multi-singer dataset before making identity-generalization claims
 - [ ] Publish the final report and reproducibility package
 
 The roadmap indicates intended work, not completed capabilities.
