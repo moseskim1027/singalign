@@ -97,6 +97,8 @@ reproducible report where applicable.
   shape tests.
 - [x] Freeze the initial score-conditioned baseline specification in
   `configs/training/conditioned.yaml`.
+- [x] Add a fixed-shape tensor adapter with explicit pitch/rest and phoneme-ID
+  conventions.
 - [x] Run held-out baseline evaluation once on the sealed test split
   (MLflow run `9610bc68f175431b96e99f9812ca3197`).
 - [x] Run held-out aligned evaluation using the same test split and metrics

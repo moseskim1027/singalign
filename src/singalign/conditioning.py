@@ -6,6 +6,8 @@ import xml.etree.ElementTree as ET
 from dataclasses import dataclass
 from pathlib import Path
 
+import torch
+
 
 @dataclass(frozen=True)
 class NoteEvent:
@@ -75,6 +77,28 @@ def frame_conditioning(
             }
         )
     return frames
+
+
+def frame_conditioning_tensors(
+    record: ConditioningRecord,
+    frame_rate: float,
+    duration_seconds: float,
+    seconds_per_quarter: float,
+    phoneme_to_id: dict[str, int],
+) -> tuple[torch.Tensor, torch.Tensor]:
+    """Return frame-aligned pitch and phoneme tensors for model input."""
+
+    frames = frame_conditioning(
+        record, frame_rate, duration_seconds, seconds_per_quarter
+    )
+    pitches = torch.tensor(
+        [frame["midi_pitch"] or 0 for frame in frames], dtype=torch.long
+    )
+    phonemes = torch.tensor(
+        [phoneme_to_id.get(str(frame["phoneme"]), 0) for frame in frames],
+        dtype=torch.long,
+    )
+    return pitches, phonemes
 
 
 def read_phoneme_labels(path: Path) -> tuple[tuple[int, int, str], ...]:

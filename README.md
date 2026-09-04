@@ -95,6 +95,8 @@ Its proposed training specification is frozen in
 100-frame-per-second conditioning, a 3-second window, and a 10-epoch
 exploratory budget. The training command will be added after the dataset frame
 adapter is implemented and tested.
+The frame adapter emits integer MIDI pitch IDs with `0` for rests and integer
+phoneme IDs with `0` reserved for unknown/padding symbols.
 Exported records also include deterministic pitch metadata: note/rest counts and
 the minimum, maximum, and mean voiced MIDI pitch. Score pitch is an intended
 conditioning signal; observed performance F0 remains a training target or

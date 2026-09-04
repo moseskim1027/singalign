@@ -4,7 +4,11 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from singalign.conditioning import frame_conditioning, load_conditioning
+from singalign.conditioning import (
+    frame_conditioning,
+    frame_conditioning_tensors,
+    load_conditioning,
+)
 
 
 class ConditioningTest(unittest.TestCase):
@@ -28,6 +32,11 @@ class ConditioningTest(unittest.TestCase):
             self.assertEqual(frames[0]["midi_pitch"], 60)
             self.assertEqual(frames[0]["voiced"], 1)
             self.assertIsNone(frames[2]["midi_pitch"])
+            pitches, phonemes = frame_conditioning_tensors(
+                record, 2, 2, 1, {"aa": 7, "pau": 8}
+            )
+            self.assertEqual(pitches.tolist(), [60, 60, 0, 0])
+            self.assertEqual(phonemes.shape, (4,))
 
 
 if __name__ == "__main__":
