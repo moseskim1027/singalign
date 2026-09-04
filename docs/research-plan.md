@@ -155,6 +155,8 @@ reproducible report where applicable.
   synthetic-preference provenance in `configs/training/preference-objectives.yaml`.
 - [x] Add a tested chosen/rejected-to-KTO batch adapter shared by future
   preference trainers.
+- [x] Freeze a separate exploratory KTO condition in `configs/training/kto.yaml`;
+  trainer integration and tracked runs remain pending.
 - [ ] Compare all conditions with paired bootstrap intervals and effect sizes.
 - [ ] Add optional qualitative or informal listening feedback without making
   population-level claims.

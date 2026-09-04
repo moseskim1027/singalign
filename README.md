@@ -502,6 +502,8 @@ The initial objective settings are frozen in
 run as explicit exploratory conditions.
 `pair_to_kto_batch` adapts the existing chosen/rejected synthetic pairs to the
 binary labels expected by the KTO objective.
+The separate exploratory KTO condition is specified in
+`configs/training/kto.yaml`; a trainer and MLflow run remain to be implemented.
 
 Stop the services without removing tracked runs:
 
