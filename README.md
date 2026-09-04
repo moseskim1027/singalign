@@ -678,6 +678,12 @@ workflow safeguards, and (4) the final reproducibility package and research
 documentation. Participant-based listening studies are intentionally excluded
 from this completion plan.
 
+PR 1 is implementing learned reward baselines on top of the existing
+deterministic preference-pair generator. The learned models are exploratory:
+they provide scalar and multidimensional scoring baselines with reproducible
+pairwise training, while proxy rewards remain available for transparent
+diagnostics.
+
 ## Contributing
 
 Research contributions should state the hypothesis being tested, describe the
