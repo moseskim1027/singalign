@@ -472,6 +472,8 @@ It will generate deterministic candidates from a shared mel input, score them
 with explicitly labeled proxy rewards, and retain provenance for every output.
 The first implementation will cover controlled perturbations before learned
 decoder outputs are added.
+The deterministic generator is implemented in `singalign.candidates`; its
+candidate records include method, seed, severity, and tensor provenance.
 
 Stop the services without removing tracked runs:
 
