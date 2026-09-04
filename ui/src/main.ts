@@ -107,9 +107,9 @@ const renderExample = (
   const grid = document.createElement("div");
   grid.className = "audio-grid";
   grid.append(
-    audioCard("Reference", runId, example.reference, false),
-    audioCard("Baseline", runId, example.baseline, true),
-    audioCard("Aligned", runId, example.aligned, true),
+    audioCard("Target audio", runId, example.reference, false),
+    audioCard("Baseline / reference policy", runId, example.baseline, true),
+    audioCard("Aligned policy", runId, example.aligned, true),
   );
   container.append(header, grid);
 };
