@@ -124,9 +124,16 @@ class PJSVocoderDataset(Dataset[tuple[torch.Tensor, torch.Tensor]]):
     def __init__(self, index_path: Path, splits_path: Path, split: DevelopmentSplit,
                  audio_config: dict[str, Any], seed: int,
                  max_items: int | None = None) -> None:
-        base = PJSMelDataset(index_path, splits_path, split, audio_config, seed, max_items)
-        self.records, self.audio_config = base.records, audio_config
-        self.fingerprint, self.seed = base.fingerprint, seed
+        if split == "test":
+            index = read_index(index_path)
+            split_data = json.loads(splits_path.read_text())
+            ids = split_data["test"][:max_items] if max_items else split_data["test"]
+            self.records = [index[item_id] for item_id in ids]
+            self.fingerprint = str(split_data["fingerprint_sha256"])
+        else:
+            base = PJSMelDataset(index_path, splits_path, split, audio_config, seed, max_items)
+            self.records, self.fingerprint = base.records, base.fingerprint
+        self.audio_config, self.seed = audio_config, seed
 
     def __len__(self) -> int:
         return len(self.records)

@@ -408,6 +408,21 @@ to MLflow, and is an engineering baseline rather than a production vocoder.
 The first 10-epoch Docker pilot is MLflow run
 `421229b14e3043bfb3d89e3d6d2ca209` in `singalign-mel-vocoder`.
 
+Evaluate that checkpoint diagnostically on the sealed test split only after
+the pilot is complete:
+
+```bash
+docker compose run --rm research \
+  singalign-vocoder-evaluate \
+  --config configs/training/vocoder.yaml \
+  --checkpoint checkpoints/vocoder/last.pt \
+  --index data/interim/pjs/index.jsonl \
+  --splits data/interim/pjs/splits.json
+```
+
+The report prints the split fingerprint, waveform MSE, and generated peak
+level. These are engineering diagnostics, not perceptual-quality claims.
+
 The default comparison duration is read from the checkpoints, matching the
 training window. An optional positive `comparison.audio_segment_seconds` value
 up to 30 seconds can override it for deliberate out-of-window inspection.

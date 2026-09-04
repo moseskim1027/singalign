@@ -135,6 +135,8 @@ reproducible report where applicable.
   an exploratory run.
 - [x] Run the 10-epoch Docker vocoder pilot (MLflow run
   `421229b14e3043bfb3d89e3d6d2ca209`).
+- [x] Add a held-out vocoder diagnostic command reporting waveform MSE and
+  output peak level with the sealed split fingerprint.
 - [ ] Add candidate generation and deterministic reward-based reranking.
 - [ ] Define and implement scalar and multidimensional reward-model baselines.
 - [ ] Add KTO as a separately tracked post-training condition.

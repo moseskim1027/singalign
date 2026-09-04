@@ -28,6 +28,7 @@ singalign-track = "singalign.tracking:main"
 singalign-train = "singalign.train:main"
 singalign-conditioned-train = "singalign.conditioned_train:main"
 singalign-vocoder-train = "singalign.vocoder_train:main"
+singalign-vocoder-evaluate = "singalign.vocoder_evaluate:main"
 
 [dependency-groups]
 dev = ["ruff==0.12.11"]
