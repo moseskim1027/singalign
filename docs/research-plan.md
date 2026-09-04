@@ -91,11 +91,13 @@ reproducible report where applicable.
   (MLflow run `9610bc68f175431b96e99f9812ca3197`).
 - [x] Run held-out aligned evaluation using the same test split and metrics
   (MLflow run `0aa5ffc003d84eaea82259b1f4e45e1d`).
+- [x] Freeze the exploratory 3-second/10-epoch pilot manifest in
+  [`experiments/pilot-3s-10e-manifest.yaml`](../experiments/pilot-3s-10e-manifest.yaml).
 
 ### Next research sequence
 
-- [ ] Freeze the pilot configurations, split fingerprint, and success
-  thresholds in an experiment manifest.
+- [ ] Register confirmatory hypotheses, success thresholds, and exclusions
+  before inspecting any future test or listener results.
 - [ ] Add candidate generation and deterministic reward-based reranking.
 - [ ] Define and implement scalar and multidimensional reward-model baselines.
 - [ ] Add KTO as a separately tracked post-training condition.
