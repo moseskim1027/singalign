@@ -475,6 +475,12 @@ When the API is running, submitting the form launches the Docker job and shows
 its container ID; if the API is unavailable, the same command remains visible
 for manual execution.
 
+The UI workflow is organized sequentially into separate tabs: **Training** for
+launching model jobs, **Evaluation** for loading and inspecting evaluation
+reports, and **Comparison** for paired or multi-condition result review.
+Downstream tabs remain unavailable until the relevant upstream run or report is
+loaded, making the dependency order visible during reproducible experiments.
+
 ### Candidate-generation sandbox
 
 The next engineering stage is defined in

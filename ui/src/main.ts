@@ -19,6 +19,27 @@ app.innerHTML = `
     <h1>SingAlign model comparison</h1>
     <p class="intro">Review paired objective metrics and local listening artifacts from one tracked comparison run.</p>
   </header>
+  <nav class="tabs" aria-label="Experiment workflow">
+    <button type="button" class="tab active" data-tab="training">Training</button>
+    <button type="button" class="tab" data-tab="evaluation">Evaluation</button>
+    <button type="button" class="tab" data-tab="comparison">Comparison</button>
+  </nav>
+  <section class="tab-panel" data-panel="training">
+    <section class="loader" aria-labelledby="training-title">
+      <div>
+        <h2 id="training-title">Training interface</h2>
+        <p>Select an implemented experiment to generate its reproducible Docker command.</p>
+      </div>
+      <form id="training-form">
+        <label for="training-experiment">Experiment</label>
+        <select id="training-experiment"></select>
+        <div id="training-fields" class="training-fields"></div>
+        <button type="submit">Generate command</button>
+      </form>
+      <pre id="training-command" class="command" hidden></pre>
+    </section>
+  </section>
+  <section class="tab-panel" data-panel="evaluation" hidden>
   <section class="loader" aria-labelledby="loader-title">
     <div>
       <h2 id="loader-title">Load a comparison run</h2>
@@ -34,6 +55,8 @@ app.innerHTML = `
     <p id="status" class="status" role="status"></p>
   </section>
   <section id="results" class="results" hidden></section>
+  </section>
+  <section class="tab-panel" data-panel="comparison" hidden>
   <section class="loader" aria-labelledby="multi-title">
     <div>
       <h2 id="multi-title">Load multi-condition report</h2>
@@ -49,18 +72,7 @@ app.innerHTML = `
     <p id="multi-status" class="status" role="status"></p>
   </section>
   <section id="multi-results" class="results" hidden></section>
-  <section class="loader" aria-labelledby="training-title">
-    <div>
-      <h2 id="training-title">Training interface</h2>
-      <p>Select an implemented experiment to generate its reproducible Docker command.</p>
-    </div>
-    <form id="training-form">
-      <label for="training-experiment">Experiment</label>
-      <select id="training-experiment"></select>
-      <div id="training-fields" class="training-fields"></div>
-      <button type="submit">Generate command</button>
-    </form>
-    <pre id="training-command" class="command" hidden></pre>
+  </section>
   </section>
   <footer>
     <strong>Interpretation boundary:</strong> this view is not a blinded listening study. Generated examples use approximate Griffin-Lim reconstruction.
@@ -80,6 +92,8 @@ const trainingForm = document.querySelector<HTMLFormElement>("#training-form");
 const trainingExperiment = document.querySelector<HTMLSelectElement>("#training-experiment");
 const trainingFields = document.querySelector<HTMLElement>("#training-fields");
 const trainingCommand = document.querySelector<HTMLElement>("#training-command");
+const tabs = [...document.querySelectorAll<HTMLButtonElement>(".tab")];
+const panels = [...document.querySelectorAll<HTMLElement>(".tab-panel")];
 
 if (!form || !input || !status || !results || !multiForm || !multiInput || !multiStatus || !multiResults || !trainingForm || !trainingExperiment || !trainingFields || !trainingCommand) {
   throw new Error("comparison controls are missing");
@@ -128,6 +142,16 @@ const renderTrainingFields = (): void => {
 };
 renderTrainingFields();
 trainingExperiment.addEventListener("change", renderTrainingFields);
+
+const setTab = (name: string): void => {
+  tabs.forEach((tab) => {
+    const active = tab.dataset.tab === name;
+    tab.classList.toggle("active", active);
+    tab.setAttribute("aria-selected", String(active));
+  });
+  panels.forEach((panel) => { panel.hidden = panel.dataset.panel !== name; });
+};
+tabs.forEach((tab) => tab.addEventListener("click", () => setTab(tab.dataset.tab ?? "training")));
 
 const safePath = (path: string): string =>
   path

@@ -43,6 +43,10 @@ input { flex: 1; min-width: 0; border: 1px solid #44554b; padding: .8rem 1rem; c
 button { border: 0; padding: .8rem 1rem; color: #07120b; background: #69e293; font-weight: 750; cursor: pointer; }
 button:hover { background: #86eba7; }
 button:disabled { cursor: not-allowed; opacity: .4; }
+.tabs { display: flex; gap: .5rem; margin: 1.5rem 0; }
+.tab { border: 1px solid #44554b; color: #d9e1dc; background: transparent; }
+.tab.active { color: #07120b; background: #69e293; }
+.tab-panel[hidden] { display: none; }
 .status { min-height: 1.5rem; margin: 1rem 0 0; color: #98a69e; }
 .status.error { color: #ff9b93; }
 
