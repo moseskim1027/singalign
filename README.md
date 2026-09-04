@@ -684,6 +684,10 @@ they provide scalar and multidimensional scoring baselines with reproducible
 pairwise training, while proxy rewards remain available for transparent
 diagnostics.
 
+PR 2 will unify cross-condition analysis. It will apply one paired metric
+contract, bootstrap uncertainty intervals, effect sizes, and stable condition
+ordering to baseline, reranking, DPO, KTO, conditioned, and vocoder outputs.
+
 ## Contributing
 
 Research contributions should state the hypothesis being tested, describe the

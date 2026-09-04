@@ -10,6 +10,7 @@ import torch
 import mlflow
 
 from singalign.metrics import reconstruction_metrics
+from singalign.metrics import bootstrap_mean_interval
 
 
 @dataclass(frozen=True)
@@ -68,3 +69,47 @@ def log_condition_report(report_path: Path, artifact_path: str = "conditions") -
     if not report_path.is_file():
         raise FileNotFoundError(report_path)
     mlflow.log_artifact(str(report_path), artifact_path=artifact_path)
+
+
+def compare_condition_dataset(
+    references: list[torch.Tensor],
+    outputs: dict[str, list[torch.Tensor]],
+    conditions: list[ConditionSpec],
+    seed: int = 2026,
+    samples: int = 2000,
+    confidence_level: float = 0.95,
+) -> dict[str, object]:
+    """Aggregate paired metrics and effects across a shared example set.
+
+    The first declared condition is the comparison anchor. Every condition is
+    evaluated against the same reference at each index, and bootstrap samples
+    resample example indices rather than mixing conditions independently.
+    """
+    validate_conditions(conditions)
+    if not references:
+        raise ValueError("references must not be empty")
+    if any(len(outputs.get(condition.name, [])) != len(references) for condition in conditions):
+        raise ValueError("each condition must provide one output per reference")
+    values: dict[str, dict[str, list[float]]] = {}
+    metric_names = ("log_mel_mse", "log_mel_mae", "spectral_convergence")
+    for condition in conditions:
+        values[condition.name] = {name: [] for name in metric_names}
+        for reference, output in zip(references, outputs[condition.name], strict=True):
+            metrics = reconstruction_metrics(output, reference)
+            for name in metric_names:
+                values[condition.name][name].append(metrics[name])
+    anchor = conditions[0].name
+    rows = []
+    for condition_index, condition in enumerate(conditions):
+        metrics: dict[str, object] = {}
+        for metric_index, name in enumerate(metric_names):
+            interval = bootstrap_mean_interval(values[condition.name][name], seed + metric_index, samples, confidence_level)
+            metrics[name] = {"mean": interval.mean, "lower": interval.lower, "upper": interval.upper}
+        effects: dict[str, object] = {}
+        if condition_index:
+            for metric_index, name in enumerate(metric_names):
+                deltas = [new - old for old, new in zip(values[anchor][name], values[condition.name][name], strict=True)]
+                interval = bootstrap_mean_interval(deltas, seed + 100 + metric_index, samples, confidence_level)
+                effects[name] = {"mean": interval.mean, "lower": interval.lower, "upper": interval.upper}
+        rows.append({"name": condition.name, "method": condition.method, "metrics": metrics, "effect_vs_anchor": effects})
+    return {"condition_count": len(rows), "example_count": len(references), "anchor": anchor, "conditions": rows}
