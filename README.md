@@ -693,6 +693,11 @@ examples without relying on independently sampled datasets.
 Use [`configs/evaluation/condition-analysis.example.json`](configs/evaluation/condition-analysis.example.json)
 as the input shape for `singalign-condition-analysis --manifest ... --output ...`.
 
+PR 3 will connect the UI tabs into a sequential workflow. A shared experiment
+registry will define each method's required checkpoint, evaluation protocol,
+and compatible comparison conditions; the UI will surface prerequisites and
+prevent incompatible downstream selections.
+
 ## Contributing
 
 Research contributions should state the hypothesis being tested, describe the
