@@ -8,6 +8,11 @@ hypothesis testing, or population-level human-preference claims. Metrics and
 bootstrap intervals remain optional diagnostic tools for comparing reproducible
 runs.
 
+Participant-based listening studies are out of scope for this repository
+milestone. The project will not make population-level human-preference claims;
+optional informal listening feedback is treated as qualitative engineering
+input only.
+
 ## Original research hypothesis
 
 Preference-based post-training can improve perceived singing quality relative
@@ -180,8 +185,8 @@ reproducible report where applicable.
 - [x] Add a stable MLflow artifact path for multi-condition reports.
 - [ ] Add optional qualitative or informal listening feedback without making
   population-level claims.
-- [ ] Package final manifests, reports, environment metadata, and reproduction
-  instructions.
+- [x] Package final manifests, reports, environment metadata, and reproduction
+  instructions for the current simulation-sandbox milestone.
 
 ### Deferred UI work
 
@@ -197,8 +202,8 @@ candidate generation exists:
 - [ ] Display multiple candidates with ranking scores and provenance.
 - [ ] Display score/phoneme conditioning metadata alongside each example.
 - [ ] Show cross-condition metrics, uncertainty intervals, and MLflow links.
-- [ ] Build a separate blinded listening-study interface with randomized
-  labels and no model-condition disclosure.
+- [x] Exclude the blinded listening-study interface from the simulation-sandbox
+  scope.
 
 Do not use the current UI for perceptual claims: its model labels are visible,
 and its generated audio uses approximate reconstruction.

@@ -664,7 +664,7 @@ evolving risk assessment.
 - [ ] Establish objective evaluation baselines
 - [ ] Train and evaluate reward models
 - [ ] Compare reranking, supervised fine-tuning, DPO, and KTO
-- [ ] Conduct a blinded listening study
+- [x] Exclude participant-based listening claims from the simulation-sandbox scope
 - [ ] Publish the final report and reproducibility package
 
 The roadmap indicates intended work, not completed capabilities.
@@ -702,6 +702,16 @@ be reused by training, evaluation, and comparison controls.
 Evaluation is a separate command-generation step: it consumes the selected
 experiment's checkpoint and protocol, while Comparison consumes the resulting
 report rather than directly reusing training settings.
+
+PR 4 is the final reproducibility package: it will consolidate the Docker
+workflow, experiment manifests, environment metadata, tracked run references,
+and end-to-end reproduction commands. This package is intended to make the
+simulation sandbox auditable without implying that its proxy metrics establish
+human preference.
+The verification workflow is documented in [`docs/reproducibility.md`](docs/reproducibility.md)
+and can be run with `bash scripts/reproduce_smoke.sh`.
+Use [`docs/run-record-template.md`](docs/run-record-template.md) to record each
+experiment's provenance and MLflow lineage.
 
 ## Contributing
 
