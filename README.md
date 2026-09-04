@@ -91,7 +91,8 @@ Windowed crops pass an explicit song-time offset so score and phoneme events are
 aligned to the same crop rather than implicitly restarting at time zero.
 The experimental `ScoreConditionedMelModel` consumes those frame-level MIDI
 pitch and phoneme IDs and predicts mel frames. It is an architectural baseline
-only; it has not yet been trained or evaluated.
+only; its first exploratory training run is not a synthesis or confirmatory
+evaluation.
 Its proposed training specification is frozen in
 `configs/training/conditioned.yaml`: 16 kHz audio, 80-bin log-mel targets,
 100-frame-per-second conditioning, a 3-second window, and a 10-epoch
@@ -111,9 +112,13 @@ docker compose run --rm research \
 
 It logs training/validation loss and a checkpoint to MLflow. This is an architectural
 baseline, not yet a candidate-generation or confirmatory experiment.
-The `PJSConditionedDataset` adapter now pairs these tensors with deterministic
+The run also records the immutable split fingerprint through the shared MLflow
+tracking contract.
+The `PJSConditionedDataset` adapter pairs these tensors with deterministic
 3-second mel targets using the same crop offset, tempo, and frame-count
-convention. It is ready for model-training integration but has not produced a
+convention. The first Docker run completed 10 exploratory epochs and logged
+MLflow run `1fd53daa1f7e494abe16ceccf7daa3c1` in experiment
+`singalign-score-conditioned-baseline`; it produced a checkpoint but no
 reported synthesis result.
 Exported records also include deterministic pitch metadata: note/rest counts and
 the minimum, maximum, and mean voiced MIDI pitch. Score pitch is an intended

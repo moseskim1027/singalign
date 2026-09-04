@@ -83,6 +83,7 @@ class PJSConditionedDataset(Dataset[tuple[torch.Tensor, torch.Tensor, torch.Tens
                  seed: int, max_items: int | None = None) -> None:
         base = PJSMelDataset(index_path, splits_path, split, audio_config, seed, max_items)
         self.records, self.audio_config = base.records, audio_config
+        self.fingerprint = base.fingerprint
         self.seed, self.conditioning_config = seed, conditioning_config
         self.phoneme_to_id = {"<unk>": 0}
         for record in self.records:

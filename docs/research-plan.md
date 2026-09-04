@@ -103,6 +103,9 @@ reproducible report where applicable.
   targets using the same crop offset.
 - [x] Add an exploratory Docker/MLflow training command for the conditioned mel
   model.
+- [x] Run the conditioned model for the frozen exploratory 10-epoch budget in
+  Docker; MLflow run `1fd53daa1f7e494abe16ceccf7daa3c1` is recorded in
+  `singalign-score-conditioned-baseline`.
 - [x] Support explicit crop offsets when aligning symbolic events to acoustic
   frames.
 - [x] Run held-out baseline evaluation once on the sealed test split
