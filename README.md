@@ -71,6 +71,15 @@ The planned research pipeline consists of:
 The methodology may change as preliminary experiments reveal limitations. Any
 material changes will be documented in the research plan and experiment logs.
 
+### Score and lyric conditioning prototype
+
+The repository now includes a dependency-light conditioning interface in
+`singalign.conditioning`. It parses PJS MusicXML into deterministic note events
+and phoneme label files into timed phoneme intervals. This is the first data
+interface for the planned score/lyric-conditioned synthesis stage; it is not
+yet a trained synthesizer or a candidate generator. The parser is covered by
+unit tests and does not alter the immutable corpus.
+
 ## Dataset plan
 
 The initial dataset is the PJS phoneme-balanced Japanese singing voice corpus.
