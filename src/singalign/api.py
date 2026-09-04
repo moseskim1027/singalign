@@ -7,9 +7,16 @@ from pathlib import Path
 
 import docker
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
 app = FastAPI(title="SingAlign training API")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:4173", "http://127.0.0.1:4173"],
+    allow_methods=["GET", "POST"],
+    allow_headers=["content-type"],
+)
 
 EXPERIMENTS = {
     "baseline": "singalign-train",

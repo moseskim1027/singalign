@@ -471,6 +471,9 @@ MLflow remains available at port 5001. The browser still displays the generated
 command as a reproducibility fallback.
 Launch requests forward only numeric allowlisted parameters and automatically
 attach the supervised checkpoint for aligned/KTO jobs.
+When the API is running, submitting the form launches the Docker job and shows
+its container ID; if the API is unavailable, the same command remains visible
+for manual execution.
 
 ### Candidate-generation sandbox
 

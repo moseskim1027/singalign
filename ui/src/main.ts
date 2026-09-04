@@ -372,6 +372,23 @@ trainingForm.addEventListener("submit", (event) => {
   const command = `docker compose run --rm research \\\n+  singalign-${commandName} \\\n+  --config ${experiment.config} \\\n+  --index data/interim/pjs/index.jsonl \\\n+  --splits data/interim/pjs/splits.json${overrides ? ` \\\n+  ${overrides}` : ""}`;
   trainingCommand.hidden = false;
   trainingCommand.textContent = command;
+  trainingCommand.textContent += "\n\nLaunching through http://localhost:8000 …";
+  fetch("http://localhost:8000/training", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      experiment: trainingExperiment.value,
+      parameters: Object.fromEntries(
+        [...values.entries()].filter(([name]) => name !== "experiment").map(([name, value]) => [name, Number(value)]),
+      ),
+    }),
+  }).then(async (response) => {
+    if (!response.ok) throw new Error((await response.json()).detail ?? "Training launch failed.");
+    const result = (await response.json()) as { job_id: string };
+    trainingCommand.textContent = `${command}\n\nJob started: ${result.job_id}`;
+  }).catch((error: unknown) => {
+    trainingCommand.textContent = `${command}\n\nAPI unavailable: ${error instanceof Error ? error.message : "launch failed"}`;
+  });
 });
 
 const initialRun = new URLSearchParams(location.search).get("run");
