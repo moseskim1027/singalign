@@ -459,10 +459,16 @@ generated audio is approximate Griffin-Lim reconstruction and must not be used
 alone to support claims about perceptual quality. See [`ui/README.md`](ui/README.md)
 for development and troubleshooting instructions.
 
-Future UI work is intentionally deferred until score-conditioned candidate
-generation is implemented. Planned additions include condition selection,
-multiple candidates with provenance, conditioning metadata, cross-condition
-uncertainty summaries, and a separate blinded listening-study interface.
+The UI still has deferred work around richer candidate selection, conditioning
+metadata, cross-condition uncertainty summaries, and a separate blinded
+listening-study interface.
+
+The UI now includes a training interface for the implemented baseline, aligned,
+conditioned, vocoder, and KTO experiments with default parameters. The
+Docker-backed API is started with `docker compose up --build api`; it exposes
+`POST /training` for allowlisted jobs and `GET /training/<job_id>` for status.
+MLflow remains available at port 5001. The browser still displays the generated
+command as a reproducibility fallback.
 
 ### Candidate-generation sandbox
 

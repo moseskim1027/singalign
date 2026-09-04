@@ -4,6 +4,7 @@ import type {
   ComparisonManifest,
   ComparisonSummary,
   LatestComparison,
+  MultiConditionReport,
 } from "./types";
 
 const app = document.querySelector<HTMLElement>("#app");
@@ -33,6 +34,34 @@ app.innerHTML = `
     <p id="status" class="status" role="status"></p>
   </section>
   <section id="results" class="results" hidden></section>
+  <section class="loader" aria-labelledby="multi-title">
+    <div>
+      <h2 id="multi-title">Load multi-condition report</h2>
+      <p>Enter the report path relative to <code>/reports/</code>.</p>
+    </div>
+    <form id="multi-form">
+      <label for="multi-path">Report path</label>
+      <div class="input-row">
+        <input id="multi-path" name="multi-path" placeholder="multi-condition/example.json" required />
+        <button type="submit">Load conditions</button>
+      </div>
+    </form>
+    <p id="multi-status" class="status" role="status"></p>
+  </section>
+  <section id="multi-results" class="results" hidden></section>
+  <section class="loader" aria-labelledby="training-title">
+    <div>
+      <h2 id="training-title">Training interface</h2>
+      <p>Select an implemented experiment to generate its reproducible Docker command.</p>
+    </div>
+    <form id="training-form">
+      <label for="training-experiment">Experiment</label>
+      <select id="training-experiment"></select>
+      <div id="training-fields" class="training-fields"></div>
+      <button type="submit">Generate command</button>
+    </form>
+    <pre id="training-command" class="command" hidden></pre>
+  </section>
   <footer>
     <strong>Interpretation boundary:</strong> this view is not a blinded listening study. Generated examples use approximate Griffin-Lim reconstruction.
     <br /><strong>DPO terminology:</strong> Reference is the target audio; Baseline is the frozen reference policy; Aligned is the optimized policy.
@@ -43,8 +72,16 @@ const form = document.querySelector<HTMLFormElement>("#run-form");
 const input = document.querySelector<HTMLInputElement>("#run-id");
 const status = document.querySelector<HTMLElement>("#status");
 const results = document.querySelector<HTMLElement>("#results");
+const multiForm = document.querySelector<HTMLFormElement>("#multi-form");
+const multiInput = document.querySelector<HTMLInputElement>("#multi-path");
+const multiStatus = document.querySelector<HTMLElement>("#multi-status");
+const multiResults = document.querySelector<HTMLElement>("#multi-results");
+const trainingForm = document.querySelector<HTMLFormElement>("#training-form");
+const trainingExperiment = document.querySelector<HTMLSelectElement>("#training-experiment");
+const trainingFields = document.querySelector<HTMLElement>("#training-fields");
+const trainingCommand = document.querySelector<HTMLElement>("#training-command");
 
-if (!form || !input || !status || !results) {
+if (!form || !input || !status || !results || !multiForm || !multiInput || !multiStatus || !multiResults || !trainingForm || !trainingExperiment || !trainingFields || !trainingCommand) {
   throw new Error("comparison controls are missing");
 }
 
@@ -58,6 +95,39 @@ const duration = (value: number): string =>
   new Intl.NumberFormat("en", { maximumFractionDigits: 3 }).format(value);
 
 const label = (name: string): string => name.replaceAll("_", " ");
+
+const trainingExperiments = {
+  baseline: { label: "Supervised baseline", config: "configs/training/baseline.yaml", args: { epochs: 10, segment_seconds: 3, batch_size: 4, learning_rate: 0.0001 } },
+  aligned: { label: "Proxy DPO alignment", config: "configs/training/alignment.yaml", args: { epochs: 10, segment_seconds: 3, beta: 0.1, anchor_weight: 1 } },
+  conditioned: { label: "Score-conditioned mel", config: "configs/training/conditioned.yaml", args: { epochs: 10, segment_seconds: 3, frame_rate: 100 } },
+  vocoder: { label: "Mel vocoder", config: "configs/training/vocoder.yaml", args: { epochs: 10, segment_seconds: 3, batch_size: 2, learning_rate: 0.0001 } },
+  kto: { label: "Synthetic KTO", config: "configs/training/kto.yaml", args: { epochs: 10, beta: 0.1, temperature: 0.1, learning_rate: 0.0001 } },
+} as const;
+
+Object.entries(trainingExperiments).forEach(([key, experiment]) => {
+  const option = document.createElement("option");
+  option.value = key;
+  option.textContent = experiment.label;
+  trainingExperiment.append(option);
+});
+
+const renderTrainingFields = (): void => {
+  trainingFields.replaceChildren();
+  const experiment = trainingExperiments[trainingExperiment.value as keyof typeof trainingExperiments];
+  Object.entries(experiment.args).forEach(([name, value]) => {
+    const field = document.createElement("label");
+    field.textContent = label(name);
+    const input = document.createElement("input");
+    input.name = name;
+    input.type = "number";
+    input.step = "any";
+    input.value = String(value);
+    field.append(input);
+    trainingFields.append(field);
+  });
+};
+renderTrainingFields();
+trainingExperiment.addEventListener("change", renderTrainingFields);
 
 const safePath = (path: string): string =>
   path
@@ -87,6 +157,27 @@ const audioCard = (
     card.append(badge);
   }
   return card;
+};
+
+const renderMulti = (report: MultiConditionReport): void => {
+  multiResults.replaceChildren();
+  multiResults.hidden = false;
+  const title = document.createElement("h2");
+  title.textContent = `${report.condition_count} conditions`;
+  const table = document.createElement("table");
+  table.innerHTML = "<thead><tr><th>Condition</th><th>Method</th><th>Mel MSE</th><th>Mel MAE</th><th>Spectral convergence</th></tr></thead><tbody></tbody>";
+  const body = table.querySelector("tbody");
+  if (!body) throw new Error("multi-condition table body is missing");
+  report.conditions.forEach((condition) => {
+    const row = document.createElement("tr");
+    [condition.name, condition.method, number(condition.metrics.log_mel_mse), number(condition.metrics.log_mel_mae), number(condition.metrics.spectral_convergence)].forEach((value, index) => {
+      const cell = document.createElement(index < 2 ? "th" : "td");
+      cell.textContent = value;
+      row.append(cell);
+    });
+    body.append(row);
+  });
+  multiResults.append(title, table);
 };
 
 const renderExample = (
@@ -249,6 +340,38 @@ form.addEventListener("submit", async (event) => {
     status.className = "status error";
     status.textContent = error instanceof Error ? error.message : "Unable to load comparison.";
   }
+});
+
+multiForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const path = multiInput.value.trim().replace(/^\/+/, "");
+  multiStatus.textContent = "Loading conditions…";
+  try {
+    if (!path || path.split("/").some((part) => part === ".." || part === ".")) {
+      throw new Error("Report path must stay within the reports directory.");
+    }
+    const response = await fetch(`/reports/${path}`, { cache: "no-store" });
+    if (!response.ok) throw new Error("No multi-condition report was found.");
+    renderMulti((await response.json()) as MultiConditionReport);
+    multiStatus.textContent = "Loaded multi-condition report.";
+  } catch (error) {
+    multiStatus.className = "status error";
+    multiStatus.textContent = error instanceof Error ? error.message : "Unable to load report.";
+  }
+});
+
+trainingForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  const experiment = trainingExperiments[trainingExperiment.value as keyof typeof trainingExperiments];
+  const values = new FormData(trainingForm);
+  const overrides = [...values.entries()]
+    .filter(([name]) => name !== "experiment")
+    .map(([name, value]) => `--${name.replaceAll("_", "-")} ${String(value)}`)
+    .join(" ");
+  const commandName = trainingExperiment.value === "aligned" ? "align" : trainingExperiment.value === "kto" ? "kto-train" : `${trainingExperiment.value}-train`;
+  const command = `docker compose run --rm research \\\n+  singalign-${commandName} \\\n+  --config ${experiment.config} \\\n+  --index data/interim/pjs/index.jsonl \\\n+  --splits data/interim/pjs/splits.json${overrides ? ` \\\n+  ${overrides}` : ""}`;
+  trainingCommand.hidden = false;
+  trainingCommand.textContent = command;
 });
 
 const initialRun = new URLSearchParams(location.search).get("run");
