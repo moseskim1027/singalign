@@ -488,6 +488,8 @@ MLflow logging and UI display are added.
 For a standalone local/Docker invocation, save a mel tensor with
 `torch.save` and run `singalign-candidates --input input.pt --output
 reports/candidates/example.json`.
+Add `--mlflow-experiment singalign-candidate-sandbox` to log the manifest and
+reproducibility metadata to the local MLflow server.
 
 Stop the services without removing tracked runs:
 
