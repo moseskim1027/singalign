@@ -524,6 +524,9 @@ to preserve stable names, methods, checkpoint paths, and declared ordering.
 `compare_condition_outputs` applies the same reconstruction diagnostics to each
 declared output, keeping baseline/aligned/DPO/KTO comparisons on one metric
 contract.
+The research checklist distinguishes the completed proxy-reward/KTO
+infrastructure from the still-pending learned reward-model baselines and
+cross-condition statistical diagnostics.
 `write_condition_report` serializes the same results to a deterministic JSON
 artifact suitable for MLflow attachment and later UI display.
 `log_condition_report` attaches an existing report to the active MLflow run

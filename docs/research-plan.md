@@ -147,18 +147,18 @@ reproducible report where applicable.
   weights and provenance.
 - [x] Add deterministic candidate-report serialization, CLI execution, and
   optional MLflow artifact logging.
-- [ ] Define and implement scalar and multidimensional reward-model baselines.
-- [ ] Add KTO as a separately tracked post-training condition.
-- [x] Add and test a standalone KTO-style objective for proxy-score simulation;
-  tracked post-training integration remains pending.
+- [ ] Define and implement learned scalar and multidimensional reward-model
+  baselines; current proxy rewards are complete but not learned reward models.
+- [x] Add KTO as a separately tracked post-training condition.
+- [x] Add and test a standalone KTO-style objective for proxy-score simulation.
 - [x] Freeze exploratory DPO/KTO objective names, beta, KL baseline, and
   synthetic-preference provenance in `configs/training/preference-objectives.yaml`.
 - [x] Add a tested chosen/rejected-to-KTO batch adapter shared by future
   preference trainers.
 - [x] Freeze a separate exploratory KTO condition in `configs/training/kto.yaml`;
-  trainer integration and tracked runs remain pending.
+  trainer integration is complete.
 - [x] Add a Docker/MLflow KTO trainer initialized from the supervised checkpoint;
-  a reproducible pilot run remains to be executed.
+  the trainer is exploratory and uses synthetic pairs.
 - [x] Run the 10-epoch synthetic KTO pilot in Docker (MLflow run
   `3c9de2f603d2419683f6bfe2502fdc9d`).
 - [x] Document the reproducible KTO Docker invocation and checkpoint lineage
