@@ -85,6 +85,8 @@ pitch)` tuples, with `MIDI pitch = null` for rests, plus phoneme intervals as
 `(start, end, symbol)` tuples in the source label timebase. This schema is
 deliberately model-independent so later candidate-generation experiments can
 compare conditioning encoders without changing corpus parsing.
+The next alignment layer expands these events to acoustic frames using explicit
+frame rate, duration, and tempo inputs; no timing is inferred implicitly.
 Exported records also include deterministic pitch metadata: note/rest counts and
 the minimum, maximum, and mean voiced MIDI pitch. Score pitch is an intended
 conditioning signal; observed performance F0 remains a training target or

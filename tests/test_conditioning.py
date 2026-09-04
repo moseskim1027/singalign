@@ -4,7 +4,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from singalign.conditioning import load_conditioning
+from singalign.conditioning import frame_conditioning, load_conditioning
 
 
 class ConditioningTest(unittest.TestCase):
@@ -23,6 +23,11 @@ class ConditioningTest(unittest.TestCase):
             self.assertEqual(record.pitch_metadata["midi_pitch_min"], 60)
             self.assertEqual(record.pitch_metadata["midi_pitch_max"], 60)
             self.assertEqual(record.pitch_metadata["rest_count"], 1)
+            frames = frame_conditioning(record, 2, 2, 1)
+            self.assertEqual(len(frames), 4)
+            self.assertEqual(frames[0]["midi_pitch"], 60)
+            self.assertEqual(frames[0]["voiced"], 1)
+            self.assertIsNone(frames[2]["midi_pitch"])
 
 
 if __name__ == "__main__":

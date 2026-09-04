@@ -38,6 +38,45 @@ class ConditioningRecord:
         }
 
 
+def frame_conditioning(
+    record: ConditioningRecord,
+    frame_rate: float,
+    duration_seconds: float,
+    seconds_per_quarter: float,
+) -> list[dict[str, int | float | str | None]]:
+    """Expand symbolic events into deterministic acoustic-frame features."""
+
+    if frame_rate <= 0 or duration_seconds <= 0 or seconds_per_quarter <= 0:
+        raise ValueError("frame rate, duration, and tempo must be positive")
+    frame_count = round(frame_rate * duration_seconds)
+    frames: list[dict[str, int | float | str | None]] = []
+    for index in range(frame_count):
+        time_seconds = index / frame_rate
+        note_start = 0.0
+        active_note: NoteEvent | None = None
+        for note in record.notes:
+            note_end = note_start + note.duration * seconds_per_quarter
+            if note_start <= time_seconds < note_end:
+                active_note = note
+                break
+            note_start = note_end
+        phoneme = None
+        for start, end, symbol in record.phonemes:
+            if start / 10_000_000 <= time_seconds < end / 10_000_000:
+                phoneme = symbol
+                break
+        frames.append(
+            {
+                "time_seconds": time_seconds,
+                "midi_pitch": active_note.midi if active_note else None,
+                "voiced": int(active_note is not None and active_note.midi is not None),
+                "note_onset": int(active_note is not None and time_seconds == note_start),
+                "phoneme": phoneme,
+            }
+        )
+    return frames
+
+
 def read_phoneme_labels(path: Path) -> tuple[tuple[int, int, str], ...]:
     """Read validated PJS phoneme intervals without exposing audio content."""
 
