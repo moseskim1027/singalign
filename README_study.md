@@ -6,16 +6,28 @@ Test whether SingAlign can preserve the linguistic content and sung melody of
 a source vocal while placing the performance over a different instrumental
 track. The target may differ in genre, instrumentation, tempo, key, and
 production style. This is a controllable singing-transfer/remixing experiment,
-not a participant study and not a claim that MusicGen can sing intelligible
-lyrics.
+not a participant study.
+
+MusicGen is not required for this core experiment. It is only an optional
+target-instrument generator for a later creative extension. Using an existing
+instrumental keeps the core experiment interpretable by avoiding a second
+source of variation. The project must not claim that MusicGen generates
+intelligible lyrics.
 
 ## Working formulation
 
-`source vocal -> phonemes + timing + F0 + optional energy -> target vocal -> target instrumental -> mix`
+Core experiment:
+
+`source vocal -> phonemes + timing + F0 + optional energy -> target vocal -> existing target instrumental -> mix`
+
+Optional creative extension:
+
+`source vocal conditions + text style prompt -> MusicGen target instrumental -> target vocal -> mix`
 
 The source vocal supplies what is sung, when it is sung, and the melody. The
 target instrumental supplies the new musical context. Keep these conditions
-separate in every manifest and MLflow run.
+separate in every manifest and MLflow run. Compare the existing-instrumental
+and MusicGen-instrumental tracks only as separate registered conditions.
 
 ## Required inputs and representations
 
@@ -24,7 +36,8 @@ separate in every manifest and MLflow run.
 - Phoneme sequence with word/phoneme timestamps.
 - Frame-level F0 in Hz, voiced/unvoiced mask, and confidence.
 - Optional energy envelope and breath/consonant regions.
-- Target instrumental WAV, BPM, beat locations, time signature, and key.
+- Target instrumental WAV, BPM, beat locations, time signature, and key. Use an
+  existing instrumental for the core experiment.
 - Target singer/voice identifier or declared voice-conversion checkpoint.
 - Deterministic policy for tempo stretching and pitch transposition.
 
@@ -59,6 +72,14 @@ tempo condition, and one transposed/tempo-shifted condition. Compare the
 remix baseline, conversion output, and an intentionally misaligned control.
 Report per-example values and aggregate means. Keep lyric intelligibility and
 musical fit as separate axes.
+
+## MusicGen boundary
+
+MusicGen belongs after the core transfer baseline as an optional source of
+target instrumentals. It should be evaluated in a separate experiment with
+its model identifier, prompt, seed, duration, and generated-audio artifact
+logged. Do not use MusicGen output to assess whether phoneme, timing, or F0
+conditioning worked; those measurements require a fixed target instrumental.
 
 ## Deliberate initial exclusions
 

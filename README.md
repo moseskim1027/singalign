@@ -43,7 +43,9 @@ study](docs/research-plan.md#future-track-transfer-study-phoneme-and-pitch-align
 preserve a source vocal's words, timing, and melody while rendering or mixing
 it over a different instrumental track. The staged plan, representations,
 ablations, metrics, and continuation prompt are maintained in the research
-plan. A temporary standalone copy of the full detailed section is available in
+plan. The core track-transfer study does not depend on MusicGen; MusicGen is
+only an optional target-instrument extension. A temporary standalone copy of
+the full detailed section is available in
 [`README_study.md`](README_study.md).
 
 The initial study will focus on compact, score-conditioned singing voice
