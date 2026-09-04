@@ -185,8 +185,8 @@ reproducible report where applicable.
 - [x] Add a stable MLflow artifact path for multi-condition reports.
 - [ ] Add optional qualitative or informal listening feedback without making
   population-level claims.
-- [ ] Package final manifests, reports, environment metadata, and reproduction
-  instructions.
+- [x] Package final manifests, reports, environment metadata, and reproduction
+  instructions for the current simulation-sandbox milestone.
 
 ### Deferred UI work
 
