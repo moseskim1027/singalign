@@ -86,6 +86,17 @@ pitch)` tuples, with `MIDI pitch = null` for rests, plus phoneme intervals as
 deliberately model-independent so later candidate-generation experiments can
 compare conditioning encoders without changing corpus parsing.
 
+Export one conditioning record for inspection inside the reproducible Docker
+environment:
+
+```bash
+docker compose run --rm research \
+  singalign-data conditioning \
+  --musicxml /workspace/data/raw/pjs/PJS_corpus_ver1.1/pjs001/pjs001.musicxml \
+  --labels /workspace/data/raw/pjs/PJS_corpus_ver1.1/pjs001/pjs001.lab \
+  --output /workspace/reports/conditioning/pjs001.json
+```
+
 ## Dataset plan
 
 The initial dataset is the PJS phoneme-balanced Japanese singing voice corpus.

@@ -89,6 +89,7 @@ reproducible report where applicable.
   corresponding MLflow evaluation run.
 - [x] Define a deterministic, model-independent score/phoneme conditioning
   record and cover its parser with unit tests.
+- [x] Add a Docker/CLI export path for inspecting conditioning records.
 - [x] Run held-out baseline evaluation once on the sealed test split
   (MLflow run `9610bc68f175431b96e99f9812ca3197`).
 - [x] Run held-out aligned evaluation using the same test split and metrics
