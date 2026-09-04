@@ -482,6 +482,9 @@ multidimensional reward combining reconstruction, smoothness, and amplitude
 components. Both are diagnostic proxies and their weights are recorded.
 The candidate-generation and reranking foundations are tracked as completed
 engineering milestones in [`docs/research-plan.md`](docs/research-plan.md).
+`singalign.candidate_report.write_candidate_report` provides the next
+integration point for writing deterministic ranked-candidate manifests before
+MLflow logging and UI display are added.
 
 Stop the services without removing tracked runs:
 
