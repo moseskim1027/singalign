@@ -56,6 +56,8 @@ export interface MultiConditionRow {
   method: string;
   metrics: MultiConditionMetric | Record<string, { mean: number; lower: number; upper: number }>;
   effect_vs_anchor?: Record<string, { mean: number; lower: number; upper: number; standardized_effect?: number }>;
+  candidates?: Array<{ id: string; rank: number; score: number; method: string }>;
+  conditioning?: { pitch_range?: [number, number]; phoneme_count?: number; frame_rate?: number };
 }
 
 export interface MultiConditionReport {

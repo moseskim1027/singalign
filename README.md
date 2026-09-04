@@ -697,6 +697,12 @@ Matrix execution is data-dependent: use `singalign-matrix-status` first, and
 only run `singalign-condition-analysis` when every declared condition is ready.
 The complete matrix run is intentionally deferred to a follow-up PR so it can
 be executed as a separately tracked, time-bounded experiment.
+
+The remaining non-matrix tasks are consolidated into one follow-up PR: expose
+the learned reward trainer and provenance in the UI, show candidate and
+conditioning details, retain informal engineering notes, and populate the
+simulation-sandbox report/checklists. Missing data-dependent results remain
+explicitly pending.
 The completion UI will consume these reports with condition filtering and show
 available uncertainty/effect-size fields without inventing values for reports
 that predate the aggregate schema.

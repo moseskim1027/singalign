@@ -20,6 +20,9 @@ proxy/reward definitions, and the sealed evaluation split.
 
 Attach aggregate reports with paired intervals and effect sizes. Include
 failed or pending conditions rather than selecting only favorable results.
+The complete comparison matrix is a deferred follow-up experiment; until its
+shared references and all condition outputs exist, mark matrix results as
+pending rather than filling this section with partial values.
 
 ## Qualitative engineering observations
 
