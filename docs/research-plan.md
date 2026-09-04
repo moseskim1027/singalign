@@ -170,6 +170,8 @@ reproducible report where applicable.
 - [ ] Compare all conditions with paired bootstrap intervals and effect sizes.
 - [x] Add a shared condition registry preserving stable names, methods,
   checkpoint paths, and declared order for future comparisons.
+- [x] Add a generic multi-condition diagnostic engine using one metric contract
+  and deterministic declared ordering.
 - [ ] Add optional qualitative or informal listening feedback without making
   population-level claims.
 - [ ] Package final manifests, reports, environment metadata, and reproduction

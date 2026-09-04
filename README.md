@@ -521,6 +521,9 @@ accuracy `1.0` and mean proxy loss `0.3955`; these are engineering diagnostics,
 not perceptual or population-level claims.
 The multi-condition comparison work now uses `singalign.conditions.ConditionSpec`
 to preserve stable names, methods, checkpoint paths, and declared ordering.
+`compare_condition_outputs` applies the same reconstruction diagnostics to each
+declared output, keeping baseline/aligned/DPO/KTO comparisons on one metric
+contract.
 The evaluation settings are frozen in `configs/evaluation/kto.yaml`; the
 command still requires the explicit test-split workflow shown below.
 
