@@ -684,6 +684,10 @@ simulation report. This larger PR will retain separate commits and validation
 records for each workstream while keeping the repository's final state easy to
 reproduce from one review.
 
+The first workstream adds `singalign-reward-train`, a Docker/MLflow command
+that trains a learned reward model from saved chosen/rejected tensors and
+records its checkpoint and pairwise diagnostic metrics.
+
 PR 1 is implementing learned reward baselines on top of the existing
 deterministic preference-pair generator. The learned models are exploratory:
 they provide scalar and multidimensional scoring baselines with reproducible
