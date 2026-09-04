@@ -464,6 +464,25 @@ generation is implemented. Planned additions include condition selection,
 multiple candidates with provenance, conditioning metadata, cross-condition
 uncertainty summaries, and a separate blinded listening-study interface.
 
+### Candidate-generation sandbox
+
+The next engineering stage is defined in
+[`experiments/candidate-generation-v1.md`](experiments/candidate-generation-v1.md).
+It will generate deterministic candidates from a shared mel input, score them
+with explicitly labeled proxy rewards, and retain provenance for every output.
+The first implementation will cover controlled perturbations before learned
+decoder outputs are added.
+The deterministic generator is implemented in `singalign.candidates`; its
+candidate records include method, seed, severity, and tensor provenance.
+The reranker in `singalign.rerank` currently uses normalized mel reconstruction
+error as an explicitly labeled proxy reward, with deterministic ranking and
+stable provenance. It is not a human-preference model.
+`singalign.rewards` now exposes the same scalar reward plus an auditable
+multidimensional reward combining reconstruction, smoothness, and amplitude
+components. Both are diagnostic proxies and their weights are recorded.
+The candidate-generation and reranking foundations are tracked as completed
+engineering milestones in [`docs/research-plan.md`](docs/research-plan.md).
+
 Stop the services without removing tracked runs:
 
 ```bash

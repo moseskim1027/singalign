@@ -137,7 +137,14 @@ reproducible report where applicable.
   `421229b14e3043bfb3d89e3d6d2ca209`).
 - [x] Add a held-out vocoder diagnostic command reporting waveform MSE and
   output peak level with the sealed split fingerprint.
-- [ ] Add candidate generation and deterministic reward-based reranking.
+- [x] Add candidate generation and deterministic reward-based reranking.
+- [x] Define candidate-generation v1 with identity and controlled perturbation
+  methods, deterministic seeds, and provenance records.
+- [x] Implement deterministic proxy reranking using normalized mel error with
+  stable tie-breaking; this is an engineering proxy, not a human-preference
+  model.
+- [x] Add scalar and multidimensional proxy-reward components with explicit
+  weights and provenance.
 - [ ] Define and implement scalar and multidimensional reward-model baselines.
 - [ ] Add KTO as a separately tracked post-training condition.
 - [ ] Compare all conditions with paired bootstrap intervals and effect sizes.
