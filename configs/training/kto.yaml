@@ -1,0 +1,19 @@
+experiment:
+  name: singalign-kto-proxy
+  run_name: kto-synthetic-proxy
+  run_kind: exploratory
+
+objective:
+  method: kto_proxy
+  beta: 0.1
+  kl_baseline: 0.0
+
+data:
+  source: synthetic_preference_pairs
+  split: train_validation
+  seed: 2026
+
+training:
+  epochs: 10
+  batch_size: 4
+  learning_rate: 0.0001

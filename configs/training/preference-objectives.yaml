@@ -1,0 +1,14 @@
+experiment:
+  name: singalign-preference-objectives
+  run_name: kto-proxy-objective
+  run_kind: exploratory
+
+objective:
+  dpo: proxy_energy_v1
+  kto: binary_advantage_v1
+  beta: 0.1
+  kl_baseline: 0.0
+
+data:
+  preference_source: synthetic_proxy
+  seed: 2026

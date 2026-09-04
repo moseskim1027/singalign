@@ -493,6 +493,17 @@ reproducibility metadata to the local MLflow server.
 The corresponding exploratory configuration is
 `configs/evaluation/candidates.yaml`; it fixes the initial methods, seed, and
 proxy-reward version for repeatable runs.
+The preference-objective sandbox also exposes a compact KTO-style loss in
+`singalign.preference_objectives`, alongside the existing proxy-DPO loss. These
+objectives operate on synthetic/proxy scores and do not establish human
+preference alignment.
+The initial objective settings are frozen in
+`configs/training/preference-objectives.yaml` so DPO/KTO comparisons can be
+run as explicit exploratory conditions.
+`pair_to_kto_batch` adapts the existing chosen/rejected synthetic pairs to the
+binary labels expected by the KTO objective.
+The separate exploratory KTO condition is specified in
+`configs/training/kto.yaml`; a trainer and MLflow run remain to be implemented.
 
 Stop the services without removing tracked runs:
 
