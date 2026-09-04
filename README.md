@@ -516,6 +516,9 @@ preference loss and accuracy on the sealed test split without changing the
 checkpoint or tuning the objective.
 The evaluator is the only workflow that passes the dataset's explicit
 `allow_test=True` opt-in; training commands remain unable to consume test IDs.
+The first held-out diagnostic evaluated 10 test examples with proxy preference
+accuracy `1.0` and mean proxy loss `0.3955`; these are engineering diagnostics,
+not perceptual or population-level claims.
 
 Run the exploratory KTO condition from Docker with:
 
