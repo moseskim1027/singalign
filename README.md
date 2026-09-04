@@ -511,6 +511,9 @@ The first 10-epoch pilot is MLflow run `3c9de2f603d2419683f6bfe2502fdc9d`
 in experiment `singalign-kto-proxy`.
 The trainer validates required sections and positive beta/temperature before
 starting a run.
+The held-out diagnostic command `singalign-kto-evaluate` measures synthetic
+preference loss and accuracy on the sealed test split without changing the
+checkpoint or tuning the objective.
 
 Run the exploratory KTO condition from Docker with:
 
