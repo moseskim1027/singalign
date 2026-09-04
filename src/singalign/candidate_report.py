@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import argparse
 from pathlib import Path
 
 import torch
@@ -26,3 +27,20 @@ def write_candidate_report(
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n")
     return report
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(prog="singalign-candidates")
+    parser.add_argument("--input", type=Path, required=True, help="torch-saved mel tensor")
+    parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--seed", type=int, default=2026)
+    args = parser.parse_args()
+    reference = torch.load(args.input, map_location="cpu", weights_only=True)
+    if not isinstance(reference, torch.Tensor):
+        raise ValueError("input must contain a torch Tensor")
+    print(json.dumps(write_candidate_report(reference, args.output, args.seed), indent=2))
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

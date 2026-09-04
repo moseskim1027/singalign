@@ -485,6 +485,9 @@ engineering milestones in [`docs/research-plan.md`](docs/research-plan.md).
 `singalign.candidate_report.write_candidate_report` provides the next
 integration point for writing deterministic ranked-candidate manifests before
 MLflow logging and UI display are added.
+For a standalone local/Docker invocation, save a mel tensor with
+`torch.save` and run `singalign-candidates --input input.pt --output
+reports/candidates/example.json`.
 
 Stop the services without removing tracked runs:
 
