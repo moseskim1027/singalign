@@ -32,6 +32,8 @@ class ConditioningTest(unittest.TestCase):
             self.assertEqual(frames[0]["midi_pitch"], 60)
             self.assertEqual(frames[0]["voiced"], 1)
             self.assertIsNone(frames[2]["midi_pitch"])
+            offset_frames = frame_conditioning(record, 2, 1, 1, start_seconds=1)
+            self.assertEqual(offset_frames[0]["time_seconds"], 0)
             pitches, phonemes = frame_conditioning_tensors(
                 record, 2, 2, 1, {"aa": 7, "pau": 8}
             )

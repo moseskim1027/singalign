@@ -45,15 +45,21 @@ def frame_conditioning(
     frame_rate: float,
     duration_seconds: float,
     seconds_per_quarter: float,
+    start_seconds: float = 0.0,
 ) -> list[dict[str, int | float | str | None]]:
     """Expand symbolic events into deterministic acoustic-frame features."""
 
-    if frame_rate <= 0 or duration_seconds <= 0 or seconds_per_quarter <= 0:
+    if (
+        frame_rate <= 0
+        or duration_seconds <= 0
+        or seconds_per_quarter <= 0
+        or start_seconds < 0
+    ):
         raise ValueError("frame rate, duration, and tempo must be positive")
     frame_count = round(frame_rate * duration_seconds)
     frames: list[dict[str, int | float | str | None]] = []
     for index in range(frame_count):
-        time_seconds = index / frame_rate
+        time_seconds = start_seconds + index / frame_rate
         note_start = 0.0
         active_note: NoteEvent | None = None
         for note in record.notes:
@@ -69,7 +75,7 @@ def frame_conditioning(
                 break
         frames.append(
             {
-                "time_seconds": time_seconds,
+                "time_seconds": time_seconds - start_seconds,
                 "midi_pitch": active_note.midi if active_note else None,
                 "voiced": int(active_note is not None and active_note.midi is not None),
                 "note_onset": int(active_note is not None and time_seconds == note_start),
@@ -85,11 +91,12 @@ def frame_conditioning_tensors(
     duration_seconds: float,
     seconds_per_quarter: float,
     phoneme_to_id: dict[str, int],
+    start_seconds: float = 0.0,
 ) -> tuple[torch.Tensor, torch.Tensor]:
     """Return frame-aligned pitch and phoneme tensors for model input."""
 
     frames = frame_conditioning(
-        record, frame_rate, duration_seconds, seconds_per_quarter
+        record, frame_rate, duration_seconds, seconds_per_quarter, start_seconds
     )
     pitches = torch.tensor(
         [frame["midi_pitch"] or 0 for frame in frames], dtype=torch.long

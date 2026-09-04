@@ -99,6 +99,8 @@ reproducible report where applicable.
   `configs/training/conditioned.yaml`.
 - [x] Add a fixed-shape tensor adapter with explicit pitch/rest and phoneme-ID
   conventions.
+- [x] Support explicit crop offsets when aligning symbolic events to acoustic
+  frames.
 - [x] Run held-out baseline evaluation once on the sealed test split
   (MLflow run `9610bc68f175431b96e99f9812ca3197`).
 - [x] Run held-out aligned evaluation using the same test split and metrics
