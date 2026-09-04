@@ -693,6 +693,16 @@ examples without relying on independently sampled datasets.
 Use [`configs/evaluation/condition-analysis.example.json`](configs/evaluation/condition-analysis.example.json)
 as the input shape for `singalign-condition-analysis --manifest ... --output ...`.
 
+PR 3 will connect the UI tabs into a sequential workflow. A shared experiment
+registry will define each method's required checkpoint, evaluation protocol,
+and compatible comparison conditions; the UI will surface prerequisites and
+prevent incompatible downstream selections.
+The registry is intentionally declarative so the same experiment identity can
+be reused by training, evaluation, and comparison controls.
+Evaluation is a separate command-generation step: it consumes the selected
+experiment's checkpoint and protocol, while Comparison consumes the resulting
+report rather than directly reusing training settings.
+
 ## Contributing
 
 Research contributions should state the hypothesis being tested, describe the
