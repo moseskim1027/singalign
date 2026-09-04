@@ -132,7 +132,7 @@ const render = (
   if (manifest.mlflow_experiment_id && manifest.mlflow_run_id) {
     const mlflowButton = document.createElement("button");
     mlflowButton.type = "button";
-    mlflowButton.textContent = "Open MLflow evaluation run";
+    mlflowButton.textContent = "MLflow run";
     mlflowButton.addEventListener("click", () => {
       const url = `${location.protocol}//${location.hostname}:5001/#/experiments/${encodeURIComponent(manifest.mlflow_experiment_id!)}/runs/${encodeURIComponent(manifest.mlflow_run_id!)}`;
       window.open(url, "_blank", "noopener,noreferrer");
