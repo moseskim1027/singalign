@@ -710,6 +710,8 @@ simulation sandbox auditable without implying that its proxy metrics establish
 human preference.
 The verification workflow is documented in [`docs/reproducibility.md`](docs/reproducibility.md)
 and can be run with `bash scripts/reproduce_smoke.sh`.
+Use [`docs/run-record-template.md`](docs/run-record-template.md) to record each
+experiment's provenance and MLflow lineage.
 
 ## Contributing
 
