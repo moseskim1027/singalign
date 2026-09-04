@@ -93,6 +93,9 @@ reproducible report where applicable.
   (MLflow run `0aa5ffc003d84eaea82259b1f4e45e1d`).
 - [x] Freeze the exploratory 3-second/10-epoch pilot manifest in
   [`experiments/pilot-3s-10e-manifest.yaml`](../experiments/pilot-3s-10e-manifest.yaml).
+- [x] Draft the confirmatory analysis plan in
+  [`experiments/analysis-plan-v1.md`](../experiments/analysis-plan-v1.md);
+  external preregistration remains pending.
 
 ### Next research sequence
 
