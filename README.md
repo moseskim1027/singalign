@@ -522,19 +522,13 @@ Example Docker invocation:
 
 ```bash
 docker compose run --rm research \
-  singalign-multi-compare \
-  --reference input.pt \
-  --condition baseline=baseline.pt:supervised \
-  --condition aligned=aligned.pt:dpo \
-  --condition kto=kto.pt:kto \
-  --output reports/multi-condition/example.json
+  singalign-candidates \
+  --input input.pt \
+  --output reports/candidates/example.json
 ```
+
 Candidate reports can be logged to MLflow with their condition metadata so
 results remain reproducible.
-`log_condition_report` attaches an existing report to the active MLflow run
-under a stable `conditions` artifact path.
-The evaluation settings are frozen in `configs/evaluation/kto.yaml`; the
-command still requires the explicit test-split workflow shown below.
 
 Run the exploratory KTO condition from Docker with:
 
