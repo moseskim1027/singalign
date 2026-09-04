@@ -6,8 +6,10 @@ import argparse
 from pathlib import Path
 
 import torch
+import mlflow
 
 from singalign.conditions import ConditionSpec, write_condition_report
+from singalign.tracking import RunMetadata, tracked_run
 
 
 def _condition(value: str) -> tuple[ConditionSpec, Path]:
@@ -25,6 +27,7 @@ def main() -> int:
     parser.add_argument("--reference", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--condition", type=_condition, action="append", required=True)
+    parser.add_argument("--mlflow-experiment")
     args = parser.parse_args()
     reference = torch.load(args.reference, map_location="cpu", weights_only=True)
     if not isinstance(reference, torch.Tensor):
@@ -34,7 +37,13 @@ def main() -> int:
                for condition, path in args.condition}
     if any(not isinstance(output, torch.Tensor) for output in outputs.values()):
         raise ValueError("condition files must contain torch Tensors")
-    report = write_condition_report(reference, outputs, conditions, args.output)
+    if args.mlflow_experiment:
+        metadata = RunMetadata(args.mlflow_experiment, "multi-condition-comparison", "exploratory", "local-mel-input", "unknown", "not-applicable", 0)
+        with tracked_run(metadata, {"condition_count": len(conditions)}):
+            report = write_condition_report(reference, outputs, conditions, args.output)
+            mlflow.log_artifact(str(args.output), artifact_path="conditions")
+    else:
+        report = write_condition_report(reference, outputs, conditions, args.output)
     print({"output": str(args.output), "condition_count": report["condition_count"]})
     return 0
 

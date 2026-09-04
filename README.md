@@ -541,6 +541,8 @@ docker compose run --rm research \
   --condition kto=kto.pt:kto \
   --output reports/multi-condition/example.json
 ```
+Add `--mlflow-experiment singalign-multi-condition` to attach the report to a
+tracked exploratory MLflow run.
 `write_condition_report` serializes the same results to a deterministic JSON
 artifact suitable for MLflow attachment and later UI display.
 `log_condition_report` attaches an existing report to the active MLflow run

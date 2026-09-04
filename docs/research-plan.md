@@ -174,6 +174,7 @@ reproducible report where applicable.
   and deterministic declared ordering.
 - [x] Add a Docker/CLI multi-condition comparison command and freeze its
   exploratory metric/output configuration.
+- [x] Add optional MLflow logging for the multi-condition report artifact.
 - [x] Serialize multi-condition diagnostics as deterministic JSON artifacts with
   condition metadata preserved.
 - [x] Add a stable MLflow artifact path for multi-condition reports.
