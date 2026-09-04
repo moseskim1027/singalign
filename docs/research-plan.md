@@ -165,6 +165,8 @@ reproducible report where applicable.
   in the root README.
 - [x] Add and run a sealed-test KTO diagnostic (10 examples; proxy accuracy
   `1.0`, mean proxy loss `0.3955`) with explicit evaluation opt-in.
+- [x] Freeze the KTO held-out diagnostic settings in
+  `configs/evaluation/kto.yaml`.
 - [ ] Compare all conditions with paired bootstrap intervals and effect sizes.
 - [ ] Add optional qualitative or informal listening feedback without making
   population-level claims.
