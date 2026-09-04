@@ -43,6 +43,30 @@ reconstruction through an anchor loss. It does not test human preference
 alignment. Its purpose is to validate instrumentation and expose trade-offs
 before collecting or modeling listener judgments.
 
+## Paper-oriented methodology
+
+The exploratory pilot validates the pipeline; it is not evidence for the
+primary hypothesis. Paper-ready claims will use confirmatory runs whose
+hypotheses, conditions, metrics, exclusions, and analysis thresholds are frozen
+before the test split or listener responses are examined.
+
+- Keep the song-disjoint split fingerprint immutable across comparisons.
+- Use the same preprocessing, checkpoint-selection rule, and compute budget
+  across conditions unless an ablation explicitly tests the difference.
+- Separate exploratory, development, and confirmatory MLflow experiments.
+- Select checkpoints using validation data only; evaluate the held-out test
+  split once per registered condition and do not tune on test results.
+- Report paired estimates, uncertainty intervals, effect sizes, sample counts,
+  exclusions, and failed runs—not only the best point estimate.
+- Treat synthetic preference labels and objective proxies as validation tools,
+  not substitutes for human preference judgments.
+- Preregister the blinded listening protocol, randomization, listener
+  eligibility, power rationale, primary endpoint, stopping rule, and analysis.
+- Maintain an experiment manifest linking config, code revision, data
+  fingerprint, checkpoint hashes, Docker image, MLflow run, and report.
+- Distinguish implementation validation from claims about quality,
+  intelligibility, identity, or preference alignment.
+
 ## Execution status and next steps
 
 This checklist is the working record for the current research cycle. Each
@@ -63,13 +87,15 @@ reproducible report where applicable.
 - [x] Generate paired validation comparisons and a local listening report.
 - [x] Expose the comparison report in the Dockerized UI and link it to the
   corresponding MLflow evaluation run.
+- [x] Run held-out baseline evaluation once on the sealed test split
+  (MLflow run `9610bc68f175431b96e99f9812ca3197`).
+- [x] Run held-out aligned evaluation using the same test split and metrics
+  (MLflow run `0aa5ffc003d84eaea82259b1f4e45e1d`).
 
 ### Next research sequence
 
 - [ ] Freeze the pilot configurations, split fingerprint, and success
   thresholds in an experiment manifest.
-- [ ] Run held-out baseline evaluation once on the sealed test split.
-- [ ] Run held-out aligned evaluation using the same test split and metrics.
 - [ ] Add candidate generation and deterministic reward-based reranking.
 - [ ] Define and implement scalar and multidimensional reward-model baselines.
 - [ ] Add KTO as a separately tracked post-training condition.

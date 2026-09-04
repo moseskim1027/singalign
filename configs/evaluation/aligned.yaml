@@ -1,0 +1,11 @@
+experiment:
+  name: singalign-aligned-evaluation
+  run_name: dpo-style-mel-alignment-test
+  run_kind: exploratory
+
+evaluation:
+  seed: 2026
+  device: auto
+  bootstrap_samples: 2000
+  confidence_level: 0.95
+  output_dir: reports/evaluation
