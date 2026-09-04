@@ -250,6 +250,16 @@ const renderMulti = (report: MultiConditionReport): void => {
       row.append(cell);
     });
     body.append(row);
+    if (condition.candidates?.length || condition.conditioning) {
+      const detail = document.createElement("tr");
+      const cell = document.createElement("td");
+      cell.colSpan = 5;
+      const candidates = condition.candidates?.map((candidate) => `${candidate.rank}. ${candidate.id} (${number(candidate.score)})`).join(" · ") ?? "No candidate rankings";
+      const conditioning = condition.conditioning ? `Pitch: ${condition.conditioning.pitch_range?.join("–") ?? "—"} MIDI · Phonemes: ${condition.conditioning.phoneme_count ?? "—"} · ${condition.conditioning.frame_rate ?? "—"} Hz` : "No conditioning metadata";
+      cell.textContent = `${candidates} | ${conditioning}`;
+      detail.append(cell);
+      body.append(detail);
+    }
     });
   };
   renderRows("all");
