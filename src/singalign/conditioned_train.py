@@ -33,12 +33,15 @@ def main() -> int:
     seed_everything(int(training["seed"]))
     device = resolve_device(str(training["device"]))
     train_data = PJSConditionedDataset(args.index, args.splits, "train", audio, conditioning, int(training["seed"]), args.max_items)
+    validation_data = PJSConditionedDataset(args.index, args.splits, "validation", audio, conditioning, int(training["seed"]), args.max_items)
+    validation_data.phoneme_to_id = train_data.phoneme_to_id
     model = ScoreConditionedMelModel(int(audio["mel_bins"]), int(conditioning["phoneme_vocab_size"])).to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=float(training["learning_rate"]))
     metadata = RunMetadata(str(config["experiment"]["name"]), str(config["experiment"]["run_name"]), str(config["experiment"]["run_kind"]), "pjs", "1.1", train_data.fingerprint, int(training["seed"]))
     with tracked_run(metadata, config):
         model.train()
         loader = DataLoader(train_data, batch_size=int(training["batch_size"]), shuffle=True)
+        validation_loader = DataLoader(validation_data, batch_size=int(training["batch_size"]))
         for epoch in range(1, int(training["epochs"]) + 1):
             total = 0.0
             for pitch, phonemes, target in loader:
@@ -49,6 +52,17 @@ def main() -> int:
                 optimizer.step()
                 total += loss.item()
             mlflow.log_metric("train.loss", total / len(loader), step=epoch)
+            model.eval()
+            with torch.no_grad():
+                validation_loss = sum(
+                    torch.nn.functional.mse_loss(
+                        model(pitch.to(device), phonemes.to(device)),
+                        target.to(device).squeeze(1),
+                    ).item()
+                    for pitch, phonemes, target in validation_loader
+                ) / len(validation_loader)
+            mlflow.log_metric("validation.loss", validation_loss, step=epoch)
+            model.train()
         checkpoint = Path(training["checkpoint_dir"]) / "last.pt"
         checkpoint.parent.mkdir(parents=True, exist_ok=True)
         torch.save({"model_state_dict": model.state_dict(), "config": config}, checkpoint)

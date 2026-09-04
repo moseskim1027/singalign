@@ -109,7 +109,7 @@ docker compose run --rm research \
   --splits data/interim/pjs/splits.json
 ```
 
-It logs the training loss and checkpoint to MLflow. This is an architectural
+It logs training/validation loss and a checkpoint to MLflow. This is an architectural
 baseline, not yet a candidate-generation or confirmatory experiment.
 The `PJSConditionedDataset` adapter now pairs these tensors with deterministic
 3-second mel targets using the same crop offset, tempo, and frame-count
