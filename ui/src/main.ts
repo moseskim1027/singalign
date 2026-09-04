@@ -33,6 +33,7 @@ app.innerHTML = `
       <form id="training-form">
         <label for="training-experiment">Experiment</label>
         <select id="training-experiment"></select>
+        <p id="experiment-context" class="status" role="status"></p>
         <div id="training-fields" class="training-fields"></div>
         <button type="submit">Generate command</button>
       </form>
@@ -92,11 +93,12 @@ const trainingForm = document.querySelector<HTMLFormElement>("#training-form");
 const trainingExperiment = document.querySelector<HTMLSelectElement>("#training-experiment");
 const trainingFields = document.querySelector<HTMLElement>("#training-fields");
 const trainingCommand = document.querySelector<HTMLElement>("#training-command");
+const experimentContext = document.querySelector<HTMLElement>("#experiment-context");
 const tabs = [...document.querySelectorAll<HTMLButtonElement>(".tab")];
 const panels = [...document.querySelectorAll<HTMLElement>(".tab-panel")];
 const workflowReady = { evaluation: false, comparison: false };
 
-if (!form || !input || !status || !results || !multiForm || !multiInput || !multiStatus || !multiResults || !trainingForm || !trainingExperiment || !trainingFields || !trainingCommand) {
+if (!form || !input || !status || !results || !multiForm || !multiInput || !multiStatus || !multiResults || !trainingForm || !trainingExperiment || !trainingFields || !trainingCommand || !experimentContext) {
   throw new Error("comparison controls are missing");
 }
 
@@ -112,11 +114,11 @@ const duration = (value: number): string =>
 const label = (name: string): string => name.replaceAll("_", " ");
 
 const trainingExperiments = {
-  baseline: { label: "Supervised baseline", config: "configs/training/baseline.yaml", args: { epochs: 10, segment_seconds: 3, batch_size: 4, learning_rate: 0.0001 } },
-  aligned: { label: "Proxy DPO alignment", config: "configs/training/alignment.yaml", args: { epochs: 10, segment_seconds: 3, beta: 0.1, anchor_weight: 1 } },
-  conditioned: { label: "Score-conditioned mel", config: "configs/training/conditioned.yaml", args: { epochs: 10, segment_seconds: 3, frame_rate: 100 } },
-  vocoder: { label: "Mel vocoder", config: "configs/training/vocoder.yaml", args: { epochs: 10, segment_seconds: 3, batch_size: 2, learning_rate: 0.0001 } },
-  kto: { label: "Synthetic KTO", config: "configs/training/kto.yaml", args: { epochs: 10, beta: 0.1, temperature: 0.1, learning_rate: 0.0001 } },
+  baseline: { label: "Supervised baseline", config: "configs/training/baseline.yaml", evaluation: "configs/evaluation/baseline.yaml", prerequisite: "none", compatible: "baseline, reranking", args: { epochs: 10, segment_seconds: 3, batch_size: 4, learning_rate: 0.0001 } },
+  aligned: { label: "Proxy DPO alignment", config: "configs/training/alignment.yaml", evaluation: "configs/evaluation/aligned.yaml", prerequisite: "baseline/best.pt", compatible: "aligned, DPO", args: { epochs: 10, segment_seconds: 3, beta: 0.1, anchor_weight: 1 } },
+  conditioned: { label: "Score-conditioned mel", config: "configs/training/conditioned.yaml", evaluation: "configs/evaluation/baseline.yaml", prerequisite: "none", compatible: "conditioned", args: { epochs: 10, segment_seconds: 3, frame_rate: 100 } },
+  vocoder: { label: "Mel vocoder", config: "configs/training/vocoder.yaml", evaluation: "configs/training/vocoder.yaml", prerequisite: "none", compatible: "vocoder", args: { epochs: 10, segment_seconds: 3, batch_size: 2, learning_rate: 0.0001 } },
+  kto: { label: "Synthetic KTO", config: "configs/training/kto.yaml", evaluation: "configs/evaluation/kto.yaml", prerequisite: "baseline/best.pt", compatible: "kto, DPO, baseline", args: { epochs: 10, beta: 0.1, temperature: 0.1, learning_rate: 0.0001 } },
 } as const;
 
 Object.entries(trainingExperiments).forEach(([key, experiment]) => {
@@ -129,6 +131,7 @@ Object.entries(trainingExperiments).forEach(([key, experiment]) => {
 const renderTrainingFields = (): void => {
   trainingFields.replaceChildren();
   const experiment = trainingExperiments[trainingExperiment.value as keyof typeof trainingExperiments];
+  experimentContext.textContent = `Evaluation: ${experiment.evaluation} · Checkpoint prerequisite: ${experiment.prerequisite} · Compatible comparisons: ${experiment.compatible}`;
   Object.entries(experiment.args).forEach(([name, value]) => {
     const field = document.createElement("label");
     field.textContent = label(name);

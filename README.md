@@ -697,6 +697,8 @@ PR 3 will connect the UI tabs into a sequential workflow. A shared experiment
 registry will define each method's required checkpoint, evaluation protocol,
 and compatible comparison conditions; the UI will surface prerequisites and
 prevent incompatible downstream selections.
+The registry is intentionally declarative so the same experiment identity can
+be reused by training, evaluation, and comparison controls.
 
 ## Contributing
 
