@@ -7,6 +7,7 @@ import json
 from pathlib import Path
 
 import torch
+import mlflow
 
 from singalign.metrics import reconstruction_metrics
 
@@ -60,3 +61,10 @@ def write_condition_report(
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n")
     return report
+
+
+def log_condition_report(report_path: Path, artifact_path: str = "conditions") -> None:
+    """Attach a serialized condition report to the active MLflow run."""
+    if not report_path.is_file():
+        raise FileNotFoundError(report_path)
+    mlflow.log_artifact(str(report_path), artifact_path=artifact_path)

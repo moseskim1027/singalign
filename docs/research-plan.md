@@ -174,6 +174,7 @@ reproducible report where applicable.
   and deterministic declared ordering.
 - [x] Serialize multi-condition diagnostics as deterministic JSON artifacts with
   condition metadata preserved.
+- [x] Add a stable MLflow artifact path for multi-condition reports.
 - [ ] Add optional qualitative or informal listening feedback without making
   population-level claims.
 - [ ] Package final manifests, reports, environment metadata, and reproduction
