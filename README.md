@@ -373,6 +373,11 @@ generated audio is approximate Griffin-Lim reconstruction and must not be used
 alone to support claims about perceptual quality. See [`ui/README.md`](ui/README.md)
 for development and troubleshooting instructions.
 
+Future UI work is intentionally deferred until score-conditioned candidate
+generation is implemented. Planned additions include condition selection,
+multiple candidates with provenance, conditioning metadata, cross-condition
+uncertainty summaries, and a separate blinded listening-study interface.
+
 Stop the services without removing tracked runs:
 
 ```bash

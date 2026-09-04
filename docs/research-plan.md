@@ -112,3 +112,19 @@ reproducible report where applicable.
 - [ ] Conduct the listening study, analyze failures, and report limitations.
 - [ ] Package final manifests, reports, environment metadata, and reproduction
   instructions.
+
+### Deferred UI work
+
+The current UI is an unblinded reconstruction-inspection tool and should remain
+stable during the score-conditioned model work. Revisit this section after
+candidate generation exists:
+
+- [ ] Add condition selection for baseline, reranking, DPO, and KTO.
+- [ ] Display multiple candidates with ranking scores and provenance.
+- [ ] Display score/phoneme conditioning metadata alongside each example.
+- [ ] Show cross-condition metrics, uncertainty intervals, and MLflow links.
+- [ ] Build a separate blinded listening-study interface with randomized
+  labels and no model-condition disclosure.
+
+Do not use the current UI for perceptual claims: its model labels are visible,
+and its generated audio uses approximate reconstruction.
