@@ -99,6 +99,18 @@ exploratory budget. The training command will be added after the dataset frame
 adapter is implemented and tested.
 The frame adapter emits integer MIDI pitch IDs with `0` for rests and integer
 phoneme IDs with `0` reserved for unknown/padding symbols.
+The exploratory conditioned-model trainer is available in Docker:
+
+```bash
+docker compose run --rm research \
+  singalign-conditioned-train \
+  --config configs/training/conditioned.yaml \
+  --index data/interim/pjs/index.jsonl \
+  --splits data/interim/pjs/splits.json
+```
+
+It logs the training loss and checkpoint to MLflow. This is an architectural
+baseline, not yet a candidate-generation or confirmatory experiment.
 The `PJSConditionedDataset` adapter now pairs these tensors with deterministic
 3-second mel targets using the same crop offset, tempo, and frame-count
 convention. It is ready for model-training integration but has not produced a
