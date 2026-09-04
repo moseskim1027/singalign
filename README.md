@@ -693,6 +693,8 @@ conditioned, and vocoder outputs; missing outputs are reported as pending
 rather than silently treated as results.
 Run `singalign-matrix-status --config configs/evaluation/comparison-matrix.yaml`
 to audit readiness before producing the aggregate report.
+Matrix execution is data-dependent: use `singalign-matrix-status` first, and
+only run `singalign-condition-analysis` when every declared condition is ready.
 The completion UI will consume these reports with condition filtering and show
 available uncertainty/effect-size fields without inventing values for reports
 that predate the aggregate schema.
