@@ -35,6 +35,7 @@ app.innerHTML = `
   <section id="results" class="results" hidden></section>
   <footer>
     <strong>Interpretation boundary:</strong> this view is not a blinded listening study. Generated examples use approximate Griffin-Lim reconstruction.
+    <br /><strong>DPO terminology:</strong> Reference is the target audio; Baseline is the frozen reference policy; Aligned is the optimized policy.
   </footer>
 `;
 
