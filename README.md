@@ -529,6 +529,18 @@ infrastructure from the still-pending learned reward-model baselines and
 cross-condition statistical diagnostics.
 The `singalign-multi-compare` CLI now compares saved mel tensors with repeated
 `--condition name=output.pt:method` arguments and writes one ordered report.
+The frozen comparison metadata is in `configs/evaluation/multi-condition.yaml`.
+For example:
+
+```bash
+docker compose run --rm research \
+  singalign-multi-compare \
+  --reference input.pt \
+  --condition baseline=baseline.pt:supervised \
+  --condition aligned=aligned.pt:dpo \
+  --condition kto=kto.pt:kto \
+  --output reports/multi-condition/example.json
+```
 `write_condition_report` serializes the same results to a deterministic JSON
 artifact suitable for MLflow attachment and later UI display.
 `log_condition_report` attaches an existing report to the active MLflow run

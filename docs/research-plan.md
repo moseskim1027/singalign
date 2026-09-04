@@ -172,6 +172,8 @@ reproducible report where applicable.
   checkpoint paths, and declared order for future comparisons.
 - [x] Add a generic multi-condition diagnostic engine using one metric contract
   and deterministic declared ordering.
+- [x] Add a Docker/CLI multi-condition comparison command and freeze its
+  exploratory metric/output configuration.
 - [x] Serialize multi-condition diagnostics as deterministic JSON artifacts with
   condition metadata preserved.
 - [x] Add a stable MLflow artifact path for multi-condition reports.
