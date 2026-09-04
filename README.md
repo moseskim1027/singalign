@@ -477,6 +477,9 @@ candidate records include method, seed, severity, and tensor provenance.
 The reranker in `singalign.rerank` currently uses normalized mel reconstruction
 error as an explicitly labeled proxy reward, with deterministic ranking and
 stable provenance. It is not a human-preference model.
+`singalign.rewards` now exposes the same scalar reward plus an auditable
+multidimensional reward combining reconstruction, smoothness, and amplitude
+components. Both are diagnostic proxies and their weights are recorded.
 The candidate-generation and reranking foundations are tracked as completed
 engineering milestones in [`docs/research-plan.md`](docs/research-plan.md).
 

@@ -143,6 +143,8 @@ reproducible report where applicable.
 - [x] Implement deterministic proxy reranking using normalized mel error with
   stable tie-breaking; this is an engineering proxy, not a human-preference
   model.
+- [x] Add scalar and multidimensional proxy-reward components with explicit
+  weights and provenance.
 - [ ] Define and implement scalar and multidimensional reward-model baselines.
 - [ ] Add KTO as a separately tracked post-training condition.
 - [ ] Compare all conditions with paired bootstrap intervals and effect sizes.
