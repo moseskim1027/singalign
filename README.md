@@ -512,6 +512,17 @@ in experiment `singalign-kto-proxy`.
 The trainer validates required sections and positive beta/temperature before
 starting a run.
 
+Run the exploratory KTO condition from Docker with:
+
+```bash
+docker compose run --rm research \
+  singalign-kto-train \
+  --config configs/training/kto.yaml \
+  --checkpoint checkpoints/baseline/best.pt \
+  --index data/interim/pjs/index.jsonl \
+  --splits data/interim/pjs/splits.json
+```
+
 Stop the services without removing tracked runs:
 
 ```bash
