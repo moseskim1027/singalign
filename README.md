@@ -40,19 +40,16 @@ evaluation design exist.
 
 ## Scope
 
-The next research direction is the deferred [phoneme and pitch track-transfer
-study](docs/research-plan.md#future-track-transfer-study-phoneme-and-pitch-alignment):
-preserve a source vocal's words, timing, and melody while rendering or mixing
-it over a different instrumental track. The staged plan, representations,
-ablations, metrics, and continuation prompt are maintained in the research
-plan. The core track-transfer study does not depend on MusicGen; MusicGen is
-only an optional target-instrument extension. A temporary standalone copy of
-the full detailed section is available in
-[`README_study.md`](README_study.md).
+The research scope has two focused directions. First, test same-singer,
+score-conditioned synthesis: lyrics, phonemes, MIDI/MusicXML note timing, and
+pitch are used to reconstruct the PJS vocalist. Second, test content-and-
+melody transfer: preserve a source vocal's words, phoneme timing, and melody
+while placing it over a different instrumental track.
 
-The two focused research directions are now consolidated in
-[`README_newresearch.md`](README_newresearch.md): same-singer score-conditioned
-synthesis and content-and-melody transfer over a different instrumental.
+The core transfer experiment does not depend on MusicGen. Use a fixed,
+MIDI-rendered PJS instrumental so vocal alignment can be evaluated without
+introducing a second generation variable. MusicGen is only an optional,
+separately logged target-instrument extension.
 
 The initial studies use the PJS corpus. Experiments will operate on short
 mel-spectrogram segments so that data preparation, baseline development, and
@@ -91,7 +88,11 @@ data and evaluation.
 
 The methodology may change as preliminary experiments reveal limitations. Any
 material changes will be documented in the research plan and experiment logs.
-The complete focused plan is in [`README_newresearch.md`](README_newresearch.md).
+The complete implementation sequence is: extract and validate observed F0;
+complete same-singer synthesis; render target instrumentals from PJS MIDI;
+create source/target pair manifests; implement tempo/key alignment and remix
+controls; add synthesized-vocal transfer; then report lyric, pitch, timing,
+audio-quality, and mix diagnostics.
 
 ### Score and lyric conditioning prototype
 
@@ -679,7 +680,7 @@ evolving risk assessment.
 
 ## Roadmap
 
-- [x] Define the PJS-supported research direction in `README_newresearch.md`
+- [x] Define the PJS-supported singing synthesis and vocal-transfer direction
 - [x] Review the PJS dataset terms and document local installation
 - [ ] Validate the corpus and create immutable data splits
 - [ ] Select and reproduce a baseline model
