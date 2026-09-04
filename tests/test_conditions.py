@@ -50,6 +50,7 @@ class ConditionsTest(unittest.TestCase):
         self.assertEqual(report["anchor"], "baseline")
         self.assertEqual(report["example_count"], 2)
         self.assertLess(report["conditions"][1]["effect_vs_anchor"]["log_mel_mse"]["mean"], 0)
+        self.assertIn("standardized_effect", report["conditions"][1]["effect_vs_anchor"]["log_mel_mse"])
 
 
 if __name__ == "__main__":

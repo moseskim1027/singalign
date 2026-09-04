@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import json
+import math
 from pathlib import Path
 
 import torch
@@ -110,6 +111,12 @@ def compare_condition_dataset(
             for metric_index, name in enumerate(metric_names):
                 deltas = [new - old for old, new in zip(values[anchor][name], values[condition.name][name], strict=True)]
                 interval = bootstrap_mean_interval(deltas, seed + 100 + metric_index, samples, confidence_level)
-                effects[name] = {"mean": interval.mean, "lower": interval.lower, "upper": interval.upper}
+                spread = math.sqrt(sum((delta - interval.mean) ** 2 for delta in deltas) / max(len(deltas) - 1, 1))
+                effects[name] = {
+                    "mean": interval.mean,
+                    "lower": interval.lower,
+                    "upper": interval.upper,
+                    "standardized_effect": interval.mean / spread if spread > 1e-12 else 0.0,
+                }
         rows.append({"name": condition.name, "method": condition.method, "metrics": metrics, "effect_vs_anchor": effects})
     return {"condition_count": len(rows), "example_count": len(references), "anchor": anchor, "conditions": rows}
