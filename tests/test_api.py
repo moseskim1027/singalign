@@ -16,6 +16,10 @@ class TrainingApiTest(unittest.TestCase):
         with self.assertRaisesRegex(HTTPException, "out of range"):
             start_training(TrainingRequest(experiment="baseline", parameters={"epochs": 0}))
 
+    def test_command_mapping_is_allowlisted(self) -> None:
+        from singalign.api import EXPERIMENTS
+        self.assertEqual(EXPERIMENTS["kto"], "singalign-kto-train")
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -40,7 +40,12 @@ def start_training(request: TrainingRequest) -> TrainingResponse:
     if not 1 <= int(parameters["epochs"]) <= 100 or not 0 < float(parameters["segment_seconds"]) <= 30:
         raise HTTPException(status_code=400, detail="epochs or segment_seconds out of range")
     config = f"configs/training/{'alignment' if request.experiment == 'aligned' else request.experiment}.yaml"
-    command = [EXPERIMENTS[request.experiment], "--config", config, "--index", "data/interim/pjs/index.jsonl", "--splits", "data/interim/pjs/splits.json"]
+    command = [EXPERIMENTS[request.experiment], "--config", config]
+    if request.experiment in {"aligned", "kto"}:
+        command.extend(["--checkpoint", "checkpoints/baseline/best.pt"])
+    command.extend(["--index", "data/interim/pjs/index.jsonl", "--splits", "data/interim/pjs/splits.json"])
+    for name, value in request.parameters.items():
+        command.extend([f"--{name.replace('_', '-')}", str(value)])
     client = docker.from_env()
     root = Path(os.environ.get("SINGALIGN_HOST_ROOT", Path.cwd())).resolve()
     try:

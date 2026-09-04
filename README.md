@@ -469,6 +469,8 @@ Docker-backed API is started with `docker compose up --build api`; it exposes
 `POST /training` for allowlisted jobs and `GET /training/<job_id>` for status.
 MLflow remains available at port 5001. The browser still displays the generated
 command as a reproducibility fallback.
+Launch requests forward only numeric allowlisted parameters and automatically
+attach the supervised checkpoint for aligned/KTO jobs.
 
 ### Candidate-generation sandbox
 
