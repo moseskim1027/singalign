@@ -270,7 +270,20 @@ def main() -> int:
         split_fingerprint=train_dataset.fingerprint,
         seed=seed,
     )
-    with tracked_run(metadata, {**config, "baseline_sha256": baseline_hash}):
+    # The alignment config intentionally contains optimizer settings only; the
+    # checkpoint owns the resolved audio window used by both alignment and the
+    # comparison UI. Log that resolved configuration with the run so MLflow
+    # describes the same inputs that the UI displays.
+    tracking_parameters = {
+        **config,
+        "audio": audio_config,
+        "baseline_sha256": baseline_hash,
+        "alignment": {
+            **config["alignment"],
+            "epochs": args.epochs or int(settings["epochs"]),
+        },
+    }
+    with tracked_run(metadata, tracking_parameters):
         history = align(
             config,
             args.checkpoint,

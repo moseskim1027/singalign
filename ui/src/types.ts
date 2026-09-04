@@ -16,6 +16,8 @@ export interface ComparisonManifest {
   title: string;
   split: string;
   examples: ComparisonExample[];
+  mlflow_experiment_id?: string;
+  mlflow_run_id?: string;
 }
 
 export interface MetricDelta {
