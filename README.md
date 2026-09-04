@@ -87,6 +87,9 @@ deliberately model-independent so later candidate-generation experiments can
 compare conditioning encoders without changing corpus parsing.
 The next alignment layer expands these events to acoustic frames using explicit
 frame rate, duration, and tempo inputs; no timing is inferred implicitly.
+The experimental `ScoreConditionedMelModel` consumes those frame-level MIDI
+pitch and phoneme IDs and predicts mel frames. It is an architectural baseline
+only; it has not yet been trained or evaluated.
 Exported records also include deterministic pitch metadata: note/rest counts and
 the minimum, maximum, and mean voiced MIDI pitch. Score pitch is an intended
 conditioning signal; observed performance F0 remains a training target or

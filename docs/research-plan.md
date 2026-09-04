@@ -93,6 +93,8 @@ reproducible report where applicable.
 - [x] Include deterministic score-pitch metadata in conditioning exports.
 - [x] Define deterministic frame-level alignment using explicit tempo and
   acoustic frame-rate parameters.
+- [x] Add an untrained score/phoneme-conditioned mel-model interface with
+  shape tests.
 - [x] Run held-out baseline evaluation once on the sealed test split
   (MLflow run `9610bc68f175431b96e99f9812ca3197`).
 - [x] Run held-out aligned evaluation using the same test split and metrics
