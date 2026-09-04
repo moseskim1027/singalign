@@ -48,6 +48,10 @@ only an optional target-instrument extension. A temporary standalone copy of
 the full detailed section is available in
 [`README_study.md`](README_study.md).
 
+The two focused research directions are now consolidated in
+[`README_newresearch.md`](README_newresearch.md): same-singer score-conditioned
+synthesis and content-and-melody transfer over a different instrumental.
+
 The initial study will focus on compact, score-conditioned singing voice
 synthesis using the PJS corpus. Experiments will operate on short
 mel-spectrogram segments so that data preparation, baseline development, and
