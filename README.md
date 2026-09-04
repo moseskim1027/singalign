@@ -664,7 +664,7 @@ evolving risk assessment.
 - [ ] Establish objective evaluation baselines
 - [ ] Train and evaluate reward models
 - [ ] Compare reranking, supervised fine-tuning, DPO, and KTO
-- [ ] Conduct a blinded listening study
+- [x] Exclude participant-based listening claims from the simulation-sandbox scope
 - [ ] Publish the final report and reproducibility package
 
 The roadmap indicates intended work, not completed capabilities.
