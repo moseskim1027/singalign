@@ -1,0 +1,27 @@
+name: singalign-simulation-matrix-v1
+reference_root: reports/matrix/references
+conditions:
+  - name: baseline
+    method: supervised
+    checkpoint: checkpoints/baseline/best.pt
+    output_root: reports/matrix/baseline
+  - name: reranking
+    method: learned-reward-reranking
+    checkpoint: checkpoints/reward/best.pt
+    output_root: reports/matrix/reranking
+  - name: aligned
+    method: dpo
+    checkpoint: checkpoints/aligned/best.pt
+    output_root: reports/matrix/aligned
+  - name: kto
+    method: kto
+    checkpoint: checkpoints/kto/best.pt
+    output_root: reports/matrix/kto
+  - name: conditioned
+    method: score-conditioned-mel
+    checkpoint: checkpoints/conditioned/best.pt
+    output_root: reports/matrix/conditioned
+  - name: vocoder
+    method: mel-vocoder
+    checkpoint: checkpoints/vocoder/best.pt
+    output_root: reports/matrix/vocoder

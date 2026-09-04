@@ -687,6 +687,12 @@ reproduce from one review.
 The first workstream adds `singalign-reward-train`, a Docker/MLflow command
 that trains a learned reward model from saved chosen/rejected tensors and
 records its checkpoint and pairwise diagnostic metrics.
+The second workstream uses a versioned comparison-matrix manifest to run the
+same paired analysis across available baseline, reranking, DPO, KTO,
+conditioned, and vocoder outputs; missing outputs are reported as pending
+rather than silently treated as results.
+Run `singalign-matrix-status --config configs/evaluation/comparison-matrix.yaml`
+to audit readiness before producing the aggregate report.
 
 PR 1 is implementing learned reward baselines on top of the existing
 deterministic preference-pair generator. The learned models are exploratory:
