@@ -14,7 +14,7 @@ from torch.nn import functional as F
 from singalign.conditioning import frame_conditioning_tensors, load_conditioning
 from singalign.audio import crop_or_pad, load_audio, log_mel_spectrogram
 
-DevelopmentSplit = Literal["train", "validation"]
+DevelopmentSplit = Literal["train", "validation", "test"]
 
 
 def read_index(path: Path) -> dict[str, dict[str, Any]]:
@@ -35,8 +35,9 @@ class PJSMelDataset(Dataset[tuple[torch.Tensor, torch.Tensor]]):
         audio_config: dict[str, Any],
         seed: int,
         max_items: int | None = None,
+        allow_test: bool = False,
     ) -> None:
-        if split not in ("train", "validation"):
+        if split not in ("train", "validation", "test") or (split == "test" and not allow_test):
             raise ValueError("training datasets may only use train or validation")
         records = read_index(index_path)
         split_data = json.loads(splits_path.read_text())

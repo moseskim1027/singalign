@@ -511,6 +511,16 @@ The first 10-epoch pilot is MLflow run `3c9de2f603d2419683f6bfe2502fdc9d`
 in experiment `singalign-kto-proxy`.
 The trainer validates required sections and positive beta/temperature before
 starting a run.
+The held-out diagnostic command `singalign-kto-evaluate` measures synthetic
+preference loss and accuracy on the sealed test split without changing the
+checkpoint or tuning the objective.
+The evaluator is the only workflow that passes the dataset's explicit
+`allow_test=True` opt-in; training commands remain unable to consume test IDs.
+The first held-out diagnostic evaluated 10 test examples with proxy preference
+accuracy `1.0` and mean proxy loss `0.3955`; these are engineering diagnostics,
+not perceptual or population-level claims.
+The evaluation settings are frozen in `configs/evaluation/kto.yaml`; the
+command still requires the explicit test-split workflow shown below.
 
 Run the exploratory KTO condition from Docker with:
 
