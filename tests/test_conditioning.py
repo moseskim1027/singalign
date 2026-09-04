@@ -20,6 +20,9 @@ class ConditioningTest(unittest.TestCase):
             self.assertEqual(record.notes[0].duration, 1.0)
             self.assertIsNone(record.notes[1].midi)
             self.assertEqual(record.phonemes[1][2], "pau")
+            self.assertEqual(record.pitch_metadata["midi_pitch_min"], 60)
+            self.assertEqual(record.pitch_metadata["midi_pitch_max"], 60)
+            self.assertEqual(record.pitch_metadata["rest_count"], 1)
 
 
 if __name__ == "__main__":

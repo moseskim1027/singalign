@@ -82,6 +82,7 @@ def main() -> int:
                 {
                     "notes": [note.__dict__ for note in record.notes],
                     "phonemes": record.phonemes,
+                    "pitch_metadata": record.pitch_metadata,
                 },
                 indent=2,
             )

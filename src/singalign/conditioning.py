@@ -23,6 +23,20 @@ class ConditioningRecord:
     notes: tuple[NoteEvent, ...]
     phonemes: tuple[tuple[int, int, str], ...]
 
+    @property
+    def pitch_metadata(self) -> dict[str, float | int | None]:
+        """Return deterministic summary metadata for the score pitches."""
+
+        pitches = [note.midi for note in self.notes if note.midi is not None]
+        return {
+            "note_count": len(self.notes),
+            "voiced_note_count": len(pitches),
+            "rest_count": len(self.notes) - len(pitches),
+            "midi_pitch_min": min(pitches) if pitches else None,
+            "midi_pitch_max": max(pitches) if pitches else None,
+            "midi_pitch_mean": sum(pitches) / len(pitches) if pitches else None,
+        }
+
 
 def read_phoneme_labels(path: Path) -> tuple[tuple[int, int, str], ...]:
     """Read validated PJS phoneme intervals without exposing audio content."""

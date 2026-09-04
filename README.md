@@ -85,6 +85,10 @@ pitch)` tuples, with `MIDI pitch = null` for rests, plus phoneme intervals as
 `(start, end, symbol)` tuples in the source label timebase. This schema is
 deliberately model-independent so later candidate-generation experiments can
 compare conditioning encoders without changing corpus parsing.
+Exported records also include deterministic pitch metadata: note/rest counts and
+the minimum, maximum, and mean voiced MIDI pitch. Score pitch is an intended
+conditioning signal; observed performance F0 remains a training target or
+diagnostic to avoid leaking the reference performance at inference time.
 
 Export one conditioning record for inspection inside the reproducible Docker
 environment:
