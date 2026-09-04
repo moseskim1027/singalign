@@ -35,6 +35,7 @@ app.innerHTML = `
   <section id="results" class="results" hidden></section>
   <footer>
     <strong>Interpretation boundary:</strong> this view is not a blinded listening study. Generated examples use approximate Griffin-Lim reconstruction.
+    <br /><strong>DPO terminology:</strong> Reference is the target audio; Baseline is the frozen reference policy; Aligned is the optimized policy.
   </footer>
 `;
 
@@ -107,9 +108,9 @@ const renderExample = (
   const grid = document.createElement("div");
   grid.className = "audio-grid";
   grid.append(
-    audioCard("Target audio", runId, example.reference, false),
-    audioCard("Baseline / reference policy", runId, example.baseline, true),
-    audioCard("Aligned policy", runId, example.aligned, true),
+    audioCard("Reference", runId, example.reference, false),
+    audioCard("Baseline", runId, example.baseline, true),
+    audioCard("Aligned", runId, example.aligned, true),
   );
   container.append(header, grid);
 };
