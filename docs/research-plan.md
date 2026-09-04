@@ -1,6 +1,14 @@
 # Research Plan
 
-## Primary hypothesis
+## Project framing
+
+SingAlign is now an engineering and simulation sandbox for comparing music
+generation methods. It does not require participant recruitment, confirmatory
+hypothesis testing, or population-level human-preference claims. Metrics and
+bootstrap intervals remain optional diagnostic tools for comparing reproducible
+runs.
+
+## Original research hypothesis
 
 Preference-based post-training can improve perceived singing quality relative
 to supervised fine-tuning and candidate reranking without materially degrading
@@ -43,6 +51,30 @@ reconstruction through an anchor loss. It does not test human preference
 alignment. Its purpose is to validate instrumentation and expose trade-offs
 before collecting or modeling listener judgments.
 
+## Paper-oriented methodology
+
+The exploratory pilot validates the pipeline; it is not evidence for the
+primary hypothesis. Paper-ready claims will use confirmatory runs whose
+hypotheses, conditions, metrics, exclusions, and analysis thresholds are frozen
+before the test split or listener responses are examined.
+
+- Keep the song-disjoint split fingerprint immutable across comparisons.
+- Use the same preprocessing, checkpoint-selection rule, and compute budget
+  across conditions unless an ablation explicitly tests the difference.
+- Separate exploratory, development, and confirmatory MLflow experiments.
+- Select checkpoints using validation data only; evaluate the held-out test
+  split once per registered condition and do not tune on test results.
+- Report paired estimates, uncertainty intervals, effect sizes, sample counts,
+  exclusions, and failed runs—not only the best point estimate.
+- Treat synthetic preference labels and objective proxies as validation tools,
+  not substitutes for human preference judgments.
+- Preregister the blinded listening protocol, randomization, listener
+  eligibility, power rationale, primary endpoint, stopping rule, and analysis.
+- Maintain an experiment manifest linking config, code revision, data
+  fingerprint, checkpoint hashes, Docker image, MLflow run, and report.
+- Distinguish implementation validation from claims about quality,
+  intelligibility, identity, or preference alignment.
+
 ## Execution status and next steps
 
 This checklist is the working record for the current research cycle. Each
@@ -63,19 +95,69 @@ reproducible report where applicable.
 - [x] Generate paired validation comparisons and a local listening report.
 - [x] Expose the comparison report in the Dockerized UI and link it to the
   corresponding MLflow evaluation run.
+- [x] Define a deterministic, model-independent score/phoneme conditioning
+  record and cover its parser with unit tests.
+- [x] Add a Docker/CLI export path for inspecting conditioning records.
+- [x] Include deterministic score-pitch metadata in conditioning exports.
+- [x] Define deterministic frame-level alignment using explicit tempo and
+  acoustic frame-rate parameters.
+- [x] Add an untrained score/phoneme-conditioned mel-model interface with
+  shape tests.
+- [x] Freeze the initial score-conditioned baseline specification in
+  `configs/training/conditioned.yaml`.
+- [x] Add a fixed-shape tensor adapter with explicit pitch/rest and phoneme-ID
+  conventions.
+- [x] Add a deterministic dataset adapter pairing symbolic frames with mel
+  targets using the same crop offset.
+- [x] Add an exploratory Docker/MLflow training command for the conditioned mel
+  model.
+- [x] Run the conditioned model for the frozen exploratory 10-epoch budget in
+  Docker; MLflow run `1fd53daa1f7e494abe16ceccf7daa3c1` is recorded in
+  `singalign-score-conditioned-baseline`.
+- [x] Support explicit crop offsets when aligning symbolic events to acoustic
+  frames.
+- [x] Run held-out baseline evaluation once on the sealed test split
+  (MLflow run `9610bc68f175431b96e99f9812ca3197`).
+- [x] Run held-out aligned evaluation using the same test split and metrics
+  (MLflow run `0aa5ffc003d84eaea82259b1f4e45e1d`).
+- [x] Freeze the exploratory 3-second/10-epoch pilot manifest in
+  [`experiments/pilot-3s-10e-manifest.yaml`](../experiments/pilot-3s-10e-manifest.yaml).
+- [x] Draft the confirmatory analysis plan in
+  [`experiments/analysis-plan-v1.md`](../experiments/analysis-plan-v1.md);
+  external preregistration remains pending.
 
-### Next research sequence
+### Next engineering sequence
 
-- [ ] Freeze the pilot configurations, split fingerprint, and success
-  thresholds in an experiment manifest.
-- [ ] Run held-out baseline evaluation once on the sealed test split.
-- [ ] Run held-out aligned evaluation using the same test split and metrics.
+- [x] Reframe the project from a confirmatory human-subjects study to a
+  reproducible generation-method simulation sandbox.
+- [x] Implement the first reproducible mel/waveform dataset adapter, vocoder
+  configuration, and Docker training command; training the baseline remains
+  an exploratory run.
+- [x] Run the 10-epoch Docker vocoder pilot (MLflow run
+  `421229b14e3043bfb3d89e3d6d2ca209`).
+- [x] Add a held-out vocoder diagnostic command reporting waveform MSE and
+  output peak level with the sealed split fingerprint.
 - [ ] Add candidate generation and deterministic reward-based reranking.
 - [ ] Define and implement scalar and multidimensional reward-model baselines.
 - [ ] Add KTO as a separately tracked post-training condition.
 - [ ] Compare all conditions with paired bootstrap intervals and effect sizes.
-- [ ] Design and preregister a blinded listening study covering naturalness,
-  pitch/rhythm, intelligibility, singer similarity, and expressiveness.
-- [ ] Conduct the listening study, analyze failures, and report limitations.
+- [ ] Add optional qualitative or informal listening feedback without making
+  population-level claims.
 - [ ] Package final manifests, reports, environment metadata, and reproduction
   instructions.
+
+### Deferred UI work
+
+The current UI is an unblinded reconstruction-inspection tool and should remain
+stable during the score-conditioned model work. Revisit this section after
+candidate generation exists:
+
+- [ ] Add condition selection for baseline, reranking, DPO, and KTO.
+- [ ] Display multiple candidates with ranking scores and provenance.
+- [ ] Display score/phoneme conditioning metadata alongside each example.
+- [ ] Show cross-condition metrics, uncertainty intervals, and MLflow links.
+- [ ] Build a separate blinded listening-study interface with randomized
+  labels and no model-condition disclosure.
+
+Do not use the current UI for perceptual claims: its model labels are visible,
+and its generated audio uses approximate reconstruction.

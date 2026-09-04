@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import argparse
+import json
 from pathlib import Path
 
+from singalign.conditioning import load_conditioning
 from singalign.data.pjs import (
     build_index,
     create_splits,
@@ -32,6 +34,13 @@ def _parser() -> argparse.ArgumentParser:
     split.add_argument("--seed", type=int, default=2026)
     split.add_argument("--train-count", type=int, default=80)
     split.add_argument("--validation-count", type=int, default=10)
+
+    conditioning = subparsers.add_parser(
+        "conditioning", help="export deterministic score/phoneme conditioning"
+    )
+    conditioning.add_argument("--musicxml", type=Path, required=True)
+    conditioning.add_argument("--labels", type=Path, required=True)
+    conditioning.add_argument("--output", type=Path, required=True)
     return parser
 
 
@@ -64,6 +73,22 @@ def main() -> int:
             f"{args.output}: train={len(splits['train'])}, "
             f"validation={len(splits['validation'])}, test={len(splits['test'])}"
         )
+        return 0
+    if args.command == "conditioning":
+        record = load_conditioning(args.musicxml, args.labels)
+        args.output.parent.mkdir(parents=True, exist_ok=True)
+        args.output.write_text(
+            json.dumps(
+                {
+                    "notes": [note.__dict__ for note in record.notes],
+                    "phonemes": record.phonemes,
+                    "pitch_metadata": record.pitch_metadata,
+                },
+                indent=2,
+            )
+            + "\n"
+        )
+        print(f"Wrote conditioning record to {args.output}")
         return 0
     return 2
 

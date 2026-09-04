@@ -1,0 +1,47 @@
+name: pilot-3s-10e
+status: exploratory
+hypothesis: >-
+  A DPO-style energy update trained on deterministic synthetic preferences can
+  improve reconstruction metrics without materially changing the baseline
+  behavior.
+scope: pipeline and post-training instrumentation; not evidence of human preference alignment
+
+dataset:
+  name: pjs
+  version: "1.1"
+  split_fingerprint: d4691c4111c5040e4e63e3a4d3f5230dab9a3ba0467fb027d73e96e666af1efd
+  test_split_policy: sealed; no training or model selection uses test examples
+
+configuration:
+  segment_seconds: 3.0
+  baseline_epochs: 10
+  alignment_epochs: 10
+  baseline: configs/training/baseline.yaml
+  alignment: configs/training/alignment.yaml
+  baseline_evaluation: configs/evaluation/baseline.yaml
+  aligned_evaluation: configs/evaluation/aligned.yaml
+  comparison: configs/evaluation/comparison.yaml
+
+checkpoints:
+  baseline_best_sha256: dcd7626b4b920fb05db404db3f4cd5d14e708f0f791b968476e9f0d23293d673
+  aligned_best_sha256: 4aad5041d004097acd462c8e104d3fe09c65d3bbb0ab535dfb8ef4ed86ba436e
+
+environment:
+  execution: Docker Compose research service
+  python: "3.11"
+  image: singalign-research
+  image_id: sha256:87935efa18824fca30c2273b889329acf2f72c7bc83bca4911265e943133559c
+  code_revision: 97f6ff02e158cd9e4611fb80bc4022da8d6ec72d
+
+mlflow_runs:
+  baseline_training: 139e112caf194f028f172ac4b3938a6d
+  aligned_training: 518118e95e934dbba2ae945251e27204
+  comparison: 53bd7c66bef34106a3bc7682b85d8a07
+  baseline_test_evaluation: 9610bc68f175431b96e99f9812ca3197
+  aligned_test_evaluation: 0aa5ffc003d84eaea82259b1f4e45e1d
+
+analysis:
+  primary_comparison_split: validation
+  primary_metrics: [log_mel_mse, log_mel_mae, spectral_convergence]
+  uncertainty: paired bootstrap confidence intervals at 0.95
+  confirmatory_claims: prohibited; thresholds and listener protocol are not registered

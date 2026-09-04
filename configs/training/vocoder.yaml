@@ -1,0 +1,19 @@
+experiment:
+  name: singalign-mel-vocoder
+  run_name: mel-vocoder-baseline
+  run_kind: exploratory
+
+audio:
+  sample_rate: 16000
+  segment_seconds: 3.0
+  n_fft: 512
+  hop_length: 160
+  mel_bins: 80
+
+training:
+  seed: 2026
+  batch_size: 2
+  epochs: 10
+  learning_rate: 0.0001
+  device: auto
+  checkpoint_dir: checkpoints/vocoder

@@ -1,6 +1,7 @@
 # SingAlign
 
-Preference-aligned singing voice synthesis.
+Reproducible music-generation sandbox for preference-aligned singing voice
+synthesis.
 
 > [!IMPORTANT]
 > SingAlign is an early-stage research project. The methods, experiments, and
@@ -9,11 +10,9 @@ Preference-aligned singing voice synthesis.
 
 ## Overview
 
-SingAlign studies whether preference-based post-training can improve singing
-voice synthesis without sacrificing musical accuracy, lyric intelligibility,
-or singer identity. Its initial experiments focus on low-resource preference
-alignment: methods that can be investigated reproducibly without training a
-large generative audio model from scratch.
+SingAlign compares singing-voice generation, reconstruction, conditioning,
+reranking, and preference-optimization methods. It is an engineering and
+simulation environment rather than a confirmatory human-subjects study.
 
 The project will evaluate multidimensional reward modeling and preference
 optimization methods for generative singing systems. Initial experiments will
@@ -70,6 +69,72 @@ The planned research pipeline consists of:
 
 The methodology may change as preliminary experiments reveal limitations. Any
 material changes will be documented in the research plan and experiment logs.
+
+### Score and lyric conditioning prototype
+
+The repository now includes a dependency-light conditioning interface in
+`singalign.conditioning`. It parses PJS MusicXML into deterministic note events
+and phoneme label files into timed phoneme intervals. This is the first data
+interface for the planned score/lyric-conditioned synthesis stage; it is not
+yet a trained synthesizer or a candidate generator. The parser is covered by
+unit tests and does not alter the immutable corpus.
+
+Each conditioning record contains note events as `(onset, duration, MIDI
+pitch)` tuples, with `MIDI pitch = null` for rests, plus phoneme intervals as
+`(start, end, symbol)` tuples in the source label timebase. This schema is
+deliberately model-independent so later candidate-generation experiments can
+compare conditioning encoders without changing corpus parsing.
+The next alignment layer expands these events to acoustic frames using explicit
+frame rate, duration, and tempo inputs; no timing is inferred implicitly.
+Windowed crops pass an explicit song-time offset so score and phoneme events are
+aligned to the same crop rather than implicitly restarting at time zero.
+The experimental `ScoreConditionedMelModel` consumes those frame-level MIDI
+pitch and phoneme IDs and predicts mel frames. It is an architectural baseline
+only; its first exploratory training run is not a synthesis or confirmatory
+evaluation.
+Its proposed training specification is frozen in
+`configs/training/conditioned.yaml`: 16 kHz audio, 80-bin log-mel targets,
+100-frame-per-second conditioning, a 3-second window, and a 10-epoch
+exploratory budget. The training command is implemented and tested in Docker;
+held-out synthesis evaluation remains intentionally deferred until a
+decoder/candidate-generation protocol is specified.
+The frame adapter emits integer MIDI pitch IDs with `0` for rests and integer
+phoneme IDs with `0` reserved for unknown/padding symbols.
+The exploratory conditioned-model trainer is available in Docker:
+
+```bash
+docker compose run --rm research \
+  singalign-conditioned-train \
+  --config configs/training/conditioned.yaml \
+  --index data/interim/pjs/index.jsonl \
+  --splits data/interim/pjs/splits.json
+```
+
+It logs training/validation loss and a checkpoint to MLflow. This is an architectural
+baseline, not yet a candidate-generation or confirmatory experiment.
+The run also records the immutable split fingerprint through the shared MLflow
+tracking contract.
+The `PJSConditionedDataset` adapter pairs these tensors with deterministic
+3-second mel targets using the same crop offset, tempo, and frame-count
+convention. The first Docker run completed 10 exploratory epochs and logged
+MLflow run `1fd53daa1f7e494abe16ceccf7daa3c1` in experiment
+`singalign-score-conditioned-baseline`; it produced a checkpoint but no
+reported synthesis result.
+Exported records also include deterministic pitch metadata: note/rest counts and
+the minimum, maximum, and mean voiced MIDI pitch. Score pitch is an intended
+conditioning signal; observed performance F0 remains a training target or
+diagnostic to avoid leaking the reference performance at inference time.
+
+Export one conditioning record for inspection inside the reproducible Docker
+environment:
+
+```bash
+docker compose run --rm research \
+  singalign-data conditioning \
+  --musicxml /workspace/data/raw/pjs/PJS_corpus_ver1.1/pjs001/pjs001.musicxml \
+  --labels /workspace/data/raw/pjs/PJS_corpus_ver1.1/pjs001/pjs001.lab \
+  --output /workspace/reports/conditioning/pjs001.json
+```
 
 ## Dataset plan
 
@@ -322,6 +387,42 @@ manifest referencing local reference, baseline, and aligned WAV files.
 Generated model audio uses approximate mel pseudoinversion and Griffin-Lim and
 must not be treated as a production-quality vocoder result.
 
+The repository also includes `MelVocoder`, a trainable mel-to-waveform decoder
+with an explicit frame hop length. It is the first differentiable vocoder
+baseline for future generation experiments; it is untrained until a dedicated
+vocoder dataset/training protocol is added, so Griffin-Lim remains the current
+fallback for existing comparison reports.
+
+Its reproducible exploratory trainer is available in Docker:
+
+```bash
+docker compose run --rm research \
+  singalign-vocoder-train \
+  --config configs/training/vocoder.yaml \
+  --index data/interim/pjs/index.jsonl \
+  --splits data/interim/pjs/splits.json
+```
+
+This trains only on the training split, logs validation loss and the checkpoint
+to MLflow, and is an engineering baseline rather than a production vocoder.
+The first 10-epoch Docker pilot is MLflow run
+`421229b14e3043bfb3d89e3d6d2ca209` in `singalign-mel-vocoder`.
+
+Evaluate that checkpoint diagnostically on the sealed test split only after
+the pilot is complete:
+
+```bash
+docker compose run --rm research \
+  singalign-vocoder-evaluate \
+  --config configs/training/vocoder.yaml \
+  --checkpoint checkpoints/vocoder/last.pt \
+  --index data/interim/pjs/index.jsonl \
+  --splits data/interim/pjs/splits.json
+```
+
+The report prints the split fingerprint, waveform MSE, and generated peak
+level. These are engineering diagnostics, not perceptual-quality claims.
+
 The default comparison duration is read from the checkpoints, matching the
 training window. An optional positive `comparison.audio_segment_seconds` value
 up to 30 seconds can override it for deliberate out-of-window inspection.
@@ -357,6 +458,11 @@ The listening view is an inspection aid, not a blinded perceptual study. Its
 generated audio is approximate Griffin-Lim reconstruction and must not be used
 alone to support claims about perceptual quality. See [`ui/README.md`](ui/README.md)
 for development and troubleshooting instructions.
+
+Future UI work is intentionally deferred until score-conditioned candidate
+generation is implemented. Planned additions include condition selection,
+multiple candidates with provenance, conditioning metadata, cross-condition
+uncertainty summaries, and a separate blinded listening-study interface.
 
 Stop the services without removing tracked runs:
 

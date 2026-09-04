@@ -9,7 +9,9 @@ from typing import Any, Literal
 
 import torch
 from torch.utils.data import Dataset
+from torch.nn import functional as F
 
+from singalign.conditioning import frame_conditioning_tensors, load_conditioning
 from singalign.audio import crop_or_pad, load_audio, log_mel_spectrogram
 
 DevelopmentSplit = Literal["train", "validation"]
@@ -71,3 +73,82 @@ class PJSMelDataset(Dataset[tuple[torch.Tensor, torch.Tensor]]):
             mel_bins=int(self.audio_config["mel_bins"]),
         ).unsqueeze(0)
         return mel, mel
+
+
+class PJSConditionedDataset(Dataset[tuple[torch.Tensor, torch.Tensor, torch.Tensor]]):
+    """Deterministic score/phoneme conditioning paired with mel targets."""
+
+    def __init__(self, index_path: Path, splits_path: Path, split: DevelopmentSplit,
+                 audio_config: dict[str, Any], conditioning_config: dict[str, Any],
+                 seed: int, max_items: int | None = None) -> None:
+        base = PJSMelDataset(index_path, splits_path, split, audio_config, seed, max_items)
+        self.records, self.audio_config = base.records, audio_config
+        self.fingerprint = base.fingerprint
+        self.seed, self.conditioning_config = seed, conditioning_config
+        self.phoneme_to_id = {"<unk>": 0}
+        for record in self.records:
+            conditioning = load_conditioning(Path(record["musicxml"]), Path(record["label"]))
+            for _, _, symbol in conditioning.phonemes:
+                if symbol not in self.phoneme_to_id:
+                    self.phoneme_to_id[symbol] = len(self.phoneme_to_id)
+
+    def __len__(self) -> int:
+        return len(self.records)
+
+    def __getitem__(self, index: int) -> tuple[torch.Tensor, ...]:
+        record = self.records[index]
+        sample_rate = int(self.audio_config["sample_rate"])
+        seconds = float(self.audio_config["segment_seconds"])
+        waveform = load_audio(Path(record["song_audio"]), sample_rate)
+        length = round(sample_rate * seconds)
+        available = max(waveform.numel() - length, 0)
+        token = f"{self.seed}:{record['id']}".encode()
+        offset = int.from_bytes(hashlib.sha256(token).digest()[:8], "big") % (available + 1)
+        target_waveform = crop_or_pad(waveform, length, offset)
+        target = log_mel_spectrogram(target_waveform, sample_rate,
+            int(self.audio_config["n_fft"]), int(self.audio_config["hop_length"]),
+            int(self.audio_config["mel_bins"])).unsqueeze(0)
+        conditioning = load_conditioning(Path(record["musicxml"]), Path(record["label"]))
+        pitch, phonemes = frame_conditioning_tensors(
+            conditioning, float(self.conditioning_config["frame_rate"]), seconds,
+            60.0 / float(record.get("bpm") or 120), self.phoneme_to_id, offset / sample_rate
+        )
+        frame_count = pitch.shape[0]
+        target = F.interpolate(target.unsqueeze(0), size=(target.shape[-2], frame_count), mode="bilinear").squeeze(0)
+        return pitch, phonemes, target
+
+
+class PJSVocoderDataset(Dataset[tuple[torch.Tensor, torch.Tensor]]):
+    """Deterministic normalized mel and waveform pairs for vocoder training."""
+
+    def __init__(self, index_path: Path, splits_path: Path, split: DevelopmentSplit,
+                 audio_config: dict[str, Any], seed: int,
+                 max_items: int | None = None) -> None:
+        if split == "test":
+            index = read_index(index_path)
+            split_data = json.loads(splits_path.read_text())
+            ids = split_data["test"][:max_items] if max_items else split_data["test"]
+            self.records = [index[item_id] for item_id in ids]
+            self.fingerprint = str(split_data["fingerprint_sha256"])
+        else:
+            base = PJSMelDataset(index_path, splits_path, split, audio_config, seed, max_items)
+            self.records, self.fingerprint = base.records, base.fingerprint
+        self.audio_config, self.seed = audio_config, seed
+
+    def __len__(self) -> int:
+        return len(self.records)
+
+    def __getitem__(self, index: int) -> tuple[torch.Tensor, torch.Tensor]:
+        record = self.records[index]
+        sample_rate = int(self.audio_config["sample_rate"])
+        length = round(sample_rate * float(self.audio_config["segment_seconds"]))
+        waveform = load_audio(Path(record["song_audio"]), sample_rate)
+        available = max(waveform.numel() - length, 0)
+        token = f"{self.seed}:{record['id']}".encode()
+        offset = int.from_bytes(hashlib.sha256(token).digest()[:8], "big") % (available + 1)
+        waveform = crop_or_pad(waveform, length, offset)
+        mel = log_mel_spectrogram(
+            waveform, sample_rate, int(self.audio_config["n_fft"]),
+            int(self.audio_config["hop_length"]), int(self.audio_config["mel_bins"]),
+        )
+        return mel, waveform
