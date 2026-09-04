@@ -699,6 +699,9 @@ and compatible comparison conditions; the UI will surface prerequisites and
 prevent incompatible downstream selections.
 The registry is intentionally declarative so the same experiment identity can
 be reused by training, evaluation, and comparison controls.
+Evaluation is a separate command-generation step: it consumes the selected
+experiment's checkpoint and protocol, while Comparison consumes the resulting
+report rather than directly reusing training settings.
 
 ## Contributing
 

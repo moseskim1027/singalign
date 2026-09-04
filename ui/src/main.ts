@@ -41,6 +41,20 @@ app.innerHTML = `
     </section>
   </section>
   <section class="tab-panel" data-panel="evaluation" hidden>
+  <section class="loader" aria-labelledby="evaluation-title">
+    <div>
+      <h2 id="evaluation-title">Evaluation interface</h2>
+      <p>Evaluate the checkpoint produced by Training using its registered protocol.</p>
+    </div>
+    <form id="evaluation-form">
+      <label for="evaluation-experiment">Experiment</label>
+      <select id="evaluation-experiment"></select>
+      <label for="evaluation-checkpoint">Checkpoint</label>
+      <input id="evaluation-checkpoint" value="checkpoints/baseline/best.pt" required />
+      <button type="submit">Generate evaluation command</button>
+    </form>
+    <pre id="evaluation-command" class="command" hidden></pre>
+  </section>
   <section class="loader" aria-labelledby="loader-title">
     <div>
       <h2 id="loader-title">Load a comparison run</h2>
@@ -94,11 +108,15 @@ const trainingExperiment = document.querySelector<HTMLSelectElement>("#training-
 const trainingFields = document.querySelector<HTMLElement>("#training-fields");
 const trainingCommand = document.querySelector<HTMLElement>("#training-command");
 const experimentContext = document.querySelector<HTMLElement>("#experiment-context");
+const evaluationForm = document.querySelector<HTMLFormElement>("#evaluation-form");
+const evaluationExperiment = document.querySelector<HTMLSelectElement>("#evaluation-experiment");
+const evaluationCheckpoint = document.querySelector<HTMLInputElement>("#evaluation-checkpoint");
+const evaluationCommand = document.querySelector<HTMLElement>("#evaluation-command");
 const tabs = [...document.querySelectorAll<HTMLButtonElement>(".tab")];
 const panels = [...document.querySelectorAll<HTMLElement>(".tab-panel")];
 const workflowReady = { evaluation: false, comparison: false };
 
-if (!form || !input || !status || !results || !multiForm || !multiInput || !multiStatus || !multiResults || !trainingForm || !trainingExperiment || !trainingFields || !trainingCommand || !experimentContext) {
+if (!form || !input || !status || !results || !multiForm || !multiInput || !multiStatus || !multiResults || !trainingForm || !trainingExperiment || !trainingFields || !trainingCommand || !experimentContext || !evaluationForm || !evaluationExperiment || !evaluationCheckpoint || !evaluationCommand) {
   throw new Error("comparison controls are missing");
 }
 
@@ -126,6 +144,7 @@ Object.entries(trainingExperiments).forEach(([key, experiment]) => {
   option.value = key;
   option.textContent = experiment.label;
   trainingExperiment.append(option);
+  evaluationExperiment.append(option.cloneNode(true));
 });
 
 const renderTrainingFields = (): void => {
@@ -146,6 +165,19 @@ const renderTrainingFields = (): void => {
 };
 renderTrainingFields();
 trainingExperiment.addEventListener("change", renderTrainingFields);
+evaluationExperiment.addEventListener("change", () => {
+  const experiment = trainingExperiments[evaluationExperiment.value as keyof typeof trainingExperiments];
+  evaluationCheckpoint.value = experiment.prerequisite === "none" ? `${experiment.config.replace("configs/training/", "checkpoints/").replace(".yaml", "/best.pt")}` : `checkpoints/${evaluationExperiment.value}/best.pt`;
+});
+evaluationForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  const experiment = trainingExperiments[evaluationExperiment.value as keyof typeof trainingExperiments];
+  const commandName = evaluationExperiment.value === "vocoder" ? "vocoder-evaluate" : evaluationExperiment.value === "kto" ? "kto-evaluate" : "evaluate";
+  evaluationCommand.hidden = false;
+  evaluationCommand.textContent = `docker compose run --rm research \\\n+  singalign-${commandName} \\\n+  --config ${experiment.evaluation} \\\n+  --checkpoint ${evaluationCheckpoint.value} \\\n+  --splits data/interim/pjs/splits.json`;
+  workflowReady.comparison = true;
+  updateWorkflowAccess();
+});
 
 const setTab = (name: string): void => {
   tabs.forEach((tab) => {
