@@ -90,6 +90,11 @@ frame rate, duration, and tempo inputs; no timing is inferred implicitly.
 The experimental `ScoreConditionedMelModel` consumes those frame-level MIDI
 pitch and phoneme IDs and predicts mel frames. It is an architectural baseline
 only; it has not yet been trained or evaluated.
+Its proposed training specification is frozen in
+`configs/training/conditioned.yaml`: 16 kHz audio, 80-bin log-mel targets,
+100-frame-per-second conditioning, a 3-second window, and a 10-epoch
+exploratory budget. The training command will be added after the dataset frame
+adapter is implemented and tested.
 Exported records also include deterministic pitch metadata: note/rest counts and
 the minimum, maximum, and mean voiced MIDI pitch. Score pitch is an intended
 conditioning signal; observed performance F0 remains a training target or

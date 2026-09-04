@@ -1,0 +1,29 @@
+experiment:
+  name: singalign-score-conditioned-baseline
+  run_name: score-phoneme-mel-baseline
+  run_kind: exploratory
+
+audio:
+  sample_rate: 16000
+  segment_seconds: 3.0
+  n_fft: 512
+  hop_length: 160
+  mel_bins: 80
+
+conditioning:
+  frame_rate: 100.0
+  phoneme_vocab_size: 256
+  midi_min: 0
+  midi_max: 128
+
+model:
+  architecture: score_conditioned_mel
+
+training:
+  seed: 2026
+  batch_size: 4
+  epochs: 10
+  learning_rate: 0.0001
+  device: auto
+  num_workers: 0
+  checkpoint_dir: checkpoints/conditioned
