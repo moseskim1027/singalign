@@ -464,6 +464,15 @@ generation is implemented. Planned additions include condition selection,
 multiple candidates with provenance, conditioning metadata, cross-condition
 uncertainty summaries, and a separate blinded listening-study interface.
 
+### Candidate-generation sandbox
+
+The next engineering stage is defined in
+[`experiments/candidate-generation-v1.md`](experiments/candidate-generation-v1.md).
+It will generate deterministic candidates from a shared mel input, score them
+with explicitly labeled proxy rewards, and retain provenance for every output.
+The first implementation will cover controlled perturbations before learned
+decoder outputs are added.
+
 Stop the services without removing tracked runs:
 
 ```bash
