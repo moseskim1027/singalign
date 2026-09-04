@@ -87,6 +87,8 @@ reproducible report where applicable.
 - [x] Generate paired validation comparisons and a local listening report.
 - [x] Expose the comparison report in the Dockerized UI and link it to the
   corresponding MLflow evaluation run.
+- [x] Define a deterministic, model-independent score/phoneme conditioning
+  record and cover its parser with unit tests.
 - [x] Run held-out baseline evaluation once on the sealed test split
   (MLflow run `9610bc68f175431b96e99f9812ca3197`).
 - [x] Run held-out aligned evaluation using the same test split and metrics

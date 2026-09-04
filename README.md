@@ -80,6 +80,12 @@ interface for the planned score/lyric-conditioned synthesis stage; it is not
 yet a trained synthesizer or a candidate generator. The parser is covered by
 unit tests and does not alter the immutable corpus.
 
+Each conditioning record contains note events as `(onset, duration, MIDI
+pitch)` tuples, with `MIDI pitch = null` for rests, plus phoneme intervals as
+`(start, end, symbol)` tuples in the source label timebase. This schema is
+deliberately model-independent so later candidate-generation experiments can
+compare conditioning encoders without changing corpus parsing.
+
 ## Dataset plan
 
 The initial dataset is the PJS phoneme-balanced Japanese singing voice corpus.
