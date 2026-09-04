@@ -393,6 +393,21 @@ baseline for future generation experiments; it is untrained until a dedicated
 vocoder dataset/training protocol is added, so Griffin-Lim remains the current
 fallback for existing comparison reports.
 
+Its reproducible exploratory trainer is available in Docker:
+
+```bash
+docker compose run --rm research \
+  singalign-vocoder-train \
+  --config configs/training/vocoder.yaml \
+  --index data/interim/pjs/index.jsonl \
+  --splits data/interim/pjs/splits.json
+```
+
+This trains only on the training split, logs validation loss and the checkpoint
+to MLflow, and is an engineering baseline rather than a production vocoder.
+The first 10-epoch Docker pilot is MLflow run
+`421229b14e3043bfb3d89e3d6d2ca209` in `singalign-mel-vocoder`.
+
 The default comparison duration is read from the checkpoints, matching the
 training window. An optional positive `comparison.audio_segment_seconds` value
 up to 30 seconds can override it for deliberate out-of-window inspection.

@@ -130,7 +130,11 @@ reproducible report where applicable.
 
 - [x] Reframe the project from a confirmatory human-subjects study to a
   reproducible generation-method simulation sandbox.
-- [ ] Define and train the waveform decoder/vocoder dataset protocol.
+- [x] Implement the first reproducible mel/waveform dataset adapter, vocoder
+  configuration, and Docker training command; training the baseline remains
+  an exploratory run.
+- [x] Run the 10-epoch Docker vocoder pilot (MLflow run
+  `421229b14e3043bfb3d89e3d6d2ca209`).
 - [ ] Add candidate generation and deterministic reward-based reranking.
 - [ ] Define and implement scalar and multidimensional reward-model baselines.
 - [ ] Add KTO as a separately tracked post-training condition.

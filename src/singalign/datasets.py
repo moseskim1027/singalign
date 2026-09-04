@@ -116,3 +116,32 @@ class PJSConditionedDataset(Dataset[tuple[torch.Tensor, torch.Tensor, torch.Tens
         frame_count = pitch.shape[0]
         target = F.interpolate(target.unsqueeze(0), size=(target.shape[-2], frame_count), mode="bilinear").squeeze(0)
         return pitch, phonemes, target
+
+
+class PJSVocoderDataset(Dataset[tuple[torch.Tensor, torch.Tensor]]):
+    """Deterministic normalized mel and waveform pairs for vocoder training."""
+
+    def __init__(self, index_path: Path, splits_path: Path, split: DevelopmentSplit,
+                 audio_config: dict[str, Any], seed: int,
+                 max_items: int | None = None) -> None:
+        base = PJSMelDataset(index_path, splits_path, split, audio_config, seed, max_items)
+        self.records, self.audio_config = base.records, audio_config
+        self.fingerprint, self.seed = base.fingerprint, seed
+
+    def __len__(self) -> int:
+        return len(self.records)
+
+    def __getitem__(self, index: int) -> tuple[torch.Tensor, torch.Tensor]:
+        record = self.records[index]
+        sample_rate = int(self.audio_config["sample_rate"])
+        length = round(sample_rate * float(self.audio_config["segment_seconds"]))
+        waveform = load_audio(Path(record["song_audio"]), sample_rate)
+        available = max(waveform.numel() - length, 0)
+        token = f"{self.seed}:{record['id']}".encode()
+        offset = int.from_bytes(hashlib.sha256(token).digest()[:8], "big") % (available + 1)
+        waveform = crop_or_pad(waveform, length, offset)
+        mel = log_mel_spectrogram(
+            waveform, sample_rate, int(self.audio_config["n_fft"]),
+            int(self.audio_config["hop_length"]), int(self.audio_config["mel_bins"]),
+        )
+        return mel, waveform
