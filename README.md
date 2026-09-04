@@ -514,6 +514,8 @@ starting a run.
 The held-out diagnostic command `singalign-kto-evaluate` measures synthetic
 preference loss and accuracy on the sealed test split without changing the
 checkpoint or tuning the objective.
+The evaluator is the only workflow that passes the dataset's explicit
+`allow_test=True` opt-in; training commands remain unable to consume test IDs.
 
 Run the exploratory KTO condition from Docker with:
 

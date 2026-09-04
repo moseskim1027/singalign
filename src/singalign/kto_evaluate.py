@@ -27,7 +27,7 @@ def main() -> int:
     config = yaml.safe_load(args.config.read_text())
     device = resolve_device(str(config["training"].get("device", "cpu")))
     policy, train_config = load_checkpoint(args.checkpoint, device)
-    base = PJSMelDataset(args.index, args.splits, "test", train_config["audio"], int(config["data"]["seed"]))
+    base = PJSMelDataset(args.index, args.splits, "test", train_config["audio"], int(config["data"]["seed"]), allow_test=True)
     pairs = PreferencePairDataset(base, int(config["data"]["seed"]), 0.03, 0.12)
     losses, correct = [], []
     policy.eval()

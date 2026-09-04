@@ -63,3 +63,9 @@ class DatasetTest(unittest.TestCase):
                 self.audio_config,
                 seed=7,
             )
+
+    def test_test_split_requires_explicit_evaluation_opt_in(self) -> None:
+        dataset = PJSMelDataset(
+            self.index, self.splits, "test", self.audio_config, seed=7, allow_test=True
+        )
+        self.assertEqual(len(dataset), 1)
