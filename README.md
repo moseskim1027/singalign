@@ -493,6 +493,10 @@ reproducibility metadata to the local MLflow server.
 The corresponding exploratory configuration is
 `configs/evaluation/candidates.yaml`; it fixes the initial methods, seed, and
 proxy-reward version for repeatable runs.
+The preference-objective sandbox also exposes a compact KTO-style loss in
+`singalign.preference_objectives`, alongside the existing proxy-DPO loss. These
+objectives operate on synthetic/proxy scores and do not establish human
+preference alignment.
 
 Stop the services without removing tracked runs:
 
