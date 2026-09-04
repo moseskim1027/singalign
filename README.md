@@ -474,6 +474,9 @@ The first implementation will cover controlled perturbations before learned
 decoder outputs are added.
 The deterministic generator is implemented in `singalign.candidates`; its
 candidate records include method, seed, severity, and tensor provenance.
+The reranker in `singalign.rerank` currently uses normalized mel reconstruction
+error as an explicitly labeled proxy reward, with deterministic ranking and
+stable provenance. It is not a human-preference model.
 
 Stop the services without removing tracked runs:
 
