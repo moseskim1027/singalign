@@ -3,7 +3,7 @@ services:
     build:
       context: ./ui
     ports:
-      - "127.0.0.1:4173:8080"
+      - "4173:8080"
     volumes:
       - ./reports/comparisons:/usr/share/nginx/html/reports:ro
     healthcheck:
@@ -46,7 +46,7 @@ services:
       - --allowed-hosts
       - localhost:5000,127.0.0.1:5000,mlflow:5000
     ports:
-      - "127.0.0.1:5000:5000"
+      - "5001:5000"
     volumes:
       - ./.mlflow:/mlflow
     healthcheck:
