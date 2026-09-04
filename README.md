@@ -690,6 +690,8 @@ ordering to baseline, reranking, DPO, KTO, conditioned, and vocoder outputs.
 The aggregate analysis command will consume a versioned JSON manifest of shared
 references and condition tensors, so every condition is evaluated on the same
 examples without relying on independently sampled datasets.
+Use [`configs/evaluation/condition-analysis.example.json`](configs/evaluation/condition-analysis.example.json)
+as the input shape for `singalign-condition-analysis --manifest ... --output ...`.
 
 ## Contributing
 

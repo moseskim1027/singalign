@@ -1,0 +1,17 @@
+{
+  "references": ["reports/examples/reference-001.pt"],
+  "conditions": [
+    {
+      "name": "baseline",
+      "method": "supervised",
+      "checkpoint": "checkpoints/baseline/best.pt",
+      "outputs": ["reports/examples/baseline-001.pt"]
+    },
+    {
+      "name": "aligned",
+      "method": "dpo",
+      "checkpoint": "checkpoints/aligned/best.pt",
+      "outputs": ["reports/examples/aligned-001.pt"]
+    }
+  ]
+}
