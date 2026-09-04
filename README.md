@@ -543,6 +543,8 @@ docker compose run --rm research \
 ```
 Add `--mlflow-experiment singalign-multi-condition` to attach the report to a
 tracked exploratory MLflow run.
+The UI integration stage loads this deterministic JSON report separately from
+the legacy paired comparison report.
 `write_condition_report` serializes the same results to a deterministic JSON
 artifact suitable for MLflow attachment and later UI display.
 `log_condition_report` attaches an existing report to the active MLflow run
