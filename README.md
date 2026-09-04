@@ -96,8 +96,9 @@ evaluation.
 Its proposed training specification is frozen in
 `configs/training/conditioned.yaml`: 16 kHz audio, 80-bin log-mel targets,
 100-frame-per-second conditioning, a 3-second window, and a 10-epoch
-exploratory budget. The training command will be added after the dataset frame
-adapter is implemented and tested.
+exploratory budget. The training command is implemented and tested in Docker;
+held-out synthesis evaluation remains intentionally deferred until a
+decoder/candidate-generation protocol is specified.
 The frame adapter emits integer MIDI pitch IDs with `0` for rests and integer
 phoneme IDs with `0` reserved for unknown/padding symbols.
 The exploratory conditioned-model trainer is available in Docker:
