@@ -7,6 +7,7 @@ objective:
   method: kto_proxy
   beta: 0.1
   kl_baseline: 0.0
+  temperature: 0.1
 
 data:
   source: synthetic_preference_pairs
@@ -17,3 +18,9 @@ training:
   epochs: 10
   batch_size: 4
   learning_rate: 0.0001
+  device: auto
+  checkpoint_dir: checkpoints/kto
+
+preferences:
+  chosen_severity: 0.03
+  rejected_severity: 0.12

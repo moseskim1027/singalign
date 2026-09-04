@@ -504,6 +504,24 @@ run as explicit exploratory conditions.
 binary labels expected by the KTO objective.
 The separate exploratory KTO condition is specified in
 `configs/training/kto.yaml`; a trainer and MLflow run remain to be implemented.
+The Docker trainer is now available with `singalign-kto-train`; it initializes
+from the supervised checkpoint, trains only on synthetic training pairs, and
+logs the exploratory checkpoint to MLflow.
+The first 10-epoch pilot is MLflow run `3c9de2f603d2419683f6bfe2502fdc9d`
+in experiment `singalign-kto-proxy`.
+The trainer validates required sections and positive beta/temperature before
+starting a run.
+
+Run the exploratory KTO condition from Docker with:
+
+```bash
+docker compose run --rm research \
+  singalign-kto-train \
+  --config configs/training/kto.yaml \
+  --checkpoint checkpoints/baseline/best.pt \
+  --index data/interim/pjs/index.jsonl \
+  --splits data/interim/pjs/splits.json
+```
 
 Stop the services without removing tracked runs:
 
