@@ -157,6 +157,8 @@ reproducible report where applicable.
   preference trainers.
 - [x] Freeze a separate exploratory KTO condition in `configs/training/kto.yaml`;
   trainer integration and tracked runs remain pending.
+- [x] Add a Docker/MLflow KTO trainer initialized from the supervised checkpoint;
+  a reproducible pilot run remains to be executed.
 - [ ] Compare all conditions with paired bootstrap intervals and effect sizes.
 - [ ] Add optional qualitative or informal listening feedback without making
   population-level claims.
