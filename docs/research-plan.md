@@ -148,12 +148,14 @@ reproducible report where applicable.
 - [x] Implement deterministic proxy reranking using normalized mel error with
   stable tie-breaking; this is an engineering proxy, not a human-preference
   model.
+- [x] Add learned scalar/multidimensional reward-model reranking while
+  retaining candidate provenance.
 - [x] Add scalar and multidimensional proxy-reward components with explicit
   weights and provenance.
 - [x] Add deterministic candidate-report serialization, CLI execution, and
   optional MLflow artifact logging.
-- [ ] Define and implement learned scalar and multidimensional reward-model
-  baselines; current proxy rewards are complete but not learned reward models.
+- [x] Define and implement learned scalar and multidimensional reward-model
+  baselines; current models remain exploratory scoring baselines.
 - [x] Add KTO as a separately tracked post-training condition.
 - [x] Add and test a standalone KTO-style objective for proxy-score simulation.
 - [x] Freeze exploratory DPO/KTO objective names, beta, KL baseline, and
@@ -172,7 +174,8 @@ reproducible report where applicable.
   `1.0`, mean proxy loss `0.3955`) with explicit evaluation opt-in.
 - [x] Freeze the KTO held-out diagnostic settings in
   `configs/evaluation/kto.yaml`.
-- [ ] Compare all conditions with paired bootstrap intervals and effect sizes.
+- [x] Compare declared conditions with paired bootstrap intervals and effect
+  sizes; the full generated-condition matrix remains future work.
 - [x] Add a shared condition registry preserving stable names, methods,
   checkpoint paths, and declared order for future comparisons.
 - [x] Add a generic multi-condition diagnostic engine using one metric contract
