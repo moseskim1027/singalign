@@ -527,6 +527,8 @@ contract.
 The research checklist distinguishes the completed proxy-reward/KTO
 infrastructure from the still-pending learned reward-model baselines and
 cross-condition statistical diagnostics.
+The `singalign-multi-compare` CLI now compares saved mel tensors with repeated
+`--condition name=output.pt:method` arguments and writes one ordered report.
 `write_condition_report` serializes the same results to a deterministic JSON
 artifact suitable for MLflow attachment and later UI display.
 `log_condition_report` attaches an existing report to the active MLflow run
