@@ -99,6 +99,10 @@ exploratory budget. The training command will be added after the dataset frame
 adapter is implemented and tested.
 The frame adapter emits integer MIDI pitch IDs with `0` for rests and integer
 phoneme IDs with `0` reserved for unknown/padding symbols.
+The `PJSConditionedDataset` adapter now pairs these tensors with deterministic
+3-second mel targets using the same crop offset, tempo, and frame-count
+convention. It is ready for model-training integration but has not produced a
+reported synthesis result.
 Exported records also include deterministic pitch metadata: note/rest counts and
 the minimum, maximum, and mean voiced MIDI pitch. Score pitch is an intended
 conditioning signal; observed performance F0 remains a training target or

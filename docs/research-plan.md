@@ -99,6 +99,8 @@ reproducible report where applicable.
   `configs/training/conditioned.yaml`.
 - [x] Add a fixed-shape tensor adapter with explicit pitch/rest and phoneme-ID
   conventions.
+- [x] Add a deterministic dataset adapter pairing symbolic frames with mel
+  targets using the same crop offset.
 - [x] Support explicit crop offsets when aligning symbolic events to acoustic
   frames.
 - [x] Run held-out baseline evaluation once on the sealed test split
