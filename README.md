@@ -677,6 +677,13 @@ Training/Evaluation/Comparison workflow safeguards, and the reproducibility
 package are merged. Participant-based listening studies are intentionally
 excluded from this completion plan.
 
+The remaining simulation-sandbox work is consolidated into one umbrella PR:
+tracked reward-model training/evaluation, the complete comparison matrix,
+finished research UI views, optional informal listening notes, and the final
+simulation report. This larger PR will retain separate commits and validation
+records for each workstream while keeping the repository's final state easy to
+reproduce from one review.
+
 PR 1 is implementing learned reward baselines on top of the existing
 deterministic preference-pair generator. The learned models are exploratory:
 they provide scalar and multidimensional scoring baselines with reproducible
