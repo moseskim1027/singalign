@@ -159,6 +159,8 @@ reproducible report where applicable.
   trainer integration and tracked runs remain pending.
 - [x] Add a Docker/MLflow KTO trainer initialized from the supervised checkpoint;
   a reproducible pilot run remains to be executed.
+- [x] Run the 10-epoch synthetic KTO pilot in Docker (MLflow run
+  `3c9de2f603d2419683f6bfe2502fdc9d`).
 - [ ] Compare all conditions with paired bootstrap intervals and effect sizes.
 - [ ] Add optional qualitative or informal listening feedback without making
   population-level claims.

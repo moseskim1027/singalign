@@ -507,6 +507,8 @@ The separate exploratory KTO condition is specified in
 The Docker trainer is now available with `singalign-kto-train`; it initializes
 from the supervised checkpoint, trains only on synthetic training pairs, and
 logs the exploratory checkpoint to MLflow.
+The first 10-epoch pilot is MLflow run `3c9de2f603d2419683f6bfe2502fdc9d`
+in experiment `singalign-kto-proxy`.
 
 Stop the services without removing tracked runs:
 
