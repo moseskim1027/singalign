@@ -669,14 +669,13 @@ evolving risk assessment.
 
 The roadmap indicates intended work, not completed capabilities.
 
-### Remaining implementation sequence
+### Completed implementation milestone
 
-The remaining simulation-sandbox work is organized into four focused pull
-requests: (1) learned scalar and multidimensional reward models, (2) unified
-cross-condition analysis, (3) sequential Training/Evaluation/Comparison UI
-workflow safeguards, and (4) the final reproducibility package and research
-documentation. Participant-based listening studies are intentionally excluded
-from this completion plan.
+The initial four-PR implementation milestone is complete: learned reward model
+baselines, unified cross-condition analysis, sequential
+Training/Evaluation/Comparison workflow safeguards, and the reproducibility
+package are merged. Participant-based listening studies are intentionally
+excluded from this completion plan.
 
 PR 1 is implementing learned reward baselines on top of the existing
 deterministic preference-pair generator. The learned models are exploratory:

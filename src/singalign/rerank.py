@@ -7,6 +7,7 @@ from dataclasses import dataclass
 import torch
 
 from singalign.candidates import Candidate
+from singalign.reward_models import MultiRewardModel, RewardModel
 
 
 @dataclass(frozen=True)
@@ -37,3 +38,21 @@ def rerank_candidates(reference: torch.Tensor, candidates: list[Candidate]) -> l
     scored.sort(key=lambda item: (item.reconstruction_error, item.candidate.seed))
     return [ScoredCandidate(item.candidate, item.reconstruction_error, item.proxy_reward, rank)
             for rank, item in enumerate(scored, start=1)]
+
+
+def rerank_with_learned_model(
+    model: RewardModel | MultiRewardModel,
+    candidates: list[Candidate],
+    weights: torch.Tensor | None = None,
+) -> list[ScoredCandidate]:
+    """Rank candidates with a learned reward while retaining provenance."""
+    if not candidates:
+        raise ValueError("candidates must not be empty")
+    with torch.no_grad():
+        features = torch.stack([candidate.features for candidate in candidates])
+        scores = model.total(features, weights) if isinstance(model, MultiRewardModel) else model(features)
+    ranked = sorted(zip(candidates, scores.tolist(), strict=True), key=lambda item: (-item[1], item[0].seed))
+    return [
+        ScoredCandidate(candidate, float("nan"), float(score), rank)
+        for rank, (candidate, score) in enumerate(ranked, start=1)
+    ]
