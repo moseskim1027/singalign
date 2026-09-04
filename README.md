@@ -38,6 +38,13 @@ SingAlign is organized around four primary questions:
 
 ## Scope
 
+The next research direction is the deferred [phoneme and pitch track-transfer
+study](docs/research-plan.md#future-track-transfer-study-phoneme-and-pitch-alignment):
+preserve a source vocal's words, timing, and melody while rendering or mixing
+it over a different instrumental track. The staged plan, representations,
+ablations, metrics, and continuation prompt are maintained in the research
+plan.
+
 The initial study will focus on compact, score-conditioned singing voice
 synthesis using the PJS corpus. Experiments will operate on short
 mel-spectrogram segments so that data preparation, baseline development, and
