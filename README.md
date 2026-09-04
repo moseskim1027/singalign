@@ -519,6 +519,15 @@ The evaluator is the only workflow that passes the dataset's explicit
 The first held-out diagnostic evaluated 10 test examples with proxy preference
 accuracy `1.0` and mean proxy loss `0.3955`; these are engineering diagnostics,
 not perceptual or population-level claims.
+The multi-condition comparison work now uses `singalign.conditions.ConditionSpec`
+to preserve stable names, methods, checkpoint paths, and declared ordering.
+`compare_condition_outputs` applies the same reconstruction diagnostics to each
+declared output, keeping baseline/aligned/DPO/KTO comparisons on one metric
+contract.
+`write_condition_report` serializes the same results to a deterministic JSON
+artifact suitable for MLflow attachment and later UI display.
+`log_condition_report` attaches an existing report to the active MLflow run
+under a stable `conditions` artifact path.
 The evaluation settings are frozen in `configs/evaluation/kto.yaml`; the
 command still requires the explicit test-split workflow shown below.
 

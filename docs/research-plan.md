@@ -168,6 +168,13 @@ reproducible report where applicable.
 - [x] Freeze the KTO held-out diagnostic settings in
   `configs/evaluation/kto.yaml`.
 - [ ] Compare all conditions with paired bootstrap intervals and effect sizes.
+- [x] Add a shared condition registry preserving stable names, methods,
+  checkpoint paths, and declared order for future comparisons.
+- [x] Add a generic multi-condition diagnostic engine using one metric contract
+  and deterministic declared ordering.
+- [x] Serialize multi-condition diagnostics as deterministic JSON artifacts with
+  condition metadata preserved.
+- [x] Add a stable MLflow artifact path for multi-condition reports.
 - [ ] Add optional qualitative or informal listening feedback without making
   population-level claims.
 - [ ] Package final manifests, reports, environment metadata, and reproduction
