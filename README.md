@@ -669,6 +669,15 @@ evolving risk assessment.
 
 The roadmap indicates intended work, not completed capabilities.
 
+### Remaining implementation sequence
+
+The remaining simulation-sandbox work is organized into four focused pull
+requests: (1) learned scalar and multidimensional reward models, (2) unified
+cross-condition analysis, (3) sequential Training/Evaluation/Comparison UI
+workflow safeguards, and (4) the final reproducibility package and research
+documentation. Participant-based listening studies are intentionally excluded
+from this completion plan.
+
 ## Contributing
 
 Research contributions should state the hypothesis being tested, describe the
