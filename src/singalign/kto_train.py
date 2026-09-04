@@ -21,6 +21,18 @@ from singalign.tracking import RunMetadata, tracked_run
 from singalign.train import resolve_device, seed_everything
 
 
+def load_kto_config(path: Path) -> dict[str, object]:
+    """Load and validate the standalone exploratory KTO configuration."""
+    config = yaml.safe_load(path.read_text())
+    required = {"experiment", "objective", "data", "training"}
+    if not isinstance(config, dict) or not required.issubset(config):
+        raise ValueError(f"configuration must contain {sorted(required)}")
+    objective = config["objective"]
+    if float(objective["beta"]) <= 0 or float(objective["temperature"]) <= 0:
+        raise ValueError("beta and temperature must be positive")
+    return config
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(prog="singalign-kto-train")
     parser.add_argument("--config", type=Path, required=True)
@@ -28,7 +40,7 @@ def main() -> int:
     parser.add_argument("--index", type=Path, required=True)
     parser.add_argument("--splits", type=Path, required=True)
     args = parser.parse_args()
-    config = yaml.safe_load(args.config.read_text())
+    config = load_kto_config(args.config)
     preference_parameters(config["preferences"] if "preferences" in config else {"chosen_severity": 0.03, "rejected_severity": 0.12})
     settings, objective = config["training"], config["objective"]
     seed_everything(int(config["data"]["seed"]))
