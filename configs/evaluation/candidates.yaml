@@ -1,0 +1,9 @@
+experiment:
+  name: singalign-candidate-sandbox
+  run_name: candidate-generation
+  run_kind: exploratory
+
+generation:
+  seed: 2026
+  methods: [identity, noise, time_mask, frequency_mask]
+  reward: multidimensional_proxy_v1

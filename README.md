@@ -490,6 +490,9 @@ For a standalone local/Docker invocation, save a mel tensor with
 reports/candidates/example.json`.
 Add `--mlflow-experiment singalign-candidate-sandbox` to log the manifest and
 reproducibility metadata to the local MLflow server.
+The corresponding exploratory configuration is
+`configs/evaluation/candidates.yaml`; it fixes the initial methods, seed, and
+proxy-reward version for repeatable runs.
 
 Stop the services without removing tracked runs:
 

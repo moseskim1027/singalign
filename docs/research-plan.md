@@ -145,6 +145,8 @@ reproducible report where applicable.
   model.
 - [x] Add scalar and multidimensional proxy-reward components with explicit
   weights and provenance.
+- [x] Add deterministic candidate-report serialization, CLI execution, and
+  optional MLflow artifact logging.
 - [ ] Define and implement scalar and multidimensional reward-model baselines.
 - [ ] Add KTO as a separately tracked post-training condition.
 - [ ] Compare all conditions with paired bootstrap intervals and effect sizes.
