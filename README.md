@@ -500,6 +500,8 @@ preference alignment.
 The initial objective settings are frozen in
 `configs/training/preference-objectives.yaml` so DPO/KTO comparisons can be
 run as explicit exploratory conditions.
+`pair_to_kto_batch` adapts the existing chosen/rejected synthetic pairs to the
+binary labels expected by the KTO objective.
 
 Stop the services without removing tracked runs:
 

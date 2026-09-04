@@ -153,6 +153,8 @@ reproducible report where applicable.
   tracked post-training integration remains pending.
 - [x] Freeze exploratory DPO/KTO objective names, beta, KL baseline, and
   synthetic-preference provenance in `configs/training/preference-objectives.yaml`.
+- [x] Add a tested chosen/rejected-to-KTO batch adapter shared by future
+  preference trainers.
 - [ ] Compare all conditions with paired bootstrap intervals and effect sizes.
 - [ ] Add optional qualitative or informal listening feedback without making
   population-level claims.

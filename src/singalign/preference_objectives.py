@@ -6,6 +6,17 @@ import torch
 from torch.nn import functional as F
 
 
+def pair_to_kto_batch(
+    chosen_score: torch.Tensor, rejected_score: torch.Tensor
+) -> tuple[torch.Tensor, torch.Tensor]:
+    """Convert chosen/rejected scores into KTO scores and binary labels."""
+    if chosen_score.shape != rejected_score.shape:
+        raise ValueError("chosen and rejected scores must have matching shapes")
+    scores = torch.cat((chosen_score, rejected_score), dim=0)
+    labels = torch.cat((torch.ones_like(chosen_score), torch.zeros_like(rejected_score))).bool()
+    return scores, labels
+
+
 def kto_proxy_loss(
     policy_score: torch.Tensor,
     reference_score: torch.Tensor,

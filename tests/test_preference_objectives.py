@@ -4,7 +4,7 @@ import unittest
 
 import torch
 
-from singalign.preference_objectives import kto_proxy_loss
+from singalign.preference_objectives import kto_proxy_loss, pair_to_kto_batch
 
 
 class PreferenceObjectiveTest(unittest.TestCase):
@@ -20,6 +20,11 @@ class PreferenceObjectiveTest(unittest.TestCase):
             kto_proxy_loss(torch.zeros(2), torch.zeros(1), torch.zeros(2, dtype=torch.bool))
         with self.assertRaisesRegex(ValueError, "positive"):
             kto_proxy_loss(torch.zeros(1), torch.zeros(1), torch.ones(1, dtype=torch.bool), beta=0)
+
+    def test_pair_adapter_marks_chosen_examples_desirable(self) -> None:
+        scores, labels = pair_to_kto_batch(torch.tensor([1.0]), torch.tensor([-1.0]))
+        self.assertEqual(scores.tolist(), [1.0, -1.0])
+        self.assertEqual(labels.tolist(), [True, False])
 
 
 if __name__ == "__main__":
