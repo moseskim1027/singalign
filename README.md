@@ -459,10 +459,27 @@ generated audio is approximate Griffin-Lim reconstruction and must not be used
 alone to support claims about perceptual quality. See [`ui/README.md`](ui/README.md)
 for development and troubleshooting instructions.
 
-Future UI work is intentionally deferred until score-conditioned candidate
-generation is implemented. Planned additions include condition selection,
-multiple candidates with provenance, conditioning metadata, cross-condition
-uncertainty summaries, and a separate blinded listening-study interface.
+The UI still has deferred work around richer candidate selection, conditioning
+metadata, cross-condition uncertainty summaries, and a separate blinded
+listening-study interface.
+
+The UI now includes a training interface for the implemented baseline, aligned,
+conditioned, vocoder, and KTO experiments with default parameters. The
+Docker-backed API is started with `docker compose up --build api`; it exposes
+`POST /training` for allowlisted jobs and `GET /training/<job_id>` for status.
+MLflow remains available at port 5001. The browser still displays the generated
+command as a reproducibility fallback.
+Launch requests forward only numeric allowlisted parameters and automatically
+attach the supervised checkpoint for aligned/KTO jobs.
+When the API is running, submitting the form launches the Docker job and shows
+its container ID; if the API is unavailable, the same command remains visible
+for manual execution.
+
+The UI workflow is organized sequentially into separate tabs: **Training** for
+launching model jobs, **Evaluation** for loading and inspecting evaluation
+reports, and **Comparison** for paired or multi-condition result review.
+Downstream tabs remain unavailable until the relevant upstream run or report is
+loaded, making the dependency order visible during reproducible experiments.
 
 ### Candidate-generation sandbox
 
@@ -543,6 +560,8 @@ docker compose run --rm research \
 ```
 Add `--mlflow-experiment singalign-multi-condition` to attach the report to a
 tracked exploratory MLflow run.
+The UI integration stage loads this deterministic JSON report separately from
+the legacy paired comparison report.
 `write_condition_report` serializes the same results to a deterministic JSON
 artifact suitable for MLflow attachment and later UI display.
 `log_condition_report` attaches an existing report to the active MLflow run

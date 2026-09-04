@@ -190,6 +190,10 @@ stable during the score-conditioned model work. Revisit this section after
 candidate generation exists:
 
 - [ ] Add condition selection for baseline, reranking, DPO, and KTO.
+- [x] Add a training interface with default parameters and a Docker-backed
+  allowlisted job-launch API.
+- [x] Connect the UI training form to the API with CORS restrictions and a
+  manual-command fallback.
 - [ ] Display multiple candidates with ranking scores and provenance.
 - [ ] Display score/phoneme conditioning metadata alongside each example.
 - [ ] Show cross-condition metrics, uncertainty intervals, and MLflow links.

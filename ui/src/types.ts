@@ -44,3 +44,20 @@ export interface ComparisonSummary {
   metric_direction: string;
   metrics: Record<string, MetricSummary>;
 }
+
+export interface MultiConditionMetric {
+  log_mel_mse: number;
+  log_mel_mae: number;
+  spectral_convergence: number;
+}
+
+export interface MultiConditionRow {
+  name: string;
+  method: string;
+  metrics: MultiConditionMetric;
+}
+
+export interface MultiConditionReport {
+  condition_count: number;
+  conditions: MultiConditionRow[];
+}

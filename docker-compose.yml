@@ -19,6 +19,22 @@ services:
       target: test
     command: uv run python -m unittest discover -v
 
+  api:
+    build:
+      context: .
+      target: api
+    ports:
+      - "8000:8000"
+    environment:
+      SINGALIGN_HOST_ROOT: ${PWD}
+      SINGALIGN_DOCKER_NETWORK: singalign_default
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - .:/workspace
+    depends_on:
+      mlflow:
+        condition: service_healthy
+
   lint:
     build:
       context: .
