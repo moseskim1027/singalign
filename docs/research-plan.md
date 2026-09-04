@@ -176,6 +176,8 @@ reproducible report where applicable.
   `configs/evaluation/kto.yaml`.
 - [x] Compare declared conditions with paired bootstrap intervals and effect
   sizes; the full generated-condition matrix remains future work.
+- [ ] Follow-up PR: generate shared references and all condition outputs, then
+  run the complete matrix as a separately tracked experiment.
 - [x] Add a shared condition registry preserving stable names, methods,
   checkpoint paths, and declared order for future comparisons.
 - [x] Add a generic multi-condition diagnostic engine using one metric contract

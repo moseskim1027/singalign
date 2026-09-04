@@ -54,10 +54,13 @@ export interface MultiConditionMetric {
 export interface MultiConditionRow {
   name: string;
   method: string;
-  metrics: MultiConditionMetric;
+  metrics: MultiConditionMetric | Record<string, { mean: number; lower: number; upper: number }>;
+  effect_vs_anchor?: Record<string, { mean: number; lower: number; upper: number; standardized_effect?: number }>;
 }
 
 export interface MultiConditionReport {
   condition_count: number;
+  example_count?: number;
+  anchor?: string;
   conditions: MultiConditionRow[];
 }

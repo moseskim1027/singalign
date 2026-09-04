@@ -677,6 +677,36 @@ Training/Evaluation/Comparison workflow safeguards, and the reproducibility
 package are merged. Participant-based listening studies are intentionally
 excluded from this completion plan.
 
+The remaining simulation-sandbox work is consolidated into one umbrella PR:
+tracked reward-model training/evaluation, the complete comparison matrix,
+finished research UI views, optional informal listening notes, and the final
+simulation report. This larger PR will retain separate commits and validation
+records for each workstream while keeping the repository's final state easy to
+reproduce from one review.
+
+The first workstream adds `singalign-reward-train`, a Docker/MLflow command
+that trains a learned reward model from saved chosen/rejected tensors and
+records its checkpoint and pairwise diagnostic metrics.
+The second workstream uses a versioned comparison-matrix manifest to run the
+same paired analysis across available baseline, reranking, DPO, KTO,
+conditioned, and vocoder outputs; missing outputs are reported as pending
+rather than silently treated as results.
+Run `singalign-matrix-status --config configs/evaluation/comparison-matrix.yaml`
+to audit readiness before producing the aggregate report.
+Matrix execution is data-dependent: use `singalign-matrix-status` first, and
+only run `singalign-condition-analysis` when every declared condition is ready.
+The complete matrix run is intentionally deferred to a follow-up PR so it can
+be executed as a separately tracked, time-bounded experiment.
+The completion UI will consume these reports with condition filtering and show
+available uncertainty/effect-size fields without inventing values for reports
+that predate the aggregate schema.
+The final workstreams include an informal engineering feedback template and a
+simulation-sandbox report scaffold; neither is a participant study or a source
+of population-level preference evidence.
+Use [`docs/informal-feedback-template.md`](docs/informal-feedback-template.md)
+for engineering notes and [`docs/simulation-sandbox-report.md`](docs/simulation-sandbox-report.md)
+for the final report structure.
+
 PR 1 is implementing learned reward baselines on top of the existing
 deterministic preference-pair generator. The learned models are exploratory:
 they provide scalar and multidimensional scoring baselines with reproducible

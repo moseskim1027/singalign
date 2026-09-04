@@ -232,20 +232,32 @@ const renderMulti = (report: MultiConditionReport): void => {
   multiResults.hidden = false;
   const title = document.createElement("h2");
   title.textContent = `${report.condition_count} conditions`;
+  const filter = document.createElement("select");
+  filter.setAttribute("aria-label", "Condition filter");
+  filter.innerHTML = `<option value="all">All conditions</option>${report.conditions.map((condition) => `<option value="${condition.name}">${condition.name}</option>`).join("")}`;
   const table = document.createElement("table");
   table.innerHTML = "<thead><tr><th>Condition</th><th>Method</th><th>Mel MSE</th><th>Mel MAE</th><th>Spectral convergence</th></tr></thead><tbody></tbody>";
   const body = table.querySelector("tbody");
   if (!body) throw new Error("multi-condition table body is missing");
-  report.conditions.forEach((condition) => {
+  const renderRows = (selected: string): void => {
+    body.replaceChildren();
+    report.conditions.filter((condition) => selected === "all" || condition.name === selected).forEach((condition) => {
     const row = document.createElement("tr");
-    [condition.name, condition.method, number(condition.metrics.log_mel_mse), number(condition.metrics.log_mel_mae), number(condition.metrics.spectral_convergence)].forEach((value, index) => {
+    const metrics = condition.metrics as Record<string, number | { mean: number }>;
+    [condition.name, condition.method, metrics.log_mel_mse, metrics.log_mel_mae, metrics.spectral_convergence].forEach((value, index) => {
       const cell = document.createElement(index < 2 ? "th" : "td");
-      cell.textContent = value;
+      cell.textContent = typeof value === "number" ? number(value) : typeof value === "object" && value !== null && "mean" in value ? number(value.mean) : "—";
       row.append(cell);
     });
     body.append(row);
-  });
-  multiResults.append(title, table);
+    });
+  };
+  renderRows("all");
+  filter.addEventListener("change", () => renderRows(filter.value));
+  const note = document.createElement("p");
+  note.className = "status";
+  note.textContent = report.anchor ? `Paired anchor: ${report.anchor} · ${report.example_count ?? "?"} examples · intervals and effect sizes are available in the JSON report.` : "Legacy single-example report; aggregate uncertainty fields are not available.";
+  multiResults.append(title, filter, note, table);
 };
 
 const renderExample = (
