@@ -119,6 +119,7 @@ def compare_checkpoints(
     config: dict[str, Any],
     output_dir: Path,
     max_items: int | None = None,
+    mlflow_experiment_id: str | None = None,
 ) -> dict[str, Any]:
     """Compare two checkpoints on identical validation or test examples."""
 
@@ -264,6 +265,9 @@ def compare_checkpoints(
         "metrics": comparisons,
         "metric_direction": "lower is better; delta is aligned minus baseline",
     }
+    if mlflow_experiment_id is not None:
+        summary["mlflow_experiment_id"] = mlflow_experiment_id
+        summary["mlflow_run_id"] = output_dir.name
     (output_dir / "summary.json").write_text(
         json.dumps(summary, indent=2, sort_keys=True) + "\n"
     )
@@ -280,6 +284,9 @@ def compare_checkpoints(
         "duration_disclosure": duration_disclosure,
         "examples": manifest_examples,
     }
+    if mlflow_experiment_id is not None:
+        manifest["mlflow_experiment_id"] = mlflow_experiment_id
+        manifest["mlflow_run_id"] = output_dir.name
     (output_dir / "manifest.json").write_text(
         json.dumps(manifest, indent=2, sort_keys=True) + "\n"
     )
@@ -321,6 +328,7 @@ def main() -> int:
     }
     with tracked_run(metadata, parameters) as run:
         output_dir = Path(settings["output_dir"]) / run.info.run_id
+        experiment = mlflow.get_experiment_by_name(metadata.experiment_name)
         summary = compare_checkpoints(
             args.baseline_checkpoint,
             args.aligned_checkpoint,
@@ -329,6 +337,7 @@ def main() -> int:
             config,
             output_dir,
             args.max_items,
+            str(experiment.experiment_id) if experiment else None,
         )
         for name, result in summary["metrics"].items():
             mlflow.log_metric(f"comparison.{name}.delta", result["delta"]["mean"])

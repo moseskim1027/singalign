@@ -129,6 +129,14 @@ const render = (
   const metadata = document.createElement("p");
   metadata.textContent = `${summary.split} split · ${summary.examples} paired examples · lower is better`;
   heading.append(title, metadata);
+  if (manifest.mlflow_experiment_id && manifest.mlflow_run_id) {
+    const link = document.createElement("a");
+    link.href = `${location.protocol}//${location.hostname}:5001/#/experiments/${encodeURIComponent(manifest.mlflow_experiment_id)}/runs/${encodeURIComponent(manifest.mlflow_run_id)}`;
+    link.target = "_blank";
+    link.rel = "noreferrer";
+    link.textContent = "Open MLflow evaluation run";
+    heading.append(link);
+  }
 
   const durationsMatch =
     Math.abs(summary.training_segment_seconds - summary.comparison_segment_seconds) <
