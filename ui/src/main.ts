@@ -94,6 +94,7 @@ const trainingFields = document.querySelector<HTMLElement>("#training-fields");
 const trainingCommand = document.querySelector<HTMLElement>("#training-command");
 const tabs = [...document.querySelectorAll<HTMLButtonElement>(".tab")];
 const panels = [...document.querySelectorAll<HTMLElement>(".tab-panel")];
+const workflowReady = { evaluation: false, comparison: false };
 
 if (!form || !input || !status || !results || !multiForm || !multiInput || !multiStatus || !multiResults || !trainingForm || !trainingExperiment || !trainingFields || !trainingCommand) {
   throw new Error("comparison controls are missing");
@@ -151,7 +152,15 @@ const setTab = (name: string): void => {
   });
   panels.forEach((panel) => { panel.hidden = panel.dataset.panel !== name; });
 };
+const updateWorkflowAccess = (): void => {
+  tabs.forEach((tab) => {
+    const name = tab.dataset.tab;
+    tab.disabled = name === "evaluation" ? !workflowReady.evaluation : name === "comparison" ? !workflowReady.comparison : false;
+    if (tab.disabled && tab.classList.contains("active")) setTab("training");
+  });
+};
 tabs.forEach((tab) => tab.addEventListener("click", () => setTab(tab.dataset.tab ?? "training")));
+updateWorkflowAccess();
 
 const safePath = (path: string): string =>
   path
@@ -348,6 +357,9 @@ const load = async (runId: string): Promise<void> => {
   const manifest = (await manifestResponse.json()) as ComparisonManifest;
   const summary = (await summaryResponse.json()) as ComparisonSummary;
   render(runId, manifest, summary);
+  workflowReady.evaluation = true;
+  workflowReady.comparison = true;
+  updateWorkflowAccess();
   history.replaceState(null, "", `?run=${encodeURIComponent(runId)}`);
 };
 
@@ -410,6 +422,8 @@ trainingForm.addEventListener("submit", (event) => {
     if (!response.ok) throw new Error((await response.json()).detail ?? "Training launch failed.");
     const result = (await response.json()) as { job_id: string };
     trainingCommand.textContent = `${command}\n\nJob started: ${result.job_id}`;
+    workflowReady.evaluation = true;
+    updateWorkflowAccess();
   }).catch((error: unknown) => {
     trainingCommand.textContent = `${command}\n\nAPI unavailable: ${error instanceof Error ? error.message : "launch failed"}`;
   });
