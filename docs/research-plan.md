@@ -172,6 +172,8 @@ reproducible report where applicable.
   checkpoint paths, and declared order for future comparisons.
 - [x] Add a generic multi-condition diagnostic engine using one metric contract
   and deterministic declared ordering.
+- [x] Serialize multi-condition diagnostics as deterministic JSON artifacts with
+  condition metadata preserved.
 - [ ] Add optional qualitative or informal listening feedback without making
   population-level claims.
 - [ ] Package final manifests, reports, environment metadata, and reproduction

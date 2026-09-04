@@ -524,6 +524,8 @@ to preserve stable names, methods, checkpoint paths, and declared ordering.
 `compare_condition_outputs` applies the same reconstruction diagnostics to each
 declared output, keeping baseline/aligned/DPO/KTO comparisons on one metric
 contract.
+`write_condition_report` serializes the same results to a deterministic JSON
+artifact suitable for MLflow attachment and later UI display.
 The evaluation settings are frozen in `configs/evaluation/kto.yaml`; the
 command still requires the explicit test-split workflow shown below.
 

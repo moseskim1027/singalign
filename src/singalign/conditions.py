@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import json
 from pathlib import Path
 
 import torch
@@ -45,3 +46,17 @@ def compare_condition_outputs(
          "metrics": reconstruction_metrics(outputs[condition.name], reference)}
         for condition in conditions
     ]
+
+
+def write_condition_report(
+    reference: torch.Tensor,
+    outputs: dict[str, torch.Tensor],
+    conditions: list[ConditionSpec],
+    output: Path,
+) -> dict[str, object]:
+    """Write a stable JSON report for one multi-condition example."""
+    rows = compare_condition_outputs(reference, outputs, conditions)
+    report = {"condition_count": len(rows), "conditions": rows}
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n")
+    return report
