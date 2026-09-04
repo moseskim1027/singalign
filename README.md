@@ -1,6 +1,7 @@
 # SingAlign
 
-Preference-aligned singing voice synthesis.
+Reproducible music-generation sandbox for preference-aligned singing voice
+synthesis.
 
 > [!IMPORTANT]
 > SingAlign is an early-stage research project. The methods, experiments, and
@@ -9,11 +10,9 @@ Preference-aligned singing voice synthesis.
 
 ## Overview
 
-SingAlign studies whether preference-based post-training can improve singing
-voice synthesis without sacrificing musical accuracy, lyric intelligibility,
-or singer identity. Its initial experiments focus on low-resource preference
-alignment: methods that can be investigated reproducibly without training a
-large generative audio model from scratch.
+SingAlign compares singing-voice generation, reconstruction, conditioning,
+reranking, and preference-optimization methods. It is an engineering and
+simulation environment rather than a confirmatory human-subjects study.
 
 The project will evaluate multidimensional reward modeling and preference
 optimization methods for generative singing systems. Initial experiments will
@@ -387,6 +386,12 @@ paired deltas, bootstrap confidence intervals, win/tie/loss counts, and a
 manifest referencing local reference, baseline, and aligned WAV files.
 Generated model audio uses approximate mel pseudoinversion and Griffin-Lim and
 must not be treated as a production-quality vocoder result.
+
+The repository also includes `MelVocoder`, a trainable mel-to-waveform decoder
+with an explicit frame hop length. It is the first differentiable vocoder
+baseline for future generation experiments; it is untrained until a dedicated
+vocoder dataset/training protocol is added, so Griffin-Lim remains the current
+fallback for existing comparison reports.
 
 The default comparison duration is read from the checkpoints, matching the
 training window. An optional positive `comparison.audio_segment_seconds` value

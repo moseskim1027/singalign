@@ -2,5 +2,6 @@
 
 from singalign.models.baseline import MelAutoencoder
 from singalign.models.conditioned import ScoreConditionedMelModel
+from singalign.models.vocoder import MelVocoder
 
-__all__ = ["MelAutoencoder", "ScoreConditionedMelModel"]
+__all__ = ["MelAutoencoder", "MelVocoder", "ScoreConditionedMelModel"]

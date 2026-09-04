@@ -1,6 +1,14 @@
 # Research Plan
 
-## Primary hypothesis
+## Project framing
+
+SingAlign is now an engineering and simulation sandbox for comparing music
+generation methods. It does not require participant recruitment, confirmatory
+hypothesis testing, or population-level human-preference claims. Metrics and
+bootstrap intervals remain optional diagnostic tools for comparing reproducible
+runs.
+
+## Original research hypothesis
 
 Preference-based post-training can improve perceived singing quality relative
 to supervised fine-tuning and candidate reranking without materially degrading
@@ -118,17 +126,17 @@ reproducible report where applicable.
   [`experiments/analysis-plan-v1.md`](../experiments/analysis-plan-v1.md);
   external preregistration remains pending.
 
-### Next research sequence
+### Next engineering sequence
 
-- [ ] Register confirmatory hypotheses, success thresholds, and exclusions
-  before inspecting any future test or listener results.
+- [x] Reframe the project from a confirmatory human-subjects study to a
+  reproducible generation-method simulation sandbox.
+- [ ] Define and train the waveform decoder/vocoder dataset protocol.
 - [ ] Add candidate generation and deterministic reward-based reranking.
 - [ ] Define and implement scalar and multidimensional reward-model baselines.
 - [ ] Add KTO as a separately tracked post-training condition.
 - [ ] Compare all conditions with paired bootstrap intervals and effect sizes.
-- [ ] Design and preregister a blinded listening study covering naturalness,
-  pitch/rhythm, intelligibility, singer similarity, and expressiveness.
-- [ ] Conduct the listening study, analyze failures, and report limitations.
+- [ ] Add optional qualitative or informal listening feedback without making
+  population-level claims.
 - [ ] Package final manifests, reports, environment metadata, and reproduction
   instructions.
 
