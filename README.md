@@ -148,8 +148,8 @@ docker compose ps
 Passing the revision at build time lets containerized runs retain their exact
 source identity without copying repository Git metadata into the image.
 
-MLflow is available at [http://localhost:5000](http://localhost:5000). The
-server binds only to the host loopback interface. Its SQLite database and
+MLflow is available at [http://localhost:5001](http://localhost:5001). Its
+SQLite database and
 artifacts persist in the ignored local directory `.mlflow/`.
 
 Validate the locally mounted PJS corpus and run all tests inside Docker:
@@ -217,7 +217,6 @@ docker compose run --rm research \
   --splits data/interim/pjs/splits.json \
   --segment-seconds 3 \
   --epochs 1 \
-  --max-train-items 4 \
   --max-validation-items 2
 ```
 

@@ -42,3 +42,40 @@ an energy-based DPO-style update relative to a frozen baseline while preserving
 reconstruction through an anchor loss. It does not test human preference
 alignment. Its purpose is to validate instrumentation and expose trade-offs
 before collecting or modeling listener judgments.
+
+## Execution status and next steps
+
+This checklist is the working record for the current research cycle. Each
+completed item should have a committed configuration, tracked MLflow run, and
+reproducible report where applicable.
+
+### Completed
+
+- [x] Document PJS v1.1 provenance, licensing, and local-data conventions.
+- [x] Validate/index/split pipeline with deterministic song-disjoint splits.
+- [x] Implement the compact supervised log-mel reconstruction baseline.
+- [x] Run the baseline for 10 epochs on 3-second segments in Docker.
+- [x] Track parameters, metrics, artifacts, code revision, and data fingerprint
+  in MLflow.
+- [x] Implement the synthetic preference-pair generator and DPO-style proxy
+  alignment with a reconstruction anchor.
+- [x] Run proxy alignment for 10 epochs from the supervised baseline.
+- [x] Generate paired validation comparisons and a local listening report.
+- [x] Expose the comparison report in the Dockerized UI and link it to the
+  corresponding MLflow evaluation run.
+
+### Next research sequence
+
+- [ ] Freeze the pilot configurations, split fingerprint, and success
+  thresholds in an experiment manifest.
+- [ ] Run held-out baseline evaluation once on the sealed test split.
+- [ ] Run held-out aligned evaluation using the same test split and metrics.
+- [ ] Add candidate generation and deterministic reward-based reranking.
+- [ ] Define and implement scalar and multidimensional reward-model baselines.
+- [ ] Add KTO as a separately tracked post-training condition.
+- [ ] Compare all conditions with paired bootstrap intervals and effect sizes.
+- [ ] Design and preregister a blinded listening study covering naturalness,
+  pitch/rhythm, intelligibility, singer similarity, and expressiveness.
+- [ ] Conduct the listening study, analyze failures, and report limitations.
+- [ ] Package final manifests, reports, environment metadata, and reproduction
+  instructions.
