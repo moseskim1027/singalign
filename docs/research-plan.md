@@ -204,9 +204,11 @@ candidate generation exists:
   allowlisted job-launch API.
 - [x] Connect the UI training form to the API with CORS restrictions and a
   manual-command fallback.
-- [ ] Display multiple candidates with ranking scores and provenance.
-- [ ] Display score/phoneme conditioning metadata alongside each example.
-- [ ] Show cross-condition metrics, uncertainty intervals, and MLflow links.
+- [x] Display optional multiple candidates with ranking scores and provenance.
+- [x] Display optional score/phoneme conditioning metadata alongside each
+  example.
+- [x] Show aggregate cross-condition metrics when uncertainty fields are
+  present; MLflow links remain report-dependent.
 - [x] Exclude the blinded listening-study interface from the simulation-sandbox
   scope.
 
