@@ -497,6 +497,9 @@ The preference-objective sandbox also exposes a compact KTO-style loss in
 `singalign.preference_objectives`, alongside the existing proxy-DPO loss. These
 objectives operate on synthetic/proxy scores and do not establish human
 preference alignment.
+The initial objective settings are frozen in
+`configs/training/preference-objectives.yaml` so DPO/KTO comparisons can be
+run as explicit exploratory conditions.
 
 Stop the services without removing tracked runs:
 
