@@ -696,6 +696,12 @@ to audit readiness before producing the aggregate report.
 The completion UI will consume these reports with condition filtering and show
 available uncertainty/effect-size fields without inventing values for reports
 that predate the aggregate schema.
+The final workstreams include an informal engineering feedback template and a
+simulation-sandbox report scaffold; neither is a participant study or a source
+of population-level preference evidence.
+Use [`docs/informal-feedback-template.md`](docs/informal-feedback-template.md)
+for engineering notes and [`docs/simulation-sandbox-report.md`](docs/simulation-sandbox-report.md)
+for the final report structure.
 
 PR 1 is implementing learned reward baselines on top of the existing
 deterministic preference-pair generator. The learned models are exploratory:
