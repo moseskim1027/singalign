@@ -524,6 +524,25 @@ to preserve stable names, methods, checkpoint paths, and declared ordering.
 `compare_condition_outputs` applies the same reconstruction diagnostics to each
 declared output, keeping baseline/aligned/DPO/KTO comparisons on one metric
 contract.
+The research checklist distinguishes the completed proxy-reward/KTO
+infrastructure from the still-pending learned reward-model baselines and
+cross-condition statistical diagnostics.
+The `singalign-multi-compare` CLI now compares saved mel tensors with repeated
+`--condition name=output.pt:method` arguments and writes one ordered report.
+The frozen comparison metadata is in `configs/evaluation/multi-condition.yaml`.
+For example:
+
+```bash
+docker compose run --rm research \
+  singalign-multi-compare \
+  --reference input.pt \
+  --condition baseline=baseline.pt:supervised \
+  --condition aligned=aligned.pt:dpo \
+  --condition kto=kto.pt:kto \
+  --output reports/multi-condition/example.json
+```
+Add `--mlflow-experiment singalign-multi-condition` to attach the report to a
+tracked exploratory MLflow run.
 `write_condition_report` serializes the same results to a deterministic JSON
 artifact suitable for MLflow attachment and later UI display.
 `log_condition_report` attaches an existing report to the active MLflow run

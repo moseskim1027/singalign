@@ -1,0 +1,9 @@
+experiment:
+  name: singalign-multi-condition
+  run_name: baseline-aligned-dpo-kto
+  run_kind: exploratory
+
+comparison:
+  conditions: [baseline, aligned, dpo, kto]
+  metric_contract: reconstruction_metrics_v1
+  output_format: json
