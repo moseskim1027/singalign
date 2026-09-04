@@ -687,6 +687,9 @@ diagnostics.
 PR 2 will unify cross-condition analysis. It will apply one paired metric
 contract, bootstrap uncertainty intervals, effect sizes, and stable condition
 ordering to baseline, reranking, DPO, KTO, conditioned, and vocoder outputs.
+The aggregate analysis command will consume a versioned JSON manifest of shared
+references and condition tensors, so every condition is evaluated on the same
+examples without relying on independently sampled datasets.
 
 ## Contributing
 
