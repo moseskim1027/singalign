@@ -36,6 +36,7 @@ singalign-candidates = "singalign.candidate_report:main"
 singalign-kto-train = "singalign.kto_train:main"
 singalign-kto-evaluate = "singalign.kto_evaluate:main"
 singalign-multi-compare = "singalign.multi_compare:main"
+singalign-condition-analysis = "singalign.condition_analysis:main"
 
 [dependency-groups]
 dev = ["ruff==0.12.11"]
