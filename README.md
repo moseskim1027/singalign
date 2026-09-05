@@ -661,8 +661,12 @@ includes the data contracts, deterministic baselines, MIDI renderer, Docker
 and MLflow experiment lineage, evaluation artifacts, UI workflows, optional
 vocoder contract, and an architecture-only conditional diffusion denoiser.
 
-The diffusion module in `src/singalign/models/diffusion.py` is a runnable
-PyTorch forward-pass scaffold, not trained voice-conversion software. A real
+The small `ScoreConditionedMelModel` remains the runnable Study 1 baseline.
+The same module also includes `ScoreConditionedMelDiffusion`, an architecture
+scaffold that combines phonemes, MIDI pitch, observed F0, and frame timing
+before conditional denoising. The generic `ConditionalMelDiffusion` is the
+corresponding Study 2/future voice-conversion denoiser. These are runnable
+PyTorch forward-pass scaffolds, not trained voice-conversion software. A real
 system would need song-disjoint multi-singer data, alignment and conditioning
 encoders, a diffusion training/sampling loop, and a neural vocoder. Training
 those components would require a CUDA-capable GPU (often multiple GPUs for

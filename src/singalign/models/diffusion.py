@@ -97,6 +97,58 @@ class ConditionalMelDiffusion(nn.Module):
         return self.output(hidden)
 
 
+class ScoreConditionedMelDiffusion(nn.Module):
+    """Study 1 scaffold: diffuse mel frames conditioned on a musical score.
+
+    The discrete phoneme and MIDI streams, plus observed F0 and normalized
+    frame timing, are projected into the frame-aligned conditioning expected by
+    :class:`ConditionalMelDiffusion`. This defines the future model boundary;
+    it does not include training, sampling, or a vocoder.
+    """
+
+    def __init__(
+        self,
+        mel_bins: int = 80,
+        phoneme_vocab_size: int = 256,
+        condition_channels: int = 256,
+        hidden_channels: int = 128,
+    ) -> None:
+        super().__init__()
+        self.phoneme = nn.Embedding(phoneme_vocab_size, 64, padding_idx=0)
+        self.midi_pitch = nn.Embedding(129, 64, padding_idx=0)
+        self.continuous = nn.Sequential(nn.Linear(2, 64), nn.SiLU(), nn.Linear(64, 64))
+        self.condition = nn.Conv1d(192, condition_channels, kernel_size=1)
+        self.denoiser = ConditionalMelDiffusion(
+            mel_bins=mel_bins,
+            condition_channels=condition_channels,
+            hidden_channels=hidden_channels,
+        )
+
+    def forward(
+        self,
+        noisy_mel: torch.Tensor,
+        timestep: torch.Tensor,
+        phoneme_ids: torch.Tensor,
+        midi_pitch: torch.Tensor,
+        observed_f0: torch.Tensor,
+        frame_position: torch.Tensor,
+    ) -> torch.Tensor:
+        streams = (phoneme_ids, midi_pitch, observed_f0, frame_position)
+        if any(stream.ndim != 2 for stream in streams):
+            raise ValueError("Study 1 conditioning streams must be [batch, frames]")
+        if len({stream.shape for stream in streams}) != 1:
+            raise ValueError("Study 1 conditioning streams must share shape")
+        if noisy_mel.shape[0] != phoneme_ids.shape[0] or noisy_mel.shape[2] != phoneme_ids.shape[1]:
+            raise ValueError("noisy_mel must align with Study 1 conditioning streams")
+        discrete = torch.cat(
+            (self.phoneme(phoneme_ids.long()), self.midi_pitch(midi_pitch.long().clamp(0, 128))),
+            dim=-1,
+        )
+        continuous = self.continuous(torch.stack((observed_f0.float(), frame_position.float()), dim=-1))
+        condition = self.condition(torch.cat((discrete, continuous), dim=-1).transpose(1, 2))
+        return self.denoiser(noisy_mel, timestep, condition)
+
+
 @dataclass(frozen=True)
 class SingingVoiceDiffusionSpec:
     """Declare the conditioning contract without allocating a model."""
