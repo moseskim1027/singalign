@@ -186,6 +186,7 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--index", type=Path, required=True)
     parser.add_argument("--splits", type=Path, required=True)
     parser.add_argument("--max-items", type=int)
+    parser.add_argument("--parent-run-id", help="MLflow training run this evaluation continues")
     return parser
 
 
@@ -206,6 +207,8 @@ def main() -> int:
     )
     parameters = {**config, "checkpoint_sha256": checkpoint_hash}
     with tracked_run(metadata, parameters) as run:
+        if args.parent_run_id:
+            mlflow.set_tag("lineage.parent_training_run_id", args.parent_run_id)
         destination = Path(settings["output_dir"]) / run.info.run_id
         result = evaluate_checkpoint(
             args.checkpoint,

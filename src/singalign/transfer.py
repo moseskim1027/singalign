@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 from pathlib import Path
 
 import torch
@@ -114,7 +115,7 @@ def run_transfer(args: argparse.Namespace) -> int:
             "vocal_gain": args.vocal_gain,
             "instrument_gain": args.instrument_gain,
         },
-    ):
+    ) as run:
         mlflow = __import__("mlflow")
         for name, value in diagnostics.items():
             mlflow.log_metric(f"transfer.{name}", value)
@@ -126,7 +127,8 @@ def run_transfer(args: argparse.Namespace) -> int:
             },
             "transfer-metadata.json",
         )
-    print(f"Wrote Study 2 transfer mix to {args.output}")
+        run_id = run.info.run_id
+    print(json.dumps({"output": str(args.output), "mlflow_run_id": run_id}, sort_keys=True))
     return 0
 
 
