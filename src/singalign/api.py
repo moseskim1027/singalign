@@ -142,6 +142,8 @@ def start_training(request: TrainingRequest) -> TrainingResponse:
 @app.post("/study2/evaluation", response_model=TrainingResponse)
 def start_study2_evaluation(request: EvaluationRequest) -> TrainingResponse:
     """Launch the objective Study 2 evaluation for one transfer output."""
+    if request.transferred.endswith("transfer.wav"):
+        request.transferred = request.transferred.replace("transfer.wav", "aligned-vocal.wav")
     command = [
         "singalign-transfer-evaluate",
         "--reference",
