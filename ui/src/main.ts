@@ -16,8 +16,8 @@ if (!app) {
 app.innerHTML = `
   <header class="hero">
     <p id="landing-eyebrow" class="eyebrow">Two-study research workspace</p>
-    <h1>SingAlign model comparison</h1>
-    <p id="landing-intro" class="intro">Choose between same-singer score-conditioned synthesis and content-and-melody transfer, then run the relevant reproducible workflow.</p>
+    <h1>SingAlign research</h1>
+    <p id="landing-intro" class="intro">Choose a study to run its reproducible experiment workflow.</p>
   </header>
   <section id="landing" class="landing" aria-labelledby="landing-title">
     <p class="section-kicker">Choose a research workflow</p>
@@ -31,8 +31,8 @@ app.innerHTML = `
   </section>
   <nav id="workflow-nav" class="tabs" aria-label="Experiment workflow" hidden>
     <button type="button" class="tab active" data-tab="training">Study 1</button>
-    <button type="button" class="tab" data-tab="evaluation">Study 1 Evaluation</button>
-    <button type="button" class="tab" data-tab="comparison">Study 1 Comparison</button>
+    <button type="button" class="tab" data-tab="evaluation">Evaluation</button>
+    <button type="button" class="tab" data-tab="comparison">Results</button>
     <button type="button" class="tab" data-tab="studies">Study 2</button>
   </nav>
   <section class="tab-panel" data-panel="training" hidden>
@@ -55,7 +55,7 @@ app.innerHTML = `
   <section class="loader" aria-labelledby="evaluation-title">
     <div>
       <h2 id="evaluation-title">Evaluation interface</h2>
-      <p>Run the registered objective evaluation on the Study 1 checkpoint. Expect a versioned report and MLflow run ID, then use that ID in Comparison.</p>
+        <p>Evaluate the trained checkpoint on the fixed split. The report and MLflow run ID are used in Results.</p>
     </div>
     <form id="evaluation-form">
       <label for="evaluation-experiment">Experiment</label>
@@ -74,7 +74,7 @@ app.innerHTML = `
   <section class="loader" aria-labelledby="loader-title">
     <div>
       <h2 id="loader-title">Compare Study 1 outputs</h2>
-      <p>Paste the MLflow comparison run ID produced after evaluation to inspect paired metrics and audio artifacts.</p>
+      <p>Load the comparison run to review metrics and audio artifacts.</p>
     </div>
     <form id="run-form">
       <label for="run-id">Run ID</label>
