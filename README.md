@@ -58,6 +58,13 @@ ensure generated audio remains synchronized with the source vocal and target
 musical structure. That setting would be evaluated separately because diffusion
 sampling introduces an additional source of variation.
 
+The rendered target is a pure instrumental accompaniment, not a second vocal
+recording. Rendering converts the target score into a fixed WAV; it does not
+modify the source vocal. The source vocal remains the content and melody
+reference, while the target accompaniment defines the destination musical
+context. A future true vocal-transfer model would be required to transform the
+source vocal's pitch, timing, or timbre before mixing it with that accompaniment.
+
 The initial studies use the PJS corpus. Experiments will operate on short
 mel-spectrogram segments so that data preparation, baseline development, and
 pilot studies remain practical on Apple Silicon. They will address:
