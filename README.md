@@ -65,6 +65,19 @@ reference, while the target accompaniment defines the destination musical
 context. A future true vocal-transfer model would be required to transform the
 source vocal's pitch, timing, or timbre before mixing it with that accompaniment.
 
+The current Study 2 baseline applies deterministic pitch shifting and tempo
+alignment to the source vocal before mixing. Pitch alignment uses resampling to
+change the vocal's frequency by the declared semitone interval, followed by an
+inverse duration correction so the pitch shift does not change its length.
+Timing alignment then uses deterministic resampling with the declared tempo
+scale. The target score supplies the destination musical context; automatic
+beat or key estimation is not yet implemented. The pipeline preserves three
+distinct artifacts: the original
+vocal reference, the pitch/time-aligned vocal, and the final aligned-vocal plus
+instrumental mix. All control parameters and artifact lineage are recorded in
+MLflow. This is a transparent signal-processing baseline, not a trained neural
+vocal-transfer model.
+
 The initial studies use the PJS corpus. Experiments will operate on short
 mel-spectrogram segments so that data preparation, baseline development, and
 pilot studies remain practical on Apple Silicon. They will address:
