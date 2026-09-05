@@ -92,9 +92,16 @@ def training_status(job_id: str) -> dict[str, str]:
         status = container.status
         logs = container.logs(tail=20).decode("utf-8", errors="replace")
         match = re.findall(r'"mlflow_run_id":\s*"([^"]+)"', logs)
+        state = container.attrs.get("State", {})
+        if status == "exited":
+            status = "completed" if state.get("ExitCode") == 0 else "failed"
         result = {"job_id": job_id, "status": status}
         if match:
             result["mlflow_run_id"] = match[-1]
+        if status == "failed":
+            errors = [line.strip() for line in logs.splitlines() if line.strip()]
+            if errors:
+                result["error"] = errors[-1]
         return result
     except docker.errors.NotFound:
         return {"job_id": job_id, "status": "completed-or-unknown"}
