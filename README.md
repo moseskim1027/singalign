@@ -49,6 +49,15 @@ while placing it over a different instrumental track.
 Use a fixed, MIDI-rendered PJS instrumental so vocal alignment can be evaluated
 without introducing a second generation variable.
 
+The primary Study 2 control uses a deterministic MIDI/MusicXML-rendered
+instrumental so vocal-transfer effects can be evaluated independently of
+accompaniment generation. Future research using a diffusion-based accompaniment
+or vocal-transfer model would require an explicit alignment strategy—such as
+beat tracking, score conditioning, or differentiable time/pitch alignment—to
+ensure generated audio remains synchronized with the source vocal and target
+musical structure. That setting would be evaluated separately because diffusion
+sampling introduces an additional source of variation.
+
 The initial studies use the PJS corpus. Experiments will operate on short
 mel-spectrogram segments so that data preparation, baseline development, and
 pilot studies remain practical on Apple Silicon. They will address:
