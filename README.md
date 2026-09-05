@@ -10,14 +10,15 @@ synthesis.
 
 ## Overview
 
-SingAlign compares singing-voice generation, reconstruction, conditioning,
-reranking, and preference-optimization methods. It is an engineering and
-simulation environment rather than a confirmatory human-subjects study.
+SingAlign focuses on two PJS-supported research directions: same-singer,
+score-conditioned singing synthesis, and preservation of vocal content and
+melody when a source vocal is placed over a different instrumental track. It
+is an engineering and simulation environment rather than a confirmatory
+human-subjects study.
 
-The project will evaluate multidimensional reward modeling and preference
-optimization methods for generative singing systems. Initial experiments will
-compare supervised fine-tuning, candidate reranking, Direct Preference
-Optimization (DPO), and Kahneman-Tversky Optimization (KTO).
+Reward modeling, candidate reranking, supervised fine-tuning, DPO, and KTO are
+retained as exploratory alignment infrastructure. They are not currently the
+primary research claim because PJS is small and contains one vocalist.
 
 This repository is structured as a reproducible research artifact. It will
 contain experiment definitions, evaluation protocols, statistical analyses,
@@ -25,50 +26,73 @@ and research documentation alongside the eventual implementation.
 
 ## Research questions
 
-SingAlign is organized around four primary questions:
+SingAlign is organized around two primary questions:
 
-1. Can a multidimensional reward model predict human preferences for generated
-   singing?
-2. Do preference-optimization methods improve perceived singing quality over
-   supervised fine-tuning and candidate reranking?
-3. What trade-offs arise between perceptual quality, score fidelity, lyric
-   intelligibility, and singer similarity?
-4. Do learned preferences generalize to unseen singers, songs, and generation
-   conditions?
+1. Can a compact model synthesize the PJS vocalist from lyrics, phonemes,
+   musical score, timing, and pitch conditioning?
+2. Can source vocal content, phoneme timing, and melody be preserved when the
+   vocal is transferred onto a different instrumental track?
+
+Reward-model and preference-optimization experiments remain optional
+engineering diagnostics. Human-preference prediction and unseen-singer
+generalization are deferred until a suitable multi-singer dataset and
+evaluation design exist.
 
 ## Scope
 
-The initial study will focus on compact, score-conditioned singing voice
-synthesis using the PJS corpus. Experiments will operate on short
+The research scope has two focused directions. First, test same-singer,
+score-conditioned synthesis: lyrics, phonemes, MIDI/MusicXML note timing, and
+pitch are used to reconstruct the PJS vocalist. Second, test content-and-
+melody transfer: preserve a source vocal's words, phoneme timing, and melody
+while placing it over a different instrumental track.
+
+The core transfer experiment does not depend on MusicGen. Use a fixed,
+MIDI-rendered PJS instrumental so vocal alignment can be evaluated without
+introducing a second generation variable. MusicGen is only an optional,
+separately logged target-instrument extension.
+
+The initial studies use the PJS corpus. Experiments will operate on short
 mel-spectrogram segments so that data preparation, baseline development, and
-pilot studies remain practical on Apple Silicon. The study will address the
-following perceptual dimensions:
+pilot studies remain practical on Apple Silicon. They will address:
 
 - vocal naturalness
 - pitch and rhythm accuracy
 - lyric intelligibility
-- singer similarity
 - expressiveness
 - audio fidelity
+
+Singer similarity is not a generalization target because PJS contains one
+vocalist; it is only a same-singer reconstruction diagnostic.
 
 The first version will intentionally favor controlled, interpretable
 experiments over model scale.
 
 ## Planned methodology
 
-The planned research pipeline consists of:
+The primary research pipeline consists of:
 
-1. Reproduce or adapt a public singing voice synthesis baseline.
-2. Generate multiple candidates for each lyric and score condition.
-3. Construct preference pairs using controlled degradations, objective
-   measurements, and a limited human listening study.
-4. Train scalar and multidimensional reward-model baselines.
-5. Apply reward-based reranking and preference optimization.
-6. Evaluate models using objective measurements and blinded human judgments.
-7. Report uncertainty, failure cases, and relevant ablations.
+1. Validate PJS phonemes, scores, lyrics, and deterministic song-disjoint
+   splits.
+2. Extract observed F0 and construct versioned conditioning records.
+3. Train and evaluate a same-singer score-conditioned synthesis baseline.
+4. Render reproducible target instrumentals from PJS MIDI/MusicXML.
+5. Implement original-vocal content-and-melody remix controls, including
+   tempo/key alignment and intentionally misaligned controls.
+6. Add synthesized-vocal transfer using the Study 1 checkpoint.
+7. Report lyric, pitch, timing, audio-quality, and mix diagnostics with full
+   provenance.
+
+Reward modeling, reranking, DPO, and KTO are optional exploratory extensions;
+they should not be used to imply human preference alignment without suitable
+data and evaluation.
 
 The methodology may change as preliminary experiments reveal limitations. Any
 material changes will be documented in the research plan and experiment logs.
+The complete implementation sequence is: extract and validate observed F0;
+complete same-singer synthesis; render target instrumentals from PJS MIDI;
+create source/target pair manifests; implement tempo/key alignment and remix
+controls; add synthesized-vocal transfer; then report lyric, pitch, timing,
+audio-quality, and mix diagnostics.
 
 ### Score and lyric conditioning prototype
 
@@ -483,91 +507,28 @@ loaded, making the dependency order visible during reproducible experiments.
 
 ### Candidate-generation sandbox
 
-The next engineering stage is defined in
-[`experiments/candidate-generation-v1.md`](experiments/candidate-generation-v1.md).
-It will generate deterministic candidates from a shared mel input, score them
-with explicitly labeled proxy rewards, and retain provenance for every output.
-The first implementation will cover controlled perturbations before learned
-decoder outputs are added.
-The deterministic generator is implemented in `singalign.candidates`; its
-candidate records include method, seed, severity, and tensor provenance.
-The reranker in `singalign.rerank` currently uses normalized mel reconstruction
-error as an explicitly labeled proxy reward, with deterministic ranking and
-stable provenance. It is not a human-preference model.
-`singalign.rewards` now exposes the same scalar reward plus an auditable
-multidimensional reward combining reconstruction, smoothness, and amplitude
-components. Both are diagnostic proxies and their weights are recorded.
-The candidate-generation and reranking foundations are tracked as completed
-engineering milestones in [`docs/research-plan.md`](docs/research-plan.md).
-`singalign.candidate_report.write_candidate_report` provides the next
-integration point for writing deterministic ranked-candidate manifests before
-MLflow logging and UI display are added.
-For a standalone local/Docker invocation, save a mel tensor with
-`torch.save` and run `singalign-candidates --input input.pt --output
-reports/candidates/example.json`.
-Add `--mlflow-experiment singalign-candidate-sandbox` to log the manifest and
-reproducibility metadata to the local MLflow server.
-The corresponding exploratory configuration is
-`configs/evaluation/candidates.yaml`; it fixes the initial methods, seed, and
-proxy-reward version for repeatable runs.
-The preference-objective sandbox also exposes a compact KTO-style loss in
-`singalign.preference_objectives`, alongside the existing proxy-DPO loss. These
-objectives operate on synthetic/proxy scores and do not establish human
-preference alignment.
-The initial objective settings are frozen in
-`configs/training/preference-objectives.yaml` so DPO/KTO comparisons can be
-run as explicit exploratory conditions.
-`pair_to_kto_batch` adapts the existing chosen/rejected synthetic pairs to the
-binary labels expected by the KTO objective.
-The separate exploratory KTO condition is specified in
-`configs/training/kto.yaml`; a trainer and MLflow run remain to be implemented.
-The Docker trainer is now available with `singalign-kto-train`; it initializes
-from the supervised checkpoint, trains only on synthetic training pairs, and
-logs the exploratory checkpoint to MLflow.
-The first 10-epoch pilot is MLflow run `3c9de2f603d2419683f6bfe2502fdc9d`
-in experiment `singalign-kto-proxy`.
-The trainer validates required sections and positive beta/temperature before
-starting a run.
-The held-out diagnostic command `singalign-kto-evaluate` measures synthetic
-preference loss and accuracy on the sealed test split without changing the
-checkpoint or tuning the objective.
-The evaluator is the only workflow that passes the dataset's explicit
-`allow_test=True` opt-in; training commands remain unable to consume test IDs.
-The first held-out diagnostic evaluated 10 test examples with proxy preference
-accuracy `1.0` and mean proxy loss `0.3955`; these are engineering diagnostics,
-not perceptual or population-level claims.
-The multi-condition comparison work now uses `singalign.conditions.ConditionSpec`
-to preserve stable names, methods, checkpoint paths, and declared ordering.
-`compare_condition_outputs` applies the same reconstruction diagnostics to each
-declared output, keeping baseline/aligned/DPO/KTO comparisons on one metric
-contract.
-The research checklist distinguishes the completed proxy-reward/KTO
-infrastructure from the still-pending learned reward-model baselines and
-cross-condition statistical diagnostics.
-The `singalign-multi-compare` CLI now compares saved mel tensors with repeated
-`--condition name=output.pt:method` arguments and writes one ordered report.
-The frozen comparison metadata is in `configs/evaluation/multi-condition.yaml`.
-For example:
+Candidate generation is supporting infrastructure for the two primary studies.
+It creates deterministic variants of a synthesis or transfer condition so we
+can compare pitch, timing, lyric intelligibility, audio quality, and alignment
+failures. Each candidate records its seed, method, input condition, and output
+provenance.
+
+The sandbox can also apply transparent proxy scores and stable reranking, but
+these scores are engineering diagnostics—not human-preference models. DPO, KTO,
+and reward-model code remains optional exploratory infrastructure and is not a
+primary research direction.
+
+Example Docker invocation:
 
 ```bash
 docker compose run --rm research \
-  singalign-multi-compare \
-  --reference input.pt \
-  --condition baseline=baseline.pt:supervised \
-  --condition aligned=aligned.pt:dpo \
-  --condition kto=kto.pt:kto \
-  --output reports/multi-condition/example.json
+  singalign-candidates \
+  --input input.pt \
+  --output reports/candidates/example.json
 ```
-Add `--mlflow-experiment singalign-multi-condition` to attach the report to a
-tracked exploratory MLflow run.
-The UI integration stage loads this deterministic JSON report separately from
-the legacy paired comparison report.
-`write_condition_report` serializes the same results to a deterministic JSON
-artifact suitable for MLflow attachment and later UI display.
-`log_condition_report` attaches an existing report to the active MLflow run
-under a stable `conditions` artifact path.
-The evaluation settings are frozen in `configs/evaluation/kto.yaml`; the
-command still requires the explicit test-split workflow shown below.
+
+Candidate reports can be logged to MLflow with their condition metadata so
+results remain reproducible.
 
 Run the exploratory KTO condition from Docker with:
 
@@ -656,15 +617,22 @@ evolving risk assessment.
 
 ## Roadmap
 
-- [ ] Finalize the research hypotheses and success criteria
+- [x] Define the PJS-supported singing synthesis and vocal-transfer direction
 - [x] Review the PJS dataset terms and document local installation
 - [ ] Validate the corpus and create immutable data splits
 - [ ] Select and reproduce a baseline model
 - [ ] Implement controlled preference-pair construction
 - [ ] Establish objective evaluation baselines
-- [ ] Train and evaluate reward models
-- [ ] Compare reranking, supervised fine-tuning, DPO, and KTO
+- [ ] Extract and validate observed F0 conditioning
+- [ ] Complete same-singer score-conditioned synthesis evaluation
+- [ ] Implement MIDI-based target-instrument rendering
+- [ ] Implement content-and-melody transfer baselines
+- [ ] Evaluate synthesized-vocal transfer over target instrumentals
+- [ ] Train and evaluate reward models as optional exploratory extensions
+- [ ] Compare reranking, supervised fine-tuning, DPO, and KTO as optional
+      diagnostics
 - [x] Exclude participant-based listening claims from the simulation-sandbox scope
+- [ ] Add a suitable multi-singer dataset before making identity-generalization claims
 - [ ] Publish the final report and reproducibility package
 
 The roadmap indicates intended work, not completed capabilities.
