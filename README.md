@@ -1,7 +1,10 @@
 # SingAlign
 
-Reproducible music-generation sandbox for preference-aligned singing voice
-synthesis.
+SingAlign is a reproducible music-synthesis sandbox for training and evaluating
+singing-voice systems. Its primary evidence is objective signal-processing
+analysis: pitch and F0 accuracy, timing, spectral/mel similarity, content
+preservation, clipping, and audio artifacts. Common ML metrics and optional
+listening measures support that analysis; they do not replace it.
 
 > [!IMPORTANT]
 > SingAlign is an early-stage research project. The methods, experiments, and
@@ -12,17 +15,23 @@ synthesis.
 
 SingAlign focuses on two PJS-supported research directions: same-singer,
 score-conditioned singing synthesis, and preservation of vocal content and
-melody when a source vocal is placed over a different instrumental track. It
-is an engineering and simulation environment rather than a confirmatory
-human-subjects study.
+melody when a source vocal is placed over a different instrumental track. Each
+study produces reproducible audio artifacts, MLflow lineage, and objective
+signal-processing reports. It is an engineering and simulation environment
+rather than a confirmatory human-subjects study.
 
 Reward modeling, candidate reranking, supervised fine-tuning, DPO, and KTO are
 retained as exploratory alignment infrastructure. They are not currently the
 primary research claim because PJS is small and contains one vocalist.
 
-This repository is structured as a reproducible research artifact. It will
-contain experiment definitions, evaluation protocols, statistical analyses,
-and research documentation alongside the eventual implementation.
+This repository is structured as a reproducible research artifact: experiment
+definitions, Dockerized execution, evaluation protocols, statistical analyses,
+MLflow tracking, playable outputs, and research documentation live alongside
+the model baselines and future-model scaffolds.
+
+<p align="center">
+  <img src="docs/melody_content_transfer.gif" alt="Melody and content transfer workflow" width="560">
+</p>
 
 ## Research questions
 
@@ -104,9 +113,9 @@ vocalist; it is only a same-singer reconstruction diagnostic.
 The first version will intentionally favor controlled, interpretable
 experiments over model scale.
 
-## Planned methodology
+## Methodology
 
-The primary research pipeline consists of:
+The shared research pipeline consists of:
 
 1. Validate PJS phonemes, scores, lyrics, and deterministic song-disjoint
    splits.
@@ -115,7 +124,8 @@ The primary research pipeline consists of:
 4. Render reproducible target instrumentals from PJS MIDI/MusicXML.
 5. Implement original-vocal content-and-melody remix controls, including
    tempo/key alignment and intentionally misaligned controls.
-6. Add synthesized-vocal transfer using the Study 1 checkpoint.
+6. Compare the deterministic Study 2 control with a future synthesized-vocal
+   transfer model.
 7. Report lyric, pitch, timing, audio-quality, and mix diagnostics with full
    provenance.
 
@@ -123,13 +133,9 @@ Reward modeling, reranking, DPO, and KTO are optional exploratory extensions;
 they should not be used to imply human preference alignment without suitable
 data and evaluation.
 
-The methodology may change as preliminary experiments reveal limitations. Any
-material changes will be documented in the research plan and experiment logs.
-The complete implementation sequence is: extract and validate observed F0;
-complete same-singer synthesis; render target instrumentals from PJS MIDI;
-create source/target pair manifests; implement tempo/key alignment and remix
-controls; add synthesized-vocal transfer; then report lyric, pitch, timing,
-audio-quality, and mix diagnostics.
+The implemented controls and scaffolds are intentionally separated from the
+future neural conversion stage. Any material methodological change should be
+documented in the research plan and experiment logs.
 
 ### Score and lyric conditioning prototype
 
@@ -589,9 +595,12 @@ MLflow database and artifacts. See
 [`configs/mlflow/README.md`](configs/mlflow/README.md) for storage and network
 details.
 
-## Evaluation plan
+## Objective evaluation plan
 
-Evaluation will combine objective and perceptual evidence.
+Evaluation is led by objective signal-processing analysis, with perceptual
+evidence treated as complementary. Metrics are interpreted against the study's
+reference and control conditions rather than as a single universal quality
+score.
 
 | Dimension | Candidate measurements |
 | --- | --- |
