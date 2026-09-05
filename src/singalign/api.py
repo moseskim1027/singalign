@@ -50,6 +50,12 @@ class EvaluationRequest(BaseModel):
     parent_run_id: str | None = None
 
 
+class RenderRequest(BaseModel):
+    score: str
+    output: str
+    bpm: float = 120.0
+
+
 def launch_container(command: list[str]) -> TrainingResponse:
     """Launch a detached research command with the repository mounts."""
     client = docker.from_env()
@@ -145,6 +151,17 @@ def start_study2_evaluation(request: EvaluationRequest) -> TrainingResponse:
     if request.parent_run_id:
         command.extend(["--parent-run-id", request.parent_run_id])
     return launch_container(command)
+
+
+@app.post("/study2/render", response_model=TrainingResponse)
+def start_study2_render(request: RenderRequest) -> TrainingResponse:
+    """Render a fixed MusicXML target instrumental for Study 2."""
+    if request.bpm <= 0:
+        raise HTTPException(status_code=400, detail="bpm must be positive")
+    return launch_container([
+        "singalign-render-instrumental", "--score", request.score,
+        "--output", request.output, "--bpm", str(request.bpm),
+    ])
 
 
 @app.get("/training/{job_id}")
