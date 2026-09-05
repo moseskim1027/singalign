@@ -83,7 +83,10 @@ with a conditioned acoustic model: phonemes/content + target F0/timing + singer
 embedding → mel spectrogram → neural vocoder. Use multi-singer, song-disjoint
 data and evaluate content preservation, target-pitch accuracy, timing, timbre,
 and artifacts. Training remains an optional GPU-backed extension; this sandbox
-keeps the deterministic baseline for reproducible comparison.
+keeps the deterministic baseline for reproducible comparison. The future model
+contract is preserved in `configs/training/diffusion.yaml`,
+`experiments/diffusion-voice-conversion-v1.md`, and the configuration-only
+`SingingVoiceDiffusionSpec`; these are placeholders, not trained components.
 
 The initial studies use the PJS corpus. Experiments will operate on short
 mel-spectrogram segments so that data preparation, baseline development, and

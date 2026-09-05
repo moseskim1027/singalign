@@ -2,6 +2,12 @@
 
 from singalign.models.baseline import MelAutoencoder
 from singalign.models.conditioned import ScoreConditionedMelModel
+from singalign.models.diffusion import SingingVoiceDiffusionSpec
 from singalign.models.vocoder import MelVocoder
 
-__all__ = ["MelAutoencoder", "MelVocoder", "ScoreConditionedMelModel"]
+__all__ = [
+    "MelAutoencoder",
+    "MelVocoder",
+    "ScoreConditionedMelModel",
+    "SingingVoiceDiffusionSpec",
+]
