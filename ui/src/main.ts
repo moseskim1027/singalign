@@ -31,8 +31,8 @@ app.innerHTML = `
   </section>
   <nav id="workflow-nav" class="tabs" aria-label="Experiment workflow" hidden>
     <button type="button" class="tab active" data-tab="training">Study 1</button>
-    <button type="button" class="tab" data-tab="evaluation">Evaluation</button>
-    <button type="button" class="tab" data-tab="comparison">Comparison</button>
+    <button type="button" class="tab" data-tab="evaluation">Study 1 Evaluation</button>
+    <button type="button" class="tab" data-tab="comparison">Study 1 Comparison</button>
     <button type="button" class="tab" data-tab="studies">Study 2</button>
   </nav>
   <section class="tab-panel" data-panel="training" hidden>
@@ -55,22 +55,26 @@ app.innerHTML = `
   <section class="loader" aria-labelledby="evaluation-title">
     <div>
       <h2 id="evaluation-title">Evaluation interface</h2>
-      <p>Evaluate the checkpoint produced by Training using its registered protocol.</p>
+      <p>Run the registered objective evaluation on the Study 1 checkpoint. Expect a versioned report and MLflow run ID, then use that ID in Comparison.</p>
     </div>
     <form id="evaluation-form">
       <label for="evaluation-experiment">Experiment</label>
       <select id="evaluation-experiment"></select>
       <label for="evaluation-checkpoint">Checkpoint</label>
       <input id="evaluation-checkpoint" value="checkpoints/baseline/best.pt" required />
+      <label for="evaluation-parent-run">Training MLflow run ID</label>
+      <input id="evaluation-parent-run" placeholder="Filled after Study 1 training completes" readonly />
       <button type="submit">Generate evaluation command</button>
     </form>
     <pre id="evaluation-command" class="command" hidden></pre>
     <p class="evaluation-footnote"><strong>Interpretation boundary:</strong> this is an objective inspection workflow, not a blinded listening study. Generated examples use approximate Griffin-Lim reconstruction.</p>
   </section>
+  </section>
+  <section class="tab-panel" data-panel="comparison" hidden>
   <section class="loader" aria-labelledby="loader-title">
     <div>
-      <h2 id="loader-title">Load a comparison run</h2>
-      <p>Paste the MLflow run ID printed by <code>singalign-compare</code>.</p>
+      <h2 id="loader-title">Compare Study 1 outputs</h2>
+      <p>Paste the MLflow comparison run ID produced after evaluation to inspect paired metrics and audio artifacts.</p>
     </div>
     <form id="run-form">
       <label for="run-id">Run ID</label>
@@ -82,8 +86,6 @@ app.innerHTML = `
     <p id="status" class="status" role="status"></p>
   </section>
   <section id="results" class="results" hidden></section>
-  </section>
-  <section class="tab-panel" data-panel="comparison" hidden>
   <section class="loader" aria-labelledby="multi-title">
     <div>
       <h2 id="multi-title">Load multi-condition report</h2>
@@ -141,6 +143,7 @@ const experimentContext = document.querySelector<HTMLElement>("#experiment-conte
 const evaluationForm = document.querySelector<HTMLFormElement>("#evaluation-form");
 const evaluationExperiment = document.querySelector<HTMLSelectElement>("#evaluation-experiment");
 const evaluationCheckpoint = document.querySelector<HTMLInputElement>("#evaluation-checkpoint");
+const evaluationParentRun = document.querySelector<HTMLInputElement>("#evaluation-parent-run");
 const evaluationCommand = document.querySelector<HTMLElement>("#evaluation-command");
 const studiesForm = document.querySelector<HTMLFormElement>("#studies-form");
 const studyKind = document.querySelector<HTMLSelectElement>("#study-kind");
@@ -156,7 +159,7 @@ const tabs = [...document.querySelectorAll<HTMLButtonElement>(".tab")];
 const panels = [...document.querySelectorAll<HTMLElement>(".tab-panel")];
 const workflowReady = { evaluation: false, comparison: false };
 
-if (!form || !input || !status || !results || !multiForm || !multiInput || !multiStatus || !multiResults || !trainingForm || !trainingExperiment || !trainingFields || !trainingCommand || !experimentContext || !evaluationForm || !evaluationExperiment || !evaluationCheckpoint || !evaluationCommand || !studiesForm || !studyKind || !studyManifest || !studySource || !studyTarget || !studyCommand || !landing || !landingFootnote || !continueStudy || !workflowNav) {
+if (!form || !input || !status || !results || !multiForm || !multiInput || !multiStatus || !multiResults || !trainingForm || !trainingExperiment || !trainingFields || !trainingCommand || !experimentContext || !evaluationForm || !evaluationExperiment || !evaluationCheckpoint || !evaluationParentRun || !evaluationCommand || !studiesForm || !studyKind || !studyManifest || !studySource || !studyTarget || !studyCommand || !landing || !landingFootnote || !continueStudy || !workflowNav) {
   throw new Error("comparison controls are missing");
 }
 
@@ -247,7 +250,7 @@ evaluationForm.addEventListener("submit", (event) => {
   const experiment = trainingExperiments[evaluationExperiment.value as keyof typeof trainingExperiments];
   const commandName = evaluationExperiment.value === "study2" ? "study" : "evaluate";
   evaluationCommand.hidden = false;
-  evaluationCommand.textContent = `docker compose run --rm research \\\n+  singalign-${commandName} \\\n+  --config ${experiment.evaluation} \\\n+  --checkpoint ${evaluationCheckpoint.value} \\\n+  --splits data/interim/pjs/splits.json`;
+  evaluationCommand.textContent = `docker compose run --rm research \\\n+  singalign-evaluate \\\n+  --config ${experiment.evaluation} \\\n+  --checkpoint ${evaluationCheckpoint.value} \\\n+  --parent-run-id ${evaluationParentRun.value || "TRAINING_RUN_ID"} \\\n+  --index data/interim/pjs/index.jsonl \\\n+  --splits data/interim/pjs/splits.json`;
   workflowReady.comparison = true;
   updateWorkflowAccess();
 });
@@ -555,8 +558,14 @@ trainingForm.addEventListener("submit", (event) => {
     trainingCommand.textContent = `${command}\n\nJob started: ${result.job_id}\nProgress: queued`;
     const poll = async (): Promise<void> => {
       const statusResponse = await fetch(`http://localhost:8000/training/${result.job_id}`);
-      const status = (await statusResponse.json()) as { status: string };
-      trainingCommand.textContent = `${command}\n\nJob ${result.job_id}\nProgress: ${status.status}`;
+      const status = (await statusResponse.json()) as { status: string; mlflow_run_id?: string };
+      if (status.mlflow_run_id) {
+        input.value = status.mlflow_run_id;
+        evaluationParentRun.value = status.mlflow_run_id;
+        trainingCommand.textContent = `${command}\n\nJob ${result.job_id}\nProgress: ${status.status}\nMLflow experiment ID: ${status.mlflow_run_id}\nOpen Study 1 Comparison to inspect results.`;
+      } else {
+        trainingCommand.textContent = `${command}\n\nJob ${result.job_id}\nProgress: ${status.status}`;
+      }
       if (!["completed-or-unknown", "exited", "dead"].includes(status.status)) {
         window.setTimeout(poll, 2000);
       }

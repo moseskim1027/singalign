@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import re
 from pathlib import Path
 
 import docker
@@ -73,7 +74,7 @@ def start_training(request: TrainingRequest) -> TrainingResponse:
     root = Path(os.environ.get("SINGALIGN_HOST_ROOT", Path.cwd())).resolve()
     try:
         container = client.containers.run(
-            "singalign-research", command=command, detach=True, remove=True,
+            "singalign-research", command=command, detach=True, remove=False,
             environment={"MLFLOW_TRACKING_URI": "http://mlflow:5000"},
             network=os.environ.get("SINGALIGN_DOCKER_NETWORK", "singalign_default"),
             volumes={str(root / "data"): {"bind": "/workspace/data", "mode": "ro"}, str(root / "checkpoints"): {"bind": "/workspace/checkpoints", "mode": "rw"}, str(root / "reports"): {"bind": "/workspace/reports", "mode": "rw"}},
@@ -87,7 +88,14 @@ def start_training(request: TrainingRequest) -> TrainingResponse:
 def training_status(job_id: str) -> dict[str, str]:
     """Return the current Docker container status."""
     try:
-        status = docker.from_env().containers.get(job_id).status
+        container = docker.from_env().containers.get(job_id)
+        status = container.status
+        logs = container.logs(tail=20).decode("utf-8", errors="replace")
+        match = re.findall(r'"mlflow_run_id":\s*"([^"]+)"', logs)
+        result = {"job_id": job_id, "status": status}
+        if match:
+            result["mlflow_run_id"] = match[-1]
+        return result
     except docker.errors.NotFound:
         return {"job_id": job_id, "status": "completed-or-unknown"}
     return {"job_id": job_id, "status": status}

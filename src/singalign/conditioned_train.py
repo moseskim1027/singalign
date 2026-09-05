@@ -38,7 +38,7 @@ def main() -> int:
     model = ScoreConditionedMelModel(int(audio["mel_bins"]), int(conditioning["phoneme_vocab_size"])).to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=float(training["learning_rate"]))
     metadata = RunMetadata(str(config["experiment"]["name"]), str(config["experiment"]["run_name"]), str(config["experiment"]["run_kind"]), "pjs", "1.1", train_data.fingerprint, int(training["seed"]))
-    with tracked_run(metadata, config):
+    with tracked_run(metadata, config) as run:
         model.train()
         loader = DataLoader(train_data, batch_size=int(training["batch_size"]), shuffle=True)
         validation_loader = DataLoader(validation_data, batch_size=int(training["batch_size"]))
@@ -67,7 +67,7 @@ def main() -> int:
         checkpoint.parent.mkdir(parents=True, exist_ok=True)
         torch.save({"model_state_dict": model.state_dict(), "config": config}, checkpoint)
         mlflow.log_artifact(str(checkpoint), artifact_path="checkpoints")
-    print(json.dumps({"epochs": int(training["epochs"]), "checkpoint": str(checkpoint)}))
+    print(json.dumps({"epochs": int(training["epochs"]), "checkpoint": str(checkpoint), "mlflow_run_id": run.info.run_id}))
     return 0
 
 
