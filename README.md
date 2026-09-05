@@ -7,9 +7,9 @@ preservation, clipping, and audio artifacts. Common ML metrics and optional
 listening measures support that analysis; they do not replace it.
 
 > [!IMPORTANT]
-> SingAlign is an early-stage research project. The methods, experiments, and
-> conclusions described here are provisional and should not be treated as
-> production-ready.
+> The reproducible sandbox implementation is finalized, but its neural model
+> scaffolds and research conclusions are provisional and are not production
+> systems.
 
 ## Overview
 
@@ -94,8 +94,9 @@ data and evaluate content preservation, target-pitch accuracy, timing, timbre,
 and artifacts. Training remains an optional GPU-backed extension; this sandbox
 keeps the deterministic baseline for reproducible comparison. The future model
 contract is preserved in `configs/training/diffusion.yaml`,
-`experiments/diffusion-voice-conversion-v1.md`, and the configuration-only
-`SingingVoiceDiffusionSpec`; these are placeholders, not trained components.
+`experiments/diffusion-voice-conversion-v1.md`, and
+`SingingVoiceDiffusionSpec`; the PyTorch modules define forward-pass and loss
+contracts, but remain placeholders without trained weights or a sampler.
 
 The initial studies use the PJS corpus. Experiments will operate on short
 mel-spectrogram segments so that data preparation, baseline development, and
@@ -139,12 +140,11 @@ documented in the research plan and experiment logs.
 
 ### Score and lyric conditioning prototype
 
-The repository now includes a dependency-light conditioning interface in
+The repository includes a dependency-light conditioning interface in
 `singalign.conditioning`. It parses PJS MusicXML into deterministic note events
-and phoneme label files into timed phoneme intervals. This is the first data
-interface for the planned score/lyric-conditioned synthesis stage; it is not
-yet a trained synthesizer or a candidate generator. The parser is covered by
-unit tests and does not alter the immutable corpus.
+and phoneme label files into timed phoneme intervals. This parser and frame
+adapter are implemented and tested, but they are not themselves a trained
+synthesizer or a candidate generator and do not alter the immutable corpus.
 
 Each conditioning record contains note events as `(onset, duration, MIDI
 pitch)` tuples, with `MIDI pitch = null` for rests, plus phoneme intervals as
@@ -156,14 +156,16 @@ frame rate, duration, and tempo inputs; no timing is inferred implicitly.
 Windowed crops pass an explicit song-time offset so score and phoneme events are
 aligned to the same crop rather than implicitly restarting at time zero.
 The experimental `ScoreConditionedMelModel` consumes those frame-level MIDI
-pitch and phoneme IDs and predicts mel frames. It is an architectural baseline
-only; its first exploratory training run is not a synthesis or confirmatory
-evaluation.
+pitch and phoneme IDs and predicts mel frames. It is a small runnable
+architectural baseline; `ScoreConditionedMelDiffusion` defines the future
+diffusion alternative using phonemes, MIDI pitch, observed F0, and frame
+timing. Neither currently produces a playable synthesized vocal without a
+decoder and vocoder.
 Its proposed training specification is frozen in
 `configs/training/conditioned.yaml`: 16 kHz audio, 80-bin log-mel targets,
 100-frame-per-second conditioning, a 3-second window, and a 10-epoch
 exploratory budget. The training command is implemented and tested in Docker;
-held-out synthesis evaluation remains intentionally deferred until a
+held-out synthesis evaluation remains intentionally limited until a
 decoder/candidate-generation protocol is specified.
 The frame adapter emits integer MIDI pitch IDs with `0` for rests and integer
 phoneme IDs with `0` reserved for unknown/padding symbols.
