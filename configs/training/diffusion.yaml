@@ -1,0 +1,24 @@
+experiment:
+  name: singalign-singing-voice-diffusion
+  run_name: conditional-diffusion-placeholder
+  run_kind: exploratory
+
+status: architecture-only-not-trained
+hardware:
+  device: cuda
+  note: GPU-backed future extension; this sandbox does not train diffusion models.
+model:
+  mel_bins: 80
+  condition_channels: 256
+  hidden_channels: 128
+  diffusion_steps: 1000
+conditioning:
+  content: phonemes-or-content-encoder
+  pitch: target-f0-contour
+  timing: score-frame-timing
+  timbre: singer-embedding
+evaluation:
+  content_preservation: phoneme_or_lyric_metric
+  pitch_accuracy: target_f0_error
+  timing_accuracy: score_onset_error
+  audio_quality: artifact_and_vocoder_diagnostics

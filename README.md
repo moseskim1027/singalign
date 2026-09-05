@@ -83,7 +83,10 @@ with a conditioned acoustic model: phonemes/content + target F0/timing + singer
 embedding → mel spectrogram → neural vocoder. Use multi-singer, song-disjoint
 data and evaluate content preservation, target-pitch accuracy, timing, timbre,
 and artifacts. Training remains an optional GPU-backed extension; this sandbox
-keeps the deterministic baseline for reproducible comparison.
+keeps the deterministic baseline for reproducible comparison. The future model
+contract is preserved in `configs/training/diffusion.yaml`,
+`experiments/diffusion-voice-conversion-v1.md`, and the configuration-only
+`SingingVoiceDiffusionSpec`; these are placeholders, not trained components.
 
 The initial studies use the PJS corpus. Experiments will operate on short
 mel-spectrogram segments so that data preparation, baseline development, and
@@ -649,44 +652,44 @@ copyright, and misleading synthetic media. SingAlign will therefore:
 See [`docs/responsible-research.md`](docs/responsible-research.md) for the
 evolving risk assessment.
 
-## Roadmap
+## Scope and status
 
-- [x] Define the PJS-supported singing synthesis and vocal-transfer direction
-- [x] Review the PJS dataset terms and document local installation
-- [ ] Validate the corpus and create immutable data splits
-- [ ] Select and reproduce a baseline model
-- [ ] Implement controlled preference-pair construction
-- [ ] Establish objective evaluation baselines
-- [ ] Extract and validate observed F0 conditioning
-- [ ] Complete same-singer score-conditioned synthesis evaluation
-- [ ] Implement MIDI-based target-instrument rendering
-- [ ] Implement content-and-melody transfer baselines
-- [ ] Evaluate synthesized-vocal transfer over target instrumentals
-- [ ] Train and evaluate reward models as optional exploratory extensions
-- [ ] Compare reranking, supervised fine-tuning, DPO, and KTO as optional
-      diagnostics
-- [x] Exclude participant-based listening claims from the simulation-sandbox scope
-- [ ] Add a suitable multi-singer dataset before making identity-generalization claims
-- [ ] Publish the final report and reproducibility package
+This repository is a finalized experimental engineering sandbox for two
+reproducible studies: same-singer, score-conditioned synthesis (Study 1), and
+content-and-melody transfer over a fixed rendered instrumental (Study 2). It
+includes the data contracts, deterministic baselines, MIDI renderer, Docker
+and MLflow experiment lineage, evaluation artifacts, UI workflows, optional
+vocoder contract, and an architecture-only conditional diffusion denoiser.
 
-The roadmap indicates intended work, not completed capabilities.
+The small `ScoreConditionedMelModel` remains the runnable Study 1 baseline.
+The same module also includes `ScoreConditionedMelDiffusion`, an architecture
+scaffold that combines phonemes, MIDI pitch, observed F0, and frame timing
+ before conditional denoising. The generic `ConditionalMelDiffusion` is the
+corresponding Study 2/future voice-conversion denoiser. These are runnable
+PyTorch forward-pass scaffolds, not trained voice-conversion software. A real
+system would need song-disjoint multi-singer data, alignment and conditioning
+encoders, a diffusion training/sampling loop, and a neural vocoder. Training
+those components would require a CUDA-capable GPU (often multiple GPUs for
+practical experiments); no weights are included here. The studies also do not
+make participant-listening or unseen-singer generalization claims.
 
-### Completed implementation milestone
+`DiffusionSchedule` provides the standard noisy-mel construction and
+noise-prediction loss used by a future training loop. The API's
+`GET /capabilities` endpoint exposes this boundary for tooling: MLflow can
+record the future model's parameters, losses, checkpoints, generated audio,
+and evaluation metrics, but sampling and vocoder connection remain explicit
+follow-up work until a trained checkpoint is available.
 
-The research-direction milestone is complete: the repository now defines two
-PJS-scoped studies and their implementation order. Study 1 covers same-singer,
-score-conditioned synthesis from lyrics, phonemes, timing, symbolic pitch, and
-observed F0. Study 2 covers preservation of source vocal content, timing, and
-melody over a different instrumental context.
+### Architecture references
 
-Implementation work for both studies starts with reproducible foundations:
-observed-F0 extraction and validation, immutable song-disjoint splits,
-phoneme-to-note alignment, and declared baseline inputs and outputs. Study 1
-is stabilized first; Study 2 can begin independently with MIDI-rendered target
-instrumentals and original-vocal remix controls.
-
-The studies intentionally exclude participant-based listening claims and
-unseen-singer generalization.
+The scaffold follows the general conditional denoising pattern used by
+[DiffWave](https://arxiv.org/abs/2009.09761) for audio diffusion, the
+conditioning and mel-spectrogram score-decoder framing of
+[Grad-TTS](https://arxiv.org/abs/2105.06337), and the score-conditioned
+singing synthesis motivation in
+[DiffSinger](https://arxiv.org/abs/2105.02446). These papers are references
+for future research—not claims that this sandbox reproduces their full
+architectures or results.
 
 ## Contributing
 
