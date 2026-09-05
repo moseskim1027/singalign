@@ -23,6 +23,7 @@ app.innerHTML = `
     <button type="button" class="tab active" data-tab="training">Training</button>
     <button type="button" class="tab" data-tab="evaluation">Evaluation</button>
     <button type="button" class="tab" data-tab="comparison">Comparison</button>
+    <button type="button" class="tab" data-tab="studies">Two studies</button>
   </nav>
   <section class="tab-panel" data-panel="training">
     <section class="loader" aria-labelledby="training-title">
@@ -88,6 +89,30 @@ app.innerHTML = `
   </section>
   <section id="multi-results" class="results" hidden></section>
   </section>
+  <section class="tab-panel" data-panel="studies" hidden>
+    <section class="loader" aria-labelledby="studies-title">
+      <div>
+        <h2 id="studies-title">Two-study experiment controls</h2>
+        <p>Generate reproducible Docker commands for the PJS research workflows.</p>
+      </div>
+      <form id="studies-form">
+        <label for="study-kind">Study</label>
+        <select id="study-kind">
+          <option value="study-1">Study 1 · Same-singer synthesis</option>
+          <option value="study-2">Study 2 · Content-and-melody transfer</option>
+        </select>
+        <label for="study-manifest">Pair manifest (Study 2)</label>
+        <input id="study-manifest" value="experiments/study-2-pairs.example.json" />
+        <label for="study-source">Source vocal (Study 2)</label>
+        <input id="study-source" value="data/interim/source.wav" />
+        <label for="study-target">Target instrumental (Study 2)</label>
+        <input id="study-target" value="data/interim/target.wav" />
+        <button type="submit">Generate Docker command</button>
+      </form>
+      <pre id="study-command" class="command" hidden></pre>
+      <p class="status">Study 1 uses score/phoneme conditioning and observed F0. Study 2 keeps source/target pairing, tempo, transposition, and MusicGen conditions explicit.</p>
+    </section>
+  </section>
   </section>
   <footer>
     <strong>Interpretation boundary:</strong> this view is not a blinded listening study. Generated examples use approximate Griffin-Lim reconstruction.
@@ -112,13 +137,27 @@ const evaluationForm = document.querySelector<HTMLFormElement>("#evaluation-form
 const evaluationExperiment = document.querySelector<HTMLSelectElement>("#evaluation-experiment");
 const evaluationCheckpoint = document.querySelector<HTMLInputElement>("#evaluation-checkpoint");
 const evaluationCommand = document.querySelector<HTMLElement>("#evaluation-command");
+const studiesForm = document.querySelector<HTMLFormElement>("#studies-form");
+const studyKind = document.querySelector<HTMLSelectElement>("#study-kind");
+const studyManifest = document.querySelector<HTMLInputElement>("#study-manifest");
+const studySource = document.querySelector<HTMLInputElement>("#study-source");
+const studyTarget = document.querySelector<HTMLInputElement>("#study-target");
+const studyCommand = document.querySelector<HTMLElement>("#study-command");
 const tabs = [...document.querySelectorAll<HTMLButtonElement>(".tab")];
 const panels = [...document.querySelectorAll<HTMLElement>(".tab-panel")];
 const workflowReady = { evaluation: false, comparison: false };
 
-if (!form || !input || !status || !results || !multiForm || !multiInput || !multiStatus || !multiResults || !trainingForm || !trainingExperiment || !trainingFields || !trainingCommand || !experimentContext || !evaluationForm || !evaluationExperiment || !evaluationCheckpoint || !evaluationCommand) {
+if (!form || !input || !status || !results || !multiForm || !multiInput || !multiStatus || !multiResults || !trainingForm || !trainingExperiment || !trainingFields || !trainingCommand || !experimentContext || !evaluationForm || !evaluationExperiment || !evaluationCheckpoint || !evaluationCommand || !studiesForm || !studyKind || !studyManifest || !studySource || !studyTarget || !studyCommand) {
   throw new Error("comparison controls are missing");
 }
+
+studiesForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  studyCommand.hidden = false;
+  studyCommand.textContent = studyKind.value === "study-1"
+    ? "docker compose run --rm research \\\n+  singalign-conditioned-train --config configs/training/conditioned.yaml --index data/interim/pjs/index.jsonl --splits data/interim/pjs/splits.json"
+    : `docker compose run --rm research \\\n+  singalign-transfer --source ${studySource.value} --target ${studyTarget.value} --output reports/study-2/transfer.wav\n\nManifest: ${studyManifest.value}`;
+});
 
 const number = (value: number): string =>
   new Intl.NumberFormat("en", {
