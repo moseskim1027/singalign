@@ -19,13 +19,23 @@ app.innerHTML = `
     <h1>SingAlign model comparison</h1>
     <p class="intro">Review paired objective metrics and local listening artifacts from one tracked comparison run.</p>
   </header>
-  <nav class="tabs" aria-label="Experiment workflow">
+  <section id="landing" class="landing" aria-labelledby="landing-title">
+    <p class="section-kicker">Choose a research workflow</p>
+    <h2 id="landing-title">What would you like to investigate?</h2>
+    <div class="study-choices">
+      <label class="study-choice"><input type="radio" name="landing-study" value="study1" checked /><span><strong>Study 1</strong><small>Same-singer, score-conditioned synthesis</small></span></label>
+      <label class="study-choice"><input type="radio" name="landing-study" value="study2" /><span><strong>Study 2</strong><small>Content-and-melody transfer to a new instrumental</small></span></label>
+    </div>
+    <p id="landing-footnote" class="landing-footnote"></p>
+    <button id="continue-study" type="button">Continue</button>
+  </section>
+  <nav id="workflow-nav" class="tabs" aria-label="Experiment workflow" hidden>
     <button type="button" class="tab active" data-tab="training">Study 1</button>
     <button type="button" class="tab" data-tab="evaluation">Evaluation</button>
     <button type="button" class="tab" data-tab="comparison">Comparison</button>
     <button type="button" class="tab" data-tab="studies">Study 2</button>
   </nav>
-  <section class="tab-panel" data-panel="training">
+  <section class="tab-panel" data-panel="training" hidden>
     <section class="loader" aria-labelledby="training-title">
       <div>
         <p class="section-kicker">Study 1 · same-singer synthesis</p>
@@ -138,13 +148,31 @@ const studyManifest = document.querySelector<HTMLInputElement>("#study-manifest"
 const studySource = document.querySelector<HTMLInputElement>("#study-source");
 const studyTarget = document.querySelector<HTMLInputElement>("#study-target");
 const studyCommand = document.querySelector<HTMLElement>("#study-command");
+const landing = document.querySelector<HTMLElement>("#landing");
+const landingFootnote = document.querySelector<HTMLElement>("#landing-footnote");
+const continueStudy = document.querySelector<HTMLButtonElement>("#continue-study");
+const workflowNav = document.querySelector<HTMLElement>("#workflow-nav");
 const tabs = [...document.querySelectorAll<HTMLButtonElement>(".tab")];
 const panels = [...document.querySelectorAll<HTMLElement>(".tab-panel")];
 const workflowReady = { evaluation: false, comparison: false };
 
-if (!form || !input || !status || !results || !multiForm || !multiInput || !multiStatus || !multiResults || !trainingForm || !trainingExperiment || !trainingFields || !trainingCommand || !experimentContext || !evaluationForm || !evaluationExperiment || !evaluationCheckpoint || !evaluationCommand || !studiesForm || !studyKind || !studyManifest || !studySource || !studyTarget || !studyCommand) {
+if (!form || !input || !status || !results || !multiForm || !multiInput || !multiStatus || !multiResults || !trainingForm || !trainingExperiment || !trainingFields || !trainingCommand || !experimentContext || !evaluationForm || !evaluationExperiment || !evaluationCheckpoint || !evaluationCommand || !studiesForm || !studyKind || !studyManifest || !studySource || !studyTarget || !studyCommand || !landing || !landingFootnote || !continueStudy || !workflowNav) {
   throw new Error("comparison controls are missing");
 }
+
+const landingNotes = {
+  study1: "Study 1 tests whether the PJS vocalist can be reconstructed from lyrics, phonemes, score timing, symbolic pitch, and observed F0. It is a same-singer diagnostic, not an unseen-singer evaluation.",
+  study2: "Study 2 tests whether source vocal content, phoneme timing, and melody are preserved over a different instrumental. It uses explicit source/target pairs and does not make participant or identity-generalization claims.",
+};
+const selectedLandingStudy = (): "study1" | "study2" => (document.querySelector<HTMLInputElement>('input[name="landing-study"]:checked')?.value === "study2" ? "study2" : "study1");
+const updateLandingNote = (): void => { landingFootnote.textContent = landingNotes[selectedLandingStudy()]; };
+document.querySelectorAll<HTMLInputElement>('input[name="landing-study"]').forEach((radio) => radio.addEventListener("change", updateLandingNote));
+updateLandingNote();
+continueStudy.addEventListener("click", () => {
+  landing.hidden = true;
+  workflowNav.hidden = false;
+  setTab(selectedLandingStudy() === "study1" ? "training" : "studies");
+});
 
 studiesForm.addEventListener("submit", (event) => {
   event.preventDefault();
