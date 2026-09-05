@@ -110,6 +110,8 @@ def start_training(request: TrainingRequest) -> TrainingResponse:
         ]
         if request.aligned_output:
             command.extend(["--aligned-output", request.aligned_output])
+        else:
+            command.extend(["--aligned-output", "reports/study-2/aligned-vocal.wav"])
     else:
         parameters = {**DEFAULTS, **request.parameters}
         if (
