@@ -639,82 +639,21 @@ The roadmap indicates intended work, not completed capabilities.
 
 ### Completed implementation milestone
 
-The initial four-PR implementation milestone is complete: learned reward model
-baselines, unified cross-condition analysis, sequential
-Training/Evaluation/Comparison workflow safeguards, and the reproducibility
-package are merged. Participant-based listening studies are intentionally
-excluded from this completion plan.
+The research-direction milestone is complete: the repository now defines two
+PJS-scoped studies and their implementation order. Study 1 covers same-singer,
+score-conditioned synthesis from lyrics, phonemes, timing, symbolic pitch, and
+observed F0. Study 2 covers preservation of source vocal content, timing, and
+melody over a different instrumental context.
 
-The remaining simulation-sandbox work is consolidated into one umbrella PR:
-tracked reward-model training/evaluation, the complete comparison matrix,
-finished research UI views, optional informal listening notes, and the final
-simulation report. This larger PR will retain separate commits and validation
-records for each workstream while keeping the repository's final state easy to
-reproduce from one review.
+Implementation work for both studies starts with reproducible foundations:
+observed-F0 extraction and validation, immutable song-disjoint splits,
+phoneme-to-note alignment, and declared baseline inputs and outputs. Study 1
+is stabilized first; Study 2 can begin independently with MIDI-rendered target
+instrumentals and original-vocal remix controls.
 
-The first workstream adds `singalign-reward-train`, a Docker/MLflow command
-that trains a learned reward model from saved chosen/rejected tensors and
-records its checkpoint and pairwise diagnostic metrics.
-The second workstream uses a versioned comparison-matrix manifest to run the
-same paired analysis across available baseline, reranking, DPO, KTO,
-conditioned, and vocoder outputs; missing outputs are reported as pending
-rather than silently treated as results.
-Run `singalign-matrix-status --config configs/evaluation/comparison-matrix.yaml`
-to audit readiness before producing the aggregate report.
-Matrix execution is data-dependent: use `singalign-matrix-status` first, and
-only run `singalign-condition-analysis` when every declared condition is ready.
-The complete matrix run is intentionally deferred to a follow-up PR so it can
-be executed as a separately tracked, time-bounded experiment.
-
-The remaining non-matrix tasks are consolidated into one follow-up PR: expose
-the learned reward trainer and provenance in the UI, show candidate and
-conditioning details, retain informal engineering notes, and populate the
-simulation-sandbox report/checklists. Missing data-dependent results remain
-explicitly pending.
-The completion UI will consume these reports with condition filtering and show
-available uncertainty/effect-size fields without inventing values for reports
-that predate the aggregate schema.
-The final workstreams include an informal engineering feedback template and a
-simulation-sandbox report scaffold; neither is a participant study or a source
-of population-level preference evidence.
-Use [`docs/informal-feedback-template.md`](docs/informal-feedback-template.md)
-for engineering notes and [`docs/simulation-sandbox-report.md`](docs/simulation-sandbox-report.md)
-for the final report structure.
-
-PR 1 is implementing learned reward baselines on top of the existing
-deterministic preference-pair generator. The learned models are exploratory:
-they provide scalar and multidimensional scoring baselines with reproducible
-pairwise training, while proxy rewards remain available for transparent
-diagnostics.
-
-PR 2 will unify cross-condition analysis. It will apply one paired metric
-contract, bootstrap uncertainty intervals, effect sizes, and stable condition
-ordering to baseline, reranking, DPO, KTO, conditioned, and vocoder outputs.
-The aggregate analysis command will consume a versioned JSON manifest of shared
-references and condition tensors, so every condition is evaluated on the same
-examples without relying on independently sampled datasets.
-Use [`configs/evaluation/condition-analysis.example.json`](configs/evaluation/condition-analysis.example.json)
-as the input shape for `singalign-condition-analysis --manifest ... --output ...`.
-
-PR 3 will connect the UI tabs into a sequential workflow. A shared experiment
-registry will define each method's required checkpoint, evaluation protocol,
-and compatible comparison conditions; the UI will surface prerequisites and
-prevent incompatible downstream selections.
-The registry is intentionally declarative so the same experiment identity can
-be reused by training, evaluation, and comparison controls.
-Evaluation is a separate command-generation step: it consumes the selected
-experiment's checkpoint and protocol, while Comparison consumes the resulting
-report rather than directly reusing training settings.
-
-PR 4 is the final reproducibility package: it will consolidate the Docker
-workflow, experiment manifests, environment metadata, tracked run references,
-and end-to-end reproduction commands. This package is intended to make the
-simulation sandbox auditable without implying that its proxy metrics establish
-human preference.
-The verification workflow is documented in [`docs/reproducibility.md`](docs/reproducibility.md)
-and can be run with `bash scripts/reproduce_smoke.sh`.
-Use [`docs/run-record-template.md`](docs/run-record-template.md) to record each
-experiment's provenance and MLflow lineage.
+The studies intentionally exclude participant-based listening claims,
+unseen-singer generalization, and joint MusicGen/vocal-transfer conclusions.
+MusicGen remains an optional, separately tracked target-instrument extension.
 
 ## Contributing
 

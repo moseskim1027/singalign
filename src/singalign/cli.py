@@ -7,6 +7,8 @@ import json
 from pathlib import Path
 
 from singalign.conditioning import load_conditioning
+from singalign.audio import load_audio
+from singalign.f0 import extract_f0, f0_payload
 from singalign.data.pjs import (
     build_index,
     create_splits,
@@ -41,6 +43,11 @@ def _parser() -> argparse.ArgumentParser:
     conditioning.add_argument("--musicxml", type=Path, required=True)
     conditioning.add_argument("--labels", type=Path, required=True)
     conditioning.add_argument("--output", type=Path, required=True)
+    f0 = subparsers.add_parser("f0", help="extract deterministic frame-level F0")
+    f0.add_argument("--audio", type=Path, required=True)
+    f0.add_argument("--output", type=Path, required=True)
+    f0.add_argument("--sample-rate", type=int, default=16000)
+    f0.add_argument("--frame-rate", type=float, default=100.0)
     return parser
 
 
@@ -89,6 +96,17 @@ def main() -> int:
             + "\n"
         )
         print(f"Wrote conditioning record to {args.output}")
+        return 0
+    if args.command == "f0":
+        waveform = load_audio(args.audio, args.sample_rate)
+        frames = extract_f0(waveform, args.sample_rate, args.frame_rate)
+        args.output.parent.mkdir(parents=True, exist_ok=True)
+        args.output.write_text(
+            json.dumps({"sample_rate": args.sample_rate, "frame_rate": args.frame_rate, "frames": f0_payload(frames)}, indent=2)
+            + "\n",
+            encoding="utf-8",
+        )
+        print(f"Wrote {len(frames)} F0 frames to {args.output}")
         return 0
     return 2
 
