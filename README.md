@@ -46,10 +46,8 @@ pitch are used to reconstruct the PJS vocalist. Second, test content-and-
 melody transfer: preserve a source vocal's words, phoneme timing, and melody
 while placing it over a different instrumental track.
 
-The core transfer experiment does not depend on MusicGen. Use a fixed,
-MIDI-rendered PJS instrumental so vocal alignment can be evaluated without
-introducing a second generation variable. MusicGen is only an optional,
-separately logged target-instrument extension.
+Use a fixed, MIDI-rendered PJS instrumental so vocal alignment can be evaluated
+without introducing a second generation variable.
 
 The initial studies use the PJS corpus. Experiments will operate on short
 mel-spectrogram segments so that data preparation, baseline development, and
@@ -651,9 +649,8 @@ phoneme-to-note alignment, and declared baseline inputs and outputs. Study 1
 is stabilized first; Study 2 can begin independently with MIDI-rendered target
 instrumentals and original-vocal remix controls.
 
-The studies intentionally exclude participant-based listening claims,
-unseen-singer generalization, and joint MusicGen/vocal-transfer conclusions.
-MusicGen remains an optional, separately tracked target-instrument extension.
+The studies intentionally exclude participant-based listening claims and
+unseen-singer generalization.
 
 ## Contributing
 

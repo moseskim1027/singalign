@@ -223,8 +223,7 @@ Test whether SingAlign can preserve the linguistic content and sung melody of
 a source vocal while placing the performance over a different instrumental
 track. The target may differ in genre, instrumentation, tempo, key, and
 production style. This is a controllable singing-transfer/remixing experiment,
-not a participant study and not a claim that MusicGen can sing intelligible
-lyrics.
+not a participant study.
 
 ### Working formulation
 
