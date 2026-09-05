@@ -36,6 +36,7 @@ class TrainingRequest(BaseModel):
     source: str | None = None
     target: str | None = None
     output: str | None = None
+    aligned_output: str | None = None
 
 
 class TrainingResponse(BaseModel):
@@ -107,6 +108,8 @@ def start_training(request: TrainingRequest) -> TrainingResponse:
             "--target-id",
             "api-target",
         ]
+        if request.aligned_output:
+            command.extend(["--aligned-output", request.aligned_output])
     else:
         parameters = {**DEFAULTS, **request.parameters}
         if (

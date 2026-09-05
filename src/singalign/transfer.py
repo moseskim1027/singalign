@@ -95,6 +95,13 @@ def run_transfer(args: argparse.Namespace) -> int:
     wavfile.write(
         args.output, args.sample_rate, (mixed.numpy() * 32767).astype("int16")
     )
+    if args.aligned_output:
+        args.aligned_output.parent.mkdir(parents=True, exist_ok=True)
+        wavfile.write(
+            args.aligned_output,
+            args.sample_rate,
+            (aligned.numpy() * 32767).astype("int16"),
+        )
     metadata = RunMetadata(
         experiment_name="singalign-study-2",
         run_name=args.run_name,
@@ -137,6 +144,7 @@ def main() -> int:
     parser.add_argument("--source", type=Path, required=True)
     parser.add_argument("--target", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--aligned-output", type=Path)
     parser.add_argument("--source-id", default="source")
     parser.add_argument("--target-id", default="target")
     parser.add_argument("--tempo-scale", type=float, default=1.0)
