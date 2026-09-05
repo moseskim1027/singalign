@@ -12,7 +12,9 @@ from singalign.audio import load_audio
 from singalign.tracking import RunMetadata, log_json_artifact, tracked_run
 
 
-def frame_pitch(waveform: torch.Tensor, sample_rate: int, frame_size: int = 1024, hop: int = 256) -> torch.Tensor:
+def frame_pitch(
+    waveform: torch.Tensor, sample_rate: int, frame_size: int = 1024, hop: int = 256
+) -> torch.Tensor:
     """Estimate one dominant frequency per frame with deterministic autocorrelation."""
     if waveform.ndim != 1 or sample_rate < 1 or frame_size < 2 or hop < 1:
         raise ValueError("invalid waveform or pitch-analysis settings")
@@ -36,7 +38,9 @@ def frame_pitch(waveform: torch.Tensor, sample_rate: int, frame_size: int = 1024
     return torch.tensor(pitches)
 
 
-def evaluate_transfer(reference: torch.Tensor, transferred: torch.Tensor, sample_rate: int) -> dict[str, float]:
+def evaluate_transfer(
+    reference: torch.Tensor, transferred: torch.Tensor, sample_rate: int
+) -> dict[str, float]:
     """Compare source vocal content/melody with the transferred output."""
     if reference.numel() == 0 or transferred.numel() == 0:
         raise ValueError("reference and transferred audio must not be empty")
@@ -46,18 +50,35 @@ def evaluate_transfer(reference: torch.Tensor, transferred: torch.Tensor, sample
     source_pitch = frame_pitch(source, sample_rate)
     output_pitch = frame_pitch(output, sample_rate)
     voiced = (source_pitch > 0) & (output_pitch > 0)
-    pitch_difference_hz = float((source_pitch[voiced] - output_pitch[voiced]).abs().mean()) if voiced.any() else 0.0
-    source_envelope = source.abs().unfold(0, min(1024, length), min(1024, length)).mean(1)
-    output_envelope = output.abs().unfold(0, min(1024, length), min(1024, length)).mean(1)
-    if source_envelope.numel() > 1 and float(source_envelope.std()) > 0 and float(output_envelope.std()) > 0:
-        content_similarity = float(torch.corrcoef(torch.stack((source_envelope, output_envelope)))[0, 1].clamp(-1, 1))
+    pitch_difference_hz = (
+        float((source_pitch[voiced] - output_pitch[voiced]).abs().mean())
+        if voiced.any()
+        else 0.0
+    )
+    source_envelope = (
+        source.abs().unfold(0, min(1024, length), min(1024, length)).mean(1)
+    )
+    output_envelope = (
+        output.abs().unfold(0, min(1024, length), min(1024, length)).mean(1)
+    )
+    if (
+        source_envelope.numel() > 1
+        and float(source_envelope.std()) > 0
+        and float(output_envelope.std()) > 0
+    ):
+        content_similarity = float(
+            torch.corrcoef(torch.stack((source_envelope, output_envelope)))[0, 1].clamp(
+                -1, 1
+            )
+        )
     else:
         content_similarity = 0.0
     return {
         "pitch_difference_hz_mean": pitch_difference_hz,
         "pitch_voiced_frame_rate": float(voiced.float().mean()),
         "content_envelope_correlation": content_similarity,
-        "duration_error_seconds": abs(reference.numel() - transferred.numel()) / sample_rate,
+        "duration_error_seconds": abs(reference.numel() - transferred.numel())
+        / sample_rate,
         "output_peak": float(transferred.abs().max()),
     }
 
@@ -66,17 +87,37 @@ def run_evaluation(args: argparse.Namespace) -> int:
     reference = load_audio(args.reference, args.sample_rate)
     transferred = load_audio(args.transferred, args.sample_rate)
     metrics = evaluate_transfer(reference, transferred, args.sample_rate)
-    metadata = RunMetadata("singalign-study-2-evaluation", args.run_name, "exploratory", "pjs", args.dataset_version, args.split_fingerprint, args.seed)
-    with tracked_run(metadata, {"parent_transfer_run_id": args.parent_run_id or "not-provided", "sample_rate": args.sample_rate}) as run:
+    metadata = RunMetadata(
+        "singalign-study-2-evaluation",
+        args.run_name,
+        "exploratory",
+        "pjs",
+        args.dataset_version,
+        args.split_fingerprint,
+        args.seed,
+    )
+    with tracked_run(
+        metadata,
+        {
+            "parent_transfer_run_id": args.parent_run_id or "not-provided",
+            "sample_rate": args.sample_rate,
+        },
+    ) as run:
         mlflow = __import__("mlflow")
         if args.parent_run_id:
             mlflow.set_tag("lineage.parent_transfer_run_id", args.parent_run_id)
         for name, value in metrics.items():
             mlflow.log_metric(name, value)
         log_json_artifact(metrics, "study-2-evaluation.json")
-        report = {"mlflow_run_id": run.info.run_id, "parent_transfer_run_id": args.parent_run_id, "metrics": metrics}
+        report = {
+            "mlflow_run_id": run.info.run_id,
+            "parent_transfer_run_id": args.parent_run_id,
+            "metrics": metrics,
+        }
     args.output.parent.mkdir(parents=True, exist_ok=True)
-    args.output.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    args.output.write_text(
+        json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
     print(json.dumps(report, sort_keys=True))
     return 0
 
