@@ -1,0 +1,19 @@
+# Shared reproducibility defaults for the two PJS studies.
+dataset: pjs
+dataset_version: "1.1"
+split: data/interim/pjs/splits.json
+split_seed: 2026
+run_kind: exploratory
+sample_rate: 16000
+f0:
+  frame_rate: 100
+  min_hz: 70
+  max_hz: 1000
+  voicing_threshold: 0.35
+study_1:
+  name: pjs-same-singer-synthesis
+  baseline: score-conditioned-mel
+study_2:
+  name: pjs-content-melody-transfer
+  pair_manifest: experiments/study-2-pairs.example.json
+  target_instrument: midi-rendered

@@ -1,0 +1,15 @@
+{
+  "schema_version": "study-2-pairs-v1",
+  "dataset": "pjs",
+  "dataset_version": "1.1",
+  "split": "validation",
+  "pairs": [
+    {
+      "source_id": "pjs-source-example",
+      "target_id": "pjs-target-example",
+      "tempo_scale": 1.0,
+      "transpose_semitones": 0,
+      "condition": "unchanged-tempo-key"
+    }
+  ]
+}
