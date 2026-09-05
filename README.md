@@ -58,6 +58,33 @@ ensure generated audio remains synchronized with the source vocal and target
 musical structure. That setting would be evaluated separately because diffusion
 sampling introduces an additional source of variation.
 
+The rendered target is a pure instrumental accompaniment, not a second vocal
+recording. Rendering converts the target score into a fixed WAV; it does not
+modify the source vocal. The source vocal remains the content and melody
+reference, while the target accompaniment defines the destination musical
+context. A future true vocal-transfer model would be required to transform the
+source vocal's pitch, timing, or timbre before mixing it with that accompaniment.
+
+The current Study 2 baseline applies deterministic pitch shifting and tempo
+alignment to the source vocal before mixing. Pitch alignment uses resampling to
+change the vocal's frequency by the declared semitone interval, followed by an
+inverse duration correction so the pitch shift does not change its length.
+Timing alignment then uses deterministic resampling with the declared tempo
+scale. The target score supplies the destination musical context; automatic
+beat or key estimation is not yet implemented. The pipeline preserves three
+distinct artifacts: the original
+vocal reference, the pitch/time-aligned vocal, and the final aligned-vocal plus
+instrumental mix. All control parameters and artifact lineage are recorded in
+MLflow. This is a transparent signal-processing baseline, not a trained neural
+vocal-transfer model.
+
+For a future single singing voice-conversion model, replace this remix control
+with a conditioned acoustic model: phonemes/content + target F0/timing + singer
+embedding → mel spectrogram → neural vocoder. Use multi-singer, song-disjoint
+data and evaluate content preservation, target-pitch accuracy, timing, timbre,
+and artifacts. Training remains an optional GPU-backed extension; this sandbox
+keeps the deterministic baseline for reproducible comparison.
+
 The initial studies use the PJS corpus. Experiments will operate on short
 mel-spectrogram segments so that data preparation, baseline development, and
 pilot studies remain practical on Apple Silicon. They will address:

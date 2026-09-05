@@ -6,6 +6,7 @@ services:
       - "4173:8080"
     volumes:
       - ./reports:/usr/share/nginx/html/reports:ro
+      - ./data:/usr/share/nginx/html/data:ro
     healthcheck:
       test: ["CMD", "wget", "--quiet", "--spider", "http://127.0.0.1:8080/"]
       interval: 5s
