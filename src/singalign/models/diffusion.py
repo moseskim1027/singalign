@@ -13,6 +13,37 @@ import torch
 from torch import nn
 
 
+class DiffusionSchedule:
+    """Minimal DDPM schedule utility for future training and sampling code."""
+
+    def __init__(self, steps: int = 1000, beta_start: float = 1e-4, beta_end: float = 0.02) -> None:
+        if steps < 2 or not 0 < beta_start < beta_end < 1:
+            raise ValueError("invalid diffusion schedule")
+        self.steps = steps
+        self.betas = torch.linspace(beta_start, beta_end, steps)
+        self.alphas = 1.0 - self.betas
+        self.alpha_bars = torch.cumprod(self.alphas, dim=0)
+
+    def add_noise(
+        self, clean_mel: torch.Tensor, noise: torch.Tensor, timestep: torch.Tensor
+    ) -> torch.Tensor:
+        """Create the noisy training target at the requested diffusion steps."""
+        alpha_bar = self.alpha_bars.to(clean_mel.device)[timestep].view(-1, 1, 1)
+        return alpha_bar.sqrt() * clean_mel + (1 - alpha_bar).sqrt() * noise
+
+    def training_loss(
+        self,
+        model: nn.Module,
+        clean_mel: torch.Tensor,
+        condition: torch.Tensor,
+        timestep: torch.Tensor,
+    ) -> torch.Tensor:
+        """Compute the standard noise-prediction objective for a denoiser."""
+        noise = torch.randn_like(clean_mel)
+        noisy_mel = self.add_noise(clean_mel, noise, timestep)
+        return nn.functional.mse_loss(model(noisy_mel, timestep, condition), noise)
+
+
 class SinusoidalTimeEmbedding(nn.Module):
     """Encode a diffusion step using the standard sinusoidal representation."""
 

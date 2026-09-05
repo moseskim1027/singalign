@@ -4,6 +4,7 @@ from singalign.models.baseline import MelAutoencoder
 from singalign.models.conditioned import ScoreConditionedMelModel
 from singalign.models.diffusion import (
     ConditionalMelDiffusion,
+    DiffusionSchedule,
     ScoreConditionedMelDiffusion,
     SingingVoiceDiffusionSpec,
 )
@@ -14,6 +15,7 @@ __all__ = [
     "MelVocoder",
     "ScoreConditionedMelModel",
     "ConditionalMelDiffusion",
+    "DiffusionSchedule",
     "ScoreConditionedMelDiffusion",
     "SingingVoiceDiffusionSpec",
 ]

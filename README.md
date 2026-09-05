@@ -664,7 +664,7 @@ vocoder contract, and an architecture-only conditional diffusion denoiser.
 The small `ScoreConditionedMelModel` remains the runnable Study 1 baseline.
 The same module also includes `ScoreConditionedMelDiffusion`, an architecture
 scaffold that combines phonemes, MIDI pitch, observed F0, and frame timing
-before conditional denoising. The generic `ConditionalMelDiffusion` is the
+ before conditional denoising. The generic `ConditionalMelDiffusion` is the
 corresponding Study 2/future voice-conversion denoiser. These are runnable
 PyTorch forward-pass scaffolds, not trained voice-conversion software. A real
 system would need song-disjoint multi-singer data, alignment and conditioning
@@ -672,6 +672,13 @@ encoders, a diffusion training/sampling loop, and a neural vocoder. Training
 those components would require a CUDA-capable GPU (often multiple GPUs for
 practical experiments); no weights are included here. The studies also do not
 make participant-listening or unseen-singer generalization claims.
+
+`DiffusionSchedule` provides the standard noisy-mel construction and
+noise-prediction loss used by a future training loop. The API's
+`GET /capabilities` endpoint exposes this boundary for tooling: MLflow can
+record the future model's parameters, losses, checkpoints, generated audio,
+and evaluation metrics, but sampling and vocoder connection remain explicit
+follow-up work until a trained checkpoint is available.
 
 ### Architecture references
 

@@ -2,7 +2,7 @@ import unittest
 
 import torch
 
-from singalign.models import ConditionalMelDiffusion, ScoreConditionedMelDiffusion
+from singalign.models import ConditionalMelDiffusion, DiffusionSchedule, ScoreConditionedMelDiffusion
 
 
 class DiffusionModelTest(unittest.TestCase):
@@ -27,3 +27,11 @@ class DiffusionModelTest(unittest.TestCase):
             torch.linspace(0, 1, 32).repeat(2, 1),
         )
         self.assertEqual(output.shape, (2, 16, 32))
+
+    def test_schedule_provides_training_loss(self) -> None:
+        model = ConditionalMelDiffusion(mel_bins=16, condition_channels=12, hidden_channels=24)
+        schedule = DiffusionSchedule(steps=8)
+        loss = schedule.training_loss(
+            model, torch.randn(2, 16, 32), torch.randn(2, 12, 32), torch.tensor([1, 5])
+        )
+        self.assertTrue(torch.isfinite(loss))

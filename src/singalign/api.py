@@ -30,6 +30,23 @@ EXPERIMENTS = {
 DEFAULTS = {"epochs": 10, "segment_seconds": 3.0, "learning_rate": 0.0001}
 
 
+@app.get("/capabilities")
+def pipeline_capabilities() -> dict[str, object]:
+    """Expose the implemented pipeline boundary for the portfolio UI/API."""
+    return {
+        "deterministic_baselines": ["study1-score-conditioned", "study2-transfer-control"],
+        "neural_scaffold": {
+            "study1": "ScoreConditionedMelDiffusion",
+            "study2": "ConditionalMelDiffusion",
+            "training": "DiffusionSchedule.training_loss",
+            "sampling": "not implemented",
+            "vocoder_connection": "not implemented",
+            "status": "architecture-only; requires GPU training and checkpoints",
+        },
+        "logged_artifacts": ["MLflow parameters", "metrics", "checkpoints", "audio"],
+    }
+
+
 class TrainingRequest(BaseModel):
     experiment: str
     parameters: dict[str, float | int] = Field(default_factory=dict)
