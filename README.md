@@ -78,6 +78,13 @@ instrumental mix. All control parameters and artifact lineage are recorded in
 MLflow. This is a transparent signal-processing baseline, not a trained neural
 vocal-transfer model.
 
+For a future single singing voice-conversion model, replace this remix control
+with a conditioned acoustic model: phonemes/content + target F0/timing + singer
+embedding → mel spectrogram → neural vocoder. Use multi-singer, song-disjoint
+data and evaluate content preservation, target-pitch accuracy, timing, timbre,
+and artifacts. Training remains an optional GPU-backed extension; this sandbox
+keeps the deterministic baseline for reproducible comparison.
+
 The initial studies use the PJS corpus. Experiments will operate on short
 mel-spectrogram segments so that data preparation, baseline development, and
 pilot studies remain practical on Apple Silicon. They will address:
