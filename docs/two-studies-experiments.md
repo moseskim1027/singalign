@@ -14,7 +14,8 @@ Study 2 is a controlled content-and-melody transfer/remix experiment. Use a
 versioned, song-disjoint source/target pair manifest. The initial control uses
 the original source vocal and a deterministic MIDI/MusicXML-rendered target
 instrumental. Tempo scaling and transposition are explicit manifest fields.
-MusicGen is a separate optional condition, never part of the primary control.
+The target instrumental is always rendered with the pinned deterministic
+renderer; generated accompaniment is outside the study scope.
 
 Runs are exploratory until the extraction, pair manifest, and baseline checks
 are complete. MLflow tags and parameters must include dataset/version, split
