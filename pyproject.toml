@@ -24,6 +24,7 @@ dependencies = [
 
 [project.scripts]
 singalign-data = "singalign.cli:main"
+singalign-study = "singalign.studies:main"
 singalign-align = "singalign.align:main"
 singalign-compare = "singalign.compare:main"
 singalign-evaluate = "singalign.evaluate:main"
