@@ -20,20 +20,20 @@ app.innerHTML = `
     <p class="intro">Review paired objective metrics and local listening artifacts from one tracked comparison run.</p>
   </header>
   <nav class="tabs" aria-label="Experiment workflow">
-    <button type="button" class="tab active" data-tab="training">Training</button>
+    <button type="button" class="tab active" data-tab="training">Study 1</button>
     <button type="button" class="tab" data-tab="evaluation">Evaluation</button>
     <button type="button" class="tab" data-tab="comparison">Comparison</button>
-    <button type="button" class="tab" data-tab="studies">Two studies</button>
+    <button type="button" class="tab" data-tab="studies">Study 2</button>
   </nav>
   <section class="tab-panel" data-panel="training">
     <section class="loader" aria-labelledby="training-title">
       <div>
-        <h2 id="training-title">Training interface</h2>
-        <p>Select an implemented experiment to generate its reproducible Docker command.</p>
+        <p class="section-kicker">Study 1 · same-singer synthesis</p>
+        <h2 id="training-title">Score-conditioned singing synthesis</h2>
+        <p>Train and evaluate the PJS vocalist from score, phoneme, timing, and observed-F0 conditioning.</p>
       </div>
       <form id="training-form">
-        <label for="training-experiment">Experiment</label>
-        <select id="training-experiment"></select>
+        <input id="training-experiment" type="hidden" value="study1" />
         <p id="experiment-context" class="status" role="status"></p>
         <div id="training-fields" class="training-fields"></div>
         <button type="submit">Generate command</button>
@@ -55,6 +55,7 @@ app.innerHTML = `
       <button type="submit">Generate evaluation command</button>
     </form>
     <pre id="evaluation-command" class="command" hidden></pre>
+    <p class="evaluation-footnote"><strong>Interpretation boundary:</strong> this is an objective inspection workflow, not a blinded listening study. Generated examples use approximate Griffin-Lim reconstruction.</p>
   </section>
   <section class="loader" aria-labelledby="loader-title">
     <div>
@@ -92,15 +93,12 @@ app.innerHTML = `
   <section class="tab-panel" data-panel="studies" hidden>
     <section class="loader" aria-labelledby="studies-title">
       <div>
-        <h2 id="studies-title">Two-study experiment controls</h2>
-        <p>Generate reproducible Docker commands for the PJS research workflows.</p>
+        <p class="section-kicker">Study 2 · content-and-melody transfer</p>
+        <h2 id="studies-title">Transfer vocal content to a new instrumental</h2>
+        <p>Run a controlled source/target remix with explicit pairing, alignment, and output paths.</p>
       </div>
       <form id="studies-form">
-        <label for="study-kind">Study</label>
-        <select id="study-kind">
-          <option value="study-1">Study 1 · Same-singer synthesis</option>
-          <option value="study-2">Study 2 · Content-and-melody transfer</option>
-        </select>
+        <input id="study-kind" type="hidden" value="study-2" />
         <label for="study-manifest">Pair manifest (Study 2)</label>
         <input id="study-manifest" value="experiments/study-2-pairs.example.json" />
         <label for="study-source">Source vocal (Study 2)</label>
@@ -114,10 +112,7 @@ app.innerHTML = `
     </section>
   </section>
   </section>
-  <footer>
-    <strong>Interpretation boundary:</strong> this view is not a blinded listening study. Generated examples use approximate Griffin-Lim reconstruction.
-    <br /><strong>DPO terminology:</strong> Reference is the target audio; Baseline is the frozen reference policy; Aligned is the optimized policy.
-  </footer>
+  <footer>SingAlign research inspection tool · PJS study workflows</footer>
 `;
 
 const form = document.querySelector<HTMLFormElement>("#run-form");
@@ -154,9 +149,22 @@ if (!form || !input || !status || !results || !multiForm || !multiInput || !mult
 studiesForm.addEventListener("submit", (event) => {
   event.preventDefault();
   studyCommand.hidden = false;
-  studyCommand.textContent = studyKind.value === "study-1"
-    ? "docker compose run --rm research \\\n+  singalign-conditioned-train --config configs/training/conditioned.yaml --index data/interim/pjs/index.jsonl --splits data/interim/pjs/splits.json"
-    : `docker compose run --rm research \\\n+  singalign-transfer --source ${studySource.value} --target ${studyTarget.value} --output reports/study-2/transfer.wav\n\nManifest: ${studyManifest.value}`;
+  if (studyKind.value === "study-1") {
+    studyCommand.textContent = "docker compose run --rm research \\\n+  singalign-conditioned-train --config configs/training/conditioned.yaml --index data/interim/pjs/index.jsonl --splits data/interim/pjs/splits.json";
+    return;
+  }
+  studyCommand.textContent = `docker compose run --rm research \\\n+  singalign-transfer --source ${studySource.value} --target ${studyTarget.value} --output reports/study-2/transfer.wav\n\nManifest: ${studyManifest.value}`;
+  fetch("http://localhost:8000/training", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ experiment: "study2", source: studySource.value, target: studyTarget.value, output: "reports/study-2/transfer.wav" }),
+  }).then(async (response) => {
+    if (!response.ok) throw new Error((await response.json()).detail ?? "Study 2 launch failed.");
+    const result = (await response.json()) as { job_id: string };
+    studyCommand.textContent += `\nJob started: ${result.job_id}`;
+  }).catch((error: unknown) => {
+    studyCommand.textContent += `\nAPI unavailable: ${error instanceof Error ? error.message : "launch failed"}`;
+  });
 });
 
 const number = (value: number): string =>
@@ -172,7 +180,6 @@ const label = (name: string): string => name.replaceAll("_", " ");
 
 const trainingExperiments = {
   study1: { label: "Study 1 · Same-singer synthesis", config: "configs/training/conditioned.yaml", evaluation: "configs/evaluation/baseline.yaml", prerequisite: "none", compatible: "score/phoneme/F0 conditioning", args: { epochs: 10, segment_seconds: 3, frame_rate: 100 } },
-  study2: { label: "Study 2 · Content-and-melody transfer", config: "configs/training/studies.yaml", evaluation: "configs/evaluation/multi-condition.yaml", prerequisite: "study-2 pair manifest", compatible: "source/target remix controls", args: { seed: 2026 } },
 } as const;
 
 Object.entries(trainingExperiments).forEach(([key, experiment]) => {

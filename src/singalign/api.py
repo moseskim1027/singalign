@@ -24,6 +24,7 @@ EXPERIMENTS = {
     "conditioned": "singalign-conditioned-train",
     "vocoder": "singalign-vocoder-train",
     "kto": "singalign-kto-train",
+    "study2": "singalign-transfer",
 }
 DEFAULTS = {"epochs": 10, "segment_seconds": 3.0, "learning_rate": 0.0001}
 
@@ -31,6 +32,9 @@ DEFAULTS = {"epochs": 10, "segment_seconds": 3.0, "learning_rate": 0.0001}
 class TrainingRequest(BaseModel):
     experiment: str
     parameters: dict[str, float | int] = Field(default_factory=dict)
+    source: str | None = None
+    target: str | None = None
+    output: str | None = None
 
 
 class TrainingResponse(BaseModel):
@@ -43,16 +47,28 @@ def start_training(request: TrainingRequest) -> TrainingResponse:
     """Validate and launch one detached research container."""
     if request.experiment not in EXPERIMENTS:
         raise HTTPException(status_code=400, detail="unsupported experiment")
-    parameters = {**DEFAULTS, **request.parameters}
-    if not 1 <= int(parameters["epochs"]) <= 100 or not 0 < float(parameters["segment_seconds"]) <= 30:
-        raise HTTPException(status_code=400, detail="epochs or segment_seconds out of range")
-    config = f"configs/training/{'alignment' if request.experiment == 'aligned' else request.experiment}.yaml"
-    command = [EXPERIMENTS[request.experiment], "--config", config]
-    if request.experiment in {"aligned", "kto"}:
-        command.extend(["--checkpoint", "checkpoints/baseline/best.pt"])
-    command.extend(["--index", "data/interim/pjs/index.jsonl", "--splits", "data/interim/pjs/splits.json"])
-    for name, value in request.parameters.items():
-        command.extend([f"--{name.replace('_', '-')}", str(value)])
+    if request.experiment == "study2":
+        if not request.source or not request.target or not request.output:
+            raise HTTPException(status_code=400, detail="Study 2 requires source, target, and output")
+        command = [
+            EXPERIMENTS[request.experiment],
+            "--source", request.source,
+            "--target", request.target,
+            "--output", request.output,
+            "--source-id", "api-source",
+            "--target-id", "api-target",
+        ]
+    else:
+        parameters = {**DEFAULTS, **request.parameters}
+        if not 1 <= int(parameters["epochs"]) <= 100 or not 0 < float(parameters["segment_seconds"]) <= 30:
+            raise HTTPException(status_code=400, detail="epochs or segment_seconds out of range")
+        config = f"configs/training/{'alignment' if request.experiment == 'aligned' else request.experiment}.yaml"
+        command = [EXPERIMENTS[request.experiment], "--config", config]
+        if request.experiment in {"aligned", "kto"}:
+            command.extend(["--checkpoint", "checkpoints/baseline/best.pt"])
+        command.extend(["--index", "data/interim/pjs/index.jsonl", "--splits", "data/interim/pjs/splits.json"])
+        for name, value in request.parameters.items():
+            command.extend([f"--{name.replace('_', '-')}", str(value)])
     client = docker.from_env()
     root = Path(os.environ.get("SINGALIGN_HOST_ROOT", Path.cwd())).resolve()
     try:
