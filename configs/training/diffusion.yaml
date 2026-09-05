@@ -3,12 +3,14 @@ experiment:
   run_name: conditional-diffusion-placeholder
   run_kind: exploratory
 
-status: placeholder-not-trained
+status: architecture-only-not-trained
 hardware:
   device: cuda
   note: GPU-backed future extension; this sandbox does not train diffusion models.
 model:
   mel_bins: 80
+  condition_channels: 256
+  hidden_channels: 128
   diffusion_steps: 1000
 conditioning:
   content: phonemes-or-content-encoder
