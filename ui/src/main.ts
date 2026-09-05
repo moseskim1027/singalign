@@ -171,11 +171,8 @@ const duration = (value: number): string =>
 const label = (name: string): string => name.replaceAll("_", " ");
 
 const trainingExperiments = {
-  baseline: { label: "Supervised baseline", config: "configs/training/baseline.yaml", evaluation: "configs/evaluation/baseline.yaml", prerequisite: "none", compatible: "baseline, reranking", args: { epochs: 10, segment_seconds: 3, batch_size: 4, learning_rate: 0.0001 } },
-  aligned: { label: "Proxy DPO alignment", config: "configs/training/alignment.yaml", evaluation: "configs/evaluation/aligned.yaml", prerequisite: "baseline/best.pt", compatible: "aligned, DPO", args: { epochs: 10, segment_seconds: 3, beta: 0.1, anchor_weight: 1 } },
-  conditioned: { label: "Score-conditioned mel", config: "configs/training/conditioned.yaml", evaluation: "configs/evaluation/baseline.yaml", prerequisite: "none", compatible: "conditioned", args: { epochs: 10, segment_seconds: 3, frame_rate: 100 } },
-  vocoder: { label: "Mel vocoder", config: "configs/training/vocoder.yaml", evaluation: "configs/training/vocoder.yaml", prerequisite: "none", compatible: "vocoder", args: { epochs: 10, segment_seconds: 3, batch_size: 2, learning_rate: 0.0001 } },
-  kto: { label: "Synthetic KTO", config: "configs/training/kto.yaml", evaluation: "configs/evaluation/kto.yaml", prerequisite: "baseline/best.pt", compatible: "kto, DPO, baseline", args: { epochs: 10, beta: 0.1, temperature: 0.1, learning_rate: 0.0001 } },
+  study1: { label: "Study 1 · Same-singer synthesis", config: "configs/training/conditioned.yaml", evaluation: "configs/evaluation/baseline.yaml", prerequisite: "none", compatible: "score/phoneme/F0 conditioning", args: { epochs: 10, segment_seconds: 3, frame_rate: 100 } },
+  study2: { label: "Study 2 · Content-and-melody transfer", config: "configs/training/studies.yaml", evaluation: "configs/evaluation/multi-condition.yaml", prerequisite: "study-2 pair manifest", compatible: "source/target remix controls", args: { seed: 2026 } },
 } as const;
 
 Object.entries(trainingExperiments).forEach(([key, experiment]) => {
@@ -189,7 +186,7 @@ Object.entries(trainingExperiments).forEach(([key, experiment]) => {
 const renderTrainingFields = (): void => {
   trainingFields.replaceChildren();
   const experiment = trainingExperiments[trainingExperiment.value as keyof typeof trainingExperiments];
-  experimentContext.textContent = `Evaluation: ${experiment.evaluation} · Checkpoint prerequisite: ${experiment.prerequisite} · Compatible comparisons: ${experiment.compatible}`;
+  experimentContext.textContent = `Study config: ${experiment.config} · ${experiment.compatible}`;
   Object.entries(experiment.args).forEach(([name, value]) => {
     const field = document.createElement("label");
     field.textContent = label(name);
@@ -211,7 +208,7 @@ evaluationExperiment.addEventListener("change", () => {
 evaluationForm.addEventListener("submit", (event) => {
   event.preventDefault();
   const experiment = trainingExperiments[evaluationExperiment.value as keyof typeof trainingExperiments];
-  const commandName = evaluationExperiment.value === "vocoder" ? "vocoder-evaluate" : evaluationExperiment.value === "kto" ? "kto-evaluate" : "evaluate";
+  const commandName = evaluationExperiment.value === "study2" ? "study" : "evaluate";
   evaluationCommand.hidden = false;
   evaluationCommand.textContent = `docker compose run --rm research \\\n+  singalign-${commandName} \\\n+  --config ${experiment.evaluation} \\\n+  --checkpoint ${evaluationCheckpoint.value} \\\n+  --splits data/interim/pjs/splits.json`;
   workflowReady.comparison = true;
@@ -500,16 +497,17 @@ trainingForm.addEventListener("submit", (event) => {
     .filter(([name]) => name !== "experiment")
     .map(([name, value]) => `--${name.replaceAll("_", "-")} ${String(value)}`)
     .join(" ");
-  const commandName = trainingExperiment.value === "aligned" ? "align" : trainingExperiment.value === "kto" ? "kto-train" : `${trainingExperiment.value}-train`;
+  const commandName = trainingExperiment.value === "study1" ? "conditioned-train" : "study";
   const command = `docker compose run --rm research \\\n+  singalign-${commandName} \\\n+  --config ${experiment.config} \\\n+  --index data/interim/pjs/index.jsonl \\\n+  --splits data/interim/pjs/splits.json${overrides ? ` \\\n+  ${overrides}` : ""}`;
   trainingCommand.hidden = false;
   trainingCommand.textContent = command;
+  if (trainingExperiment.value === "study2") return;
   trainingCommand.textContent += "\n\nLaunching through http://localhost:8000 …";
   fetch("http://localhost:8000/training", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      experiment: trainingExperiment.value,
+      experiment: "conditioned",
       parameters: Object.fromEntries(
         [...values.entries()].filter(([name]) => name !== "experiment").map(([name, value]) => [name, Number(value)]),
       ),
@@ -517,7 +515,16 @@ trainingForm.addEventListener("submit", (event) => {
   }).then(async (response) => {
     if (!response.ok) throw new Error((await response.json()).detail ?? "Training launch failed.");
     const result = (await response.json()) as { job_id: string };
-    trainingCommand.textContent = `${command}\n\nJob started: ${result.job_id}`;
+    trainingCommand.textContent = `${command}\n\nJob started: ${result.job_id}\nProgress: queued`;
+    const poll = async (): Promise<void> => {
+      const statusResponse = await fetch(`http://localhost:8000/training/${result.job_id}`);
+      const status = (await statusResponse.json()) as { status: string };
+      trainingCommand.textContent = `${command}\n\nJob ${result.job_id}\nProgress: ${status.status}`;
+      if (!["completed-or-unknown", "exited", "dead"].includes(status.status)) {
+        window.setTimeout(poll, 2000);
+      }
+    };
+    window.setTimeout(poll, 1000);
     workflowReady.evaluation = true;
     updateWorkflowAccess();
   }).catch((error: unknown) => {
