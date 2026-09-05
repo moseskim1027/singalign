@@ -112,6 +112,14 @@ def start_training(request: TrainingRequest) -> TrainingResponse:
             command.extend(["--aligned-output", request.aligned_output])
         else:
             command.extend(["--aligned-output", "reports/study-2/aligned-vocal.wav"])
+        command.extend(
+            [
+                "--tempo-scale",
+                str(request.parameters.get("tempo_scale", 1.0)),
+                "--transpose-semitones",
+                str(request.parameters.get("transpose_semitones", 0)),
+            ]
+        )
     else:
         parameters = {**DEFAULTS, **request.parameters}
         if (
@@ -145,7 +153,9 @@ def start_training(request: TrainingRequest) -> TrainingResponse:
 def start_study2_evaluation(request: EvaluationRequest) -> TrainingResponse:
     """Launch the objective Study 2 evaluation for one transfer output."""
     if request.transferred.endswith("transfer.wav"):
-        request.transferred = request.transferred.replace("transfer.wav", "aligned-vocal.wav")
+        request.transferred = request.transferred.replace(
+            "transfer.wav", "aligned-vocal.wav"
+        )
     command = [
         "singalign-transfer-evaluate",
         "--reference",
@@ -165,10 +175,17 @@ def start_study2_render(request: RenderRequest) -> TrainingResponse:
     """Render a fixed MusicXML target instrumental for Study 2."""
     if request.bpm <= 0:
         raise HTTPException(status_code=400, detail="bpm must be positive")
-    return launch_container([
-        "singalign-render-instrumental", "--score", request.score,
-        "--output", request.output, "--bpm", str(request.bpm),
-    ])
+    return launch_container(
+        [
+            "singalign-render-instrumental",
+            "--score",
+            request.score,
+            "--output",
+            request.output,
+            "--bpm",
+            str(request.bpm),
+        ]
+    )
 
 
 @app.get("/training/{job_id}")

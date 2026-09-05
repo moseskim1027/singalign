@@ -41,8 +41,8 @@ def render_note_events(
         envelope = torch.minimum(
             torch.ones(count), torch.arange(count) / max(1, round(sample_rate * 0.01))
         )
-        output[start : start + count] += 0.25 * envelope * torch.sin(
-            2 * torch.pi * frequency * time
+        output[start : start + count] += (
+            0.25 * envelope * torch.sin(2 * torch.pi * frequency * time)
         )
     return output.clamp(-1.0, 1.0)
 
@@ -57,6 +57,19 @@ def tempo_align(waveform: torch.Tensor, tempo_scale: float) -> torch.Tensor:
     return torch.from_numpy(
         resample_poly(waveform.numpy(), denominator, numerator).astype("float32")
     )
+
+
+def pitch_shift(waveform: torch.Tensor, semitones: float) -> torch.Tensor:
+    """Shift pitch deterministically, then restore the original duration."""
+    if waveform.ndim != 1:
+        raise ValueError("waveform must be mono")
+    factor = 2 ** (semitones / 12)
+    denominator = 10_000
+    numerator = max(1, round(factor * denominator))
+    shifted = torch.from_numpy(
+        resample_poly(waveform.numpy(), denominator, numerator).astype("float32")
+    )
+    return tempo_align(shifted, 1 / factor)
 
 
 def mix_vocal_and_instrument(
@@ -87,7 +100,8 @@ def mix_vocal_and_instrument(
 def run_transfer(args: argparse.Namespace) -> int:
     vocal = load_audio(args.source, args.sample_rate)
     instrumental = load_audio(args.target, args.sample_rate)
-    aligned = tempo_align(vocal, args.tempo_scale)
+    pitched = pitch_shift(vocal, args.transpose_semitones)
+    aligned = tempo_align(pitched, args.tempo_scale)
     mixed, diagnostics = mix_vocal_and_instrument(
         aligned, instrumental, args.vocal_gain, args.instrument_gain
     )
@@ -135,7 +149,11 @@ def run_transfer(args: argparse.Namespace) -> int:
             "transfer-metadata.json",
         )
         run_id = run.info.run_id
-    print(json.dumps({"output": str(args.output), "mlflow_run_id": run_id}, sort_keys=True))
+    print(
+        json.dumps(
+            {"output": str(args.output), "mlflow_run_id": run_id}, sort_keys=True
+        )
+    )
     return 0
 
 
