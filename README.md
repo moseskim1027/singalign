@@ -30,7 +30,7 @@ MLflow tracking, playable outputs, and research documentation live alongside
 the model baselines and future-model scaffolds.
 
 <p align="center">
-  <img src="docs/melody_content_transfer.gif" alt="Melody and content transfer workflow" width="560">
+  <img src="docs/melody_content_transfer.gif" alt="Melody and content transfer workflow" width="900">
 </p>
 
 ## Research questions
