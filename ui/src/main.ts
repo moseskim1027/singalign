@@ -15,9 +15,9 @@ if (!app) {
 
 app.innerHTML = `
   <header class="hero">
-    <p class="eyebrow">Research inspection tool</p>
+    <p id="landing-eyebrow" class="eyebrow">Two-study research workspace</p>
     <h1>SingAlign model comparison</h1>
-    <p class="intro">Review paired objective metrics and local listening artifacts from one tracked comparison run.</p>
+    <p id="landing-intro" class="intro">Choose between same-singer score-conditioned synthesis and content-and-melody transfer, then run the relevant reproducible workflow.</p>
   </header>
   <section id="landing" class="landing" aria-labelledby="landing-title">
     <p class="section-kicker">Choose a research workflow</p>
@@ -171,6 +171,8 @@ updateLandingNote();
 continueStudy.addEventListener("click", () => {
   landing.hidden = true;
   workflowNav.hidden = false;
+  document.querySelector("#landing-eyebrow")?.remove();
+  document.querySelector("#landing-intro")?.remove();
   setTab(selectedLandingStudy() === "study1" ? "training" : "studies");
 });
 
