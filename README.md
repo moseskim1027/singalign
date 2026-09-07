@@ -27,6 +27,43 @@ objective measurements, and preserve the reports, audio, and MLflow lineage.
 The held-out test split is not available to training. Checkpoints are selected
 on validation data and evaluated separately.
 
+## Study 1: score-conditioned synthesis baseline
+
+Study 1 uses aligned phoneme IDs and MusicXML/MIDI pitch and timing to predict
+mel-spectrogram frames for the PJS vocalist. The conditioning interface keeps
+crop offsets, duration, tempo, and acoustic frame rate explicit so a future
+acoustic model can replace the compact baseline without changing data parsing.
+
+Run the current conditioned mel model in Docker:
+
+```bash
+docker compose run --rm research \
+  singalign-conditioned-train \
+  --config configs/training/conditioned.yaml \
+  --index data/interim/pjs/index.jsonl \
+  --splits data/interim/pjs/splits.json
+```
+
+The run records training and validation loss, its resolved configuration, split
+fingerprint, and checkpoint lineage in MLflow. It validates the Study 1
+training contract, but does not yet produce a production-quality synthesized
+vocal: that requires a stronger acoustic model, a complete generation path, and
+a validated neural vocoder.
+
+The exact conditioning, replacement, and evaluation contracts are documented
+in [`docs/two-studies-experiments.md`](docs/two-studies-experiments.md#study-1-score-conditioned-synthesis).
+
+## Study 2: deterministic transfer control
+
+Study 2 uses a fixed MIDI/MusicXML-rendered instrumental so vocal alignment can
+be measured without adding accompaniment generation as another variable.
+
+The pipeline preserves the original vocal, aligned vocal, and final mix as
+separate artifacts. It does not estimate key or beat automatically and is not a
+trained voice-conversion model. The exact experiment controls and required
+lineage are documented in
+[`docs/two-studies-experiments.md`](docs/two-studies-experiments.md).
+
 ## What is implemented?
 
 | Status | Scope |
@@ -272,43 +309,6 @@ docker compose down
 
 Do not remove `.mlflow/` unless you intend to delete its local database and
 artifacts.
-
-## Study 1: score-conditioned synthesis baseline
-
-Study 1 uses aligned phoneme IDs and MusicXML/MIDI pitch and timing to predict
-mel-spectrogram frames for the PJS vocalist. The conditioning interface keeps
-crop offsets, duration, tempo, and acoustic frame rate explicit so a future
-acoustic model can replace the compact baseline without changing data parsing.
-
-Run the current conditioned mel model in Docker:
-
-```bash
-docker compose run --rm research \
-  singalign-conditioned-train \
-  --config configs/training/conditioned.yaml \
-  --index data/interim/pjs/index.jsonl \
-  --splits data/interim/pjs/splits.json
-```
-
-The run records training and validation loss, its resolved configuration, split
-fingerprint, and checkpoint lineage in MLflow. It validates the Study 1
-training contract, but does not yet produce a production-quality synthesized
-vocal: that requires a stronger acoustic model, a complete generation path, and
-a validated neural vocoder.
-
-The exact conditioning, replacement, and evaluation contracts are documented
-in [`docs/two-studies-experiments.md`](docs/two-studies-experiments.md#study-1-score-conditioned-synthesis).
-
-## Study 2: deterministic transfer control
-
-Study 2 uses a fixed MIDI/MusicXML-rendered instrumental so vocal alignment can
-be measured without adding accompaniment generation as another variable.
-
-The pipeline preserves the original vocal, aligned vocal, and final mix as
-separate artifacts. It does not estimate key or beat automatically and is not a
-trained voice-conversion model. The exact experiment controls and required
-lineage are documented in
-[`docs/two-studies-experiments.md`](docs/two-studies-experiments.md).
 
 ## Evaluation
 
