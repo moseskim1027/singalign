@@ -156,26 +156,26 @@ interfaces. It is not a complete synthesizer. Playable synthesis still needs a
 validated waveform decoder; the current Griffin-Lim path and exploratory
 `MelVocoder` are engineering diagnostics.
 
-The committed baseline currently resolves to:
+For a replacement model, classify and register parameters as follows:
 
-| Parameter | Registered value |
-| --- | --- |
-| Sample rate | `16000` Hz |
-| Segment duration | `3.0` seconds |
-| FFT / hop length | `512` / `160` samples |
-| Mel bins | `80` |
-| Conditioning rate | `100.0` frames/second |
-| Phoneme vocabulary | `256` IDs |
-| MIDI range | `0`–`128`; `0` is the rest/padding convention |
-| Batch size | `4` |
-| Epochs | `10` |
-| Learning rate | `0.0001` |
-| Seed | `2026` |
-| Device | `auto` |
-| Data-loader workers | `0` |
+| Parameter | Classification | Replacement rule |
+| --- | --- | --- |
+| Dataset version and split | Shared experiment parameter | Hold fixed for a direct comparison |
+| Sample rate, FFT, hop length, and mel bins | Input/output contract | Hold fixed unless the representation change is the registered experimental factor |
+| Segment duration and conditioning frame rate | Experiment-specific | Declare in the condition config and apply consistently to training and evaluation |
+| Phoneme vocabulary and pitch encoding | Conditioning-interface specific | Version the encoder and document unknown, rest, and padding conventions |
+| Architecture, layers, channels, embeddings, and parameter count | Model-specific | Register the complete resolved model configuration |
+| Loss terms and weights | Model-specific | Register every objective and coefficient |
+| Optimizer, learning rate, scheduler, and regularization | Model-specific | Register explicit values; do not rely on framework defaults |
+| Batch size and gradient accumulation | Model- and compute-specific | Register the effective batch size |
+| Epochs, update steps, validation cadence, and stopping rule | Experiment-specific | Freeze the training budget before the run |
+| Seed and checkpoint-selection metric | Shared comparison parameter | Hold fixed unless the experiment explicitly studies them |
+| Device, precision, and worker count | Hardware-specific | Record the resolved execution values and known nondeterminism |
+| Sampler and vocoder | Model-specific inference parameter | Register separately from acoustic-model training |
 
-`configs/training/conditioned.yaml` is authoritative if this summary and the
-configuration ever disagree.
+`configs/training/conditioned.yaml` remains authoritative for the current
+baseline. Each replacement must receive its own committed configuration rather
+than copying values from this documentation.
 
 ### Evaluation outputs
 
@@ -252,9 +252,9 @@ The control has no learned training parameters. Its experiment parameters are:
 | Vocal and instrumental gains | Resolved transfer configuration or invocation |
 | Input/output artifact identities | Exported transfer metadata and report |
 
-The example pair manifest supplies an unchanged control (`tempo_scale: 1.0`,
-`transpose_semitones: 0`). Transformed and misaligned conditions must declare
-their own values rather than inheriting undocumented command defaults.
+The example pair manifest defines the unchanged control. Transformed and
+misaligned conditions must declare their own values rather than inheriting
+undocumented command defaults.
 
 ### Required conditions
 
