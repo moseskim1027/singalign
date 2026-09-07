@@ -64,6 +64,62 @@ Changing a research component must not silently change the split, preprocessing,
 metric definitions, or checkpoint-selection policy. If one of those contracts
 must change, register it as a new experiment condition and report the difference.
 
+## Replacement experiment registration contract
+
+A baseline replacement is reproducible only when its resolved parameters are
+stored in a committed configuration or manifest. MLflow may mirror that
+configuration during execution, but local tracking state is not the canonical
+record for reviewing the experiment.
+
+### Training parameters
+
+The following fields are required for every learned replacement in either
+study. `Not applicable` is valid only with a short justification, such as for a
+deterministic control with no optimizer.
+
+| Parameter group | Required fields | Registration rule |
+| --- | --- | --- |
+| Data identity | Dataset, version, license reference, manifest path, split path, split fingerprint | Freeze before training; do not substitute local paths for dataset identity |
+| Input representation | Sample rate, segment duration, feature type, FFT/hop settings, frame rate, normalization | Record resolved values and preprocessing implementation version |
+| Conditioning | Inputs used, vocabulary or encoder version, dimensions, timing convention, missing-value policy | Distinguish training-only targets from inference-available inputs |
+| Model | Architecture name, implementation revision, parameter count, layer/channel dimensions, initialization checkpoint | Record `none` when training from scratch |
+| Optimization | Loss terms and weights, optimizer, learning rate, scheduler, weight decay, gradient clipping | Record all defaults explicitly rather than relying on library defaults |
+| Training budget | Batch size, gradient accumulation, epochs or update steps, validation frequency | Declare the stopping unit and maximum budget before the run |
+| Reproducibility | Seed, device, precision, worker count, deterministic settings | Record any operation known to be nondeterministic |
+| Selection | Validation metric, direction, checkpoint frequency, early-stopping rule | Freeze before inspecting held-out test results |
+| Resume policy | Source checkpoint, optimizer-state behavior, completed steps | Required whenever a run does not start from its declared initialization |
+| Outputs | Checkpoint path, config snapshot, logs, report schema, artifact hashes | Export reviewable lineage into a committed manifest or report when cited |
+
+### Generation and sampling parameters
+
+Learned models must register inference separately from training. This prevents
+changes in a sampler or decoder from being mistaken for changes in the acoustic
+model.
+
+| Component | Required fields |
+| --- | --- |
+| Acoustic generation | Checkpoint identity, input condition manifest, inference seed, requested duration, batching policy |
+| Diffusion sampling | Schedule, number of inference steps, sampler, variance/noise policy, guidance method and scale |
+| Mel processing | Value range, normalization/inversion parameters, padding and crop policy |
+| Vocoder | Architecture, checkpoint hash, expected mel contract, hop length, sample rate, loudness/normalization policy |
+| Waveform output | File format, bit depth, peak/limiter policy, silence trimming, artifact naming |
+
+Values for the future diffusion sampler and validated vocoder are intentionally
+not specified yet because neither component has been selected or trained. They
+must be frozen in versioned configs before the first comparison run.
+
+### Study-specific experiment parameters
+
+| Study | Parameters that must be registered for every condition |
+| --- | --- |
+| Study 1 | Conditioning fields, acoustic-model config, training budget, decoder/vocoder identity, checkpoint-selection metric, synthesis seed, evaluation window |
+| Study 2 deterministic control | Pair-manifest identity, source and target IDs, sample rate, tempo scale, transposition, vocal/instrument gains, renderer settings, alignment policy |
+| Study 2 learned replacement | Content encoder, target-F0 source, timing/alignment method, singer/timbre representation, acoustic or conversion model, training contract, sampler, vocoder, mixing policy |
+
+When comparing a replacement with a baseline, also register which parameters
+are **held constant**, which are **intentionally changed**, and which are
+**not applicable**. The comparison report must repeat that declaration.
+
 ## Study 1: score-conditioned synthesis
 
 ### Question
@@ -99,6 +155,27 @@ The model validates conditioning, tensor, training, checkpoint, and tracking
 interfaces. It is not a complete synthesizer. Playable synthesis still needs a
 validated waveform decoder; the current Griffin-Lim path and exploratory
 `MelVocoder` are engineering diagnostics.
+
+The committed baseline currently resolves to:
+
+| Parameter | Registered value |
+| --- | --- |
+| Sample rate | `16000` Hz |
+| Segment duration | `3.0` seconds |
+| FFT / hop length | `512` / `160` samples |
+| Mel bins | `80` |
+| Conditioning rate | `100.0` frames/second |
+| Phoneme vocabulary | `256` IDs |
+| MIDI range | `0`–`128`; `0` is the rest/padding convention |
+| Batch size | `4` |
+| Epochs | `10` |
+| Learning rate | `0.0001` |
+| Seed | `2026` |
+| Device | `auto` |
+| Data-loader workers | `0` |
+
+`configs/training/conditioned.yaml` is authoritative if this summary and the
+configuration ever disagree.
 
 ### Evaluation outputs
 
@@ -164,6 +241,20 @@ Preserve the original source vocal, aligned vocal, rendered instrumental, and
 final mix as separate artifacts. The control does not estimate beat or key,
 preserve formants with a production-grade algorithm, or perform learned timbre
 conversion.
+
+The control has no learned training parameters. Its experiment parameters are:
+
+| Parameter | Registration source |
+| --- | --- |
+| Dataset, split, sample rate, and F0 policy | `configs/training/studies.yaml` |
+| Source ID, target ID, condition, tempo scale, and transposition | Versioned pair manifest |
+| Renderer BPM, sample rate, seed, and score identity | Renderer invocation and exported metadata |
+| Vocal and instrumental gains | Resolved transfer configuration or invocation |
+| Input/output artifact identities | Exported transfer metadata and report |
+
+The example pair manifest supplies an unchanged control (`tempo_scale: 1.0`,
+`transpose_semitones: 0`). Transformed and misaligned conditions must declare
+their own values rather than inheriting undocumented command defaults.
 
 ### Required conditions
 
