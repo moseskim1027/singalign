@@ -194,10 +194,41 @@ exported lineage metadata.
 
 ### Replacement path
 
-A stronger Study 1 system may replace the compact mel model with a sequence or
-diffusion acoustic model and replace approximate inversion with a trained neural
-vocoder. It must keep the same conditioning and evaluation contract unless the
-change is explicitly registered and compared as an ablation.
+Study 1 generates a vocal from symbolic inputs; it does not require a source
+vocal at inference. The current compact model predicts a mel spectrogram from
+frame-aligned phoneme and MIDI-pitch IDs. A stronger system would replace that
+small predictor with a trained sequence or diffusion acoustic model, then use a
+trained neural vocoder instead of approximate Griffin-Lim inversion.
+
+```text
+Lyrics / phonemes ──> phoneme and duration encoder ──┐
+                                                     │
+MusicXML / MIDI ───> pitch and timing encoder ───────┤
+                                                     │
+Singer ID/reference -> singer embedding (optional) ─┘
+                                                     │
+                                                     v
+                                      Sequence or diffusion
+                                         acoustic model
+                                                     │
+                                                     v
+                                        Mel spectrogram
+                                                     │
+                                                     v
+                                         Neural vocoder
+                                                     │
+                                                     v
+                                     Synthesized vocal WAV
+```
+
+During training, the PJS reference vocal supplies the target mel spectrogram
+and objective diagnostics. It must not become an undeclared inference input.
+Keeping the same conditioning contract means preserving the meaning, timing,
+and availability of phoneme and score inputs. Keeping the same evaluation
+contract means using the same split, references, metrics, and checkpoint-
+selection rule. If a replacement changes one of those contracts, register the
+change as an experimental factor and compare it as an ablation rather than
+attributing the full difference to the model architecture.
 
 ## Study 2: content-and-melody transfer
 
@@ -291,6 +322,36 @@ A learned transfer system would replace the deterministic vocal transform with
 a model conditioned on content or phonemes, target F0 and timing, and target
 singer or timbre. Score-, beat-, or audio-derived alignment may replace declared
 transforms when it is registered as its own component.
+
+```text
+Source vocal WAV ──> content / phoneme encoder ──────┐
+       │                                              │
+       ├───────────> F0 / pitch extractor ───────────┤
+       │                                              │
+       └───────────> timing / alignment ─────────────┤
+                                                      │
+Target score / track -> target F0 and timing ─────────┤
+                                                      │
+Target singer/reference -> singer embedding ─────────┘
+                                                      │
+                                                      v
+                                       Learned transfer model
+                                                      │
+                                                      v
+                                         Mel spectrogram
+                                                      │
+                                                      v
+                                          Neural vocoder
+                                                      │
+                                                      v
+                                         Converted vocal WAV
+```
+
+The source encoders describe what is sung and how the source performance is
+timed. The target score or track defines the requested destination pitch and
+timing, while the target singer input defines timbre. An experiment may preserve
+source melody instead of deriving a new target contour, but that choice must be
+explicit in the condition manifest.
 
 The fixed instrumental, deterministic transfer, and intentionally misaligned
 condition remain controls. They make it possible to identify whether an
