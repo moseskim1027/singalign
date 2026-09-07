@@ -41,6 +41,60 @@ unseen-singer generalization. PJS contains one vocalist. See
 [`experiments/diffusion-voice-conversion-v1.md`](experiments/diffusion-voice-conversion-v1.md)
 for the future model contract.
 
+## What the sandbox is for
+
+The sandbox is the reusable experimental spine, not a component that must be
+discarded before building a real system. It already provides the controls
+needed to replace a baseline with a stronger model and compare both versions
+under the same conditions.
+
+| Reusable layer | What it provides |
+| --- | --- |
+| Data | Provenance checks, immutable song-disjoint splits, and model-independent conditioning records |
+| Run definitions | Versioned training/evaluation configs, seeds, manifests, and checkpoint selection rules |
+| Execution | The same pinned Docker environment for training, evaluation, API, UI, and MLflow |
+| Tracking | Code, data, configuration, metric, checkpoint, and artifact lineage |
+| Evaluation | Shared objective metrics, deterministic controls, held-out evaluation, and report formats |
+| Inspection | APIs and a UI for launching runs and comparing outputs without changing the experiment contract |
+
+A new acoustic model, vocoder, or alignment method should enter through the
+existing data and configuration contracts, produce the expected versioned
+artifacts, and run beside the current baseline. This makes model development
+repeatable and makes comparisons attributable to the changed component rather
+than to a different split, preprocessing path, or evaluation procedure.
+
+## Gap to an end-to-end vocal system
+
+The current repository proves that the experimental workflow runs; it does not
+yet prove that the generated vocal is useful. Reaching actual vocal synthesis
+and learned transfer requires replacing or extending these stages:
+
+| Workflow stage | Current component | Needed for an end-to-end system |
+| --- | --- | --- |
+| Training data | Small, single-vocalist PJS corpus | A suitably licensed multi-singer corpus with singer- and song-disjoint splits for generalization |
+| Inference conditioning | Parsed phonemes, score events, timing, and frame contracts | Target phoneme durations and pitch/timing available without reference-performance leakage; singer/timbre conditioning when required |
+| Study 1 acoustic model | Compact convolutional mel baseline | A trained sequence or diffusion acoustic model with a complete generation/sampling path |
+| Waveform generation | Approximate Griffin-Lim output and an exploratory `MelVocoder` | A trained, validated neural vocoder compatible with the generated mel representation |
+| Study 2 alignment | User-declared semitone and tempo transforms implemented with deterministic resampling | Score-, beat-, or audio-derived alignment plus higher-quality time/pitch transformation where inputs are not already aligned |
+| Study 2 transfer | Aligned source vocal mixed with a fixed instrumental; no learned timbre conversion | A trained conversion or synthesis model conditioned on content, target F0/timing, and target singer/timbre |
+| Quality evidence | Objective engineering diagnostics | Stable audio outputs, ablations, failure analysis, and a separate blinded listening protocol for perceptual claims |
+
+The fixed MIDI instrumental and deterministic transfer remain useful controls
+after learned models are added. They isolate whether an apparent improvement
+comes from vocal generation, alignment, or accompaniment variation.
+
+In practice, development should replace one stage at a time:
+
+1. register the new component and configuration;
+2. run it on the same training and validation partitions;
+3. select its checkpoint using the same declared rule;
+4. compare it with the deterministic or compact baseline; and
+5. export a reviewable report before making a claim.
+
+The [research plan](docs/research-plan.md) describes the evidence milestones and
+the [two-study protocol](docs/two-studies-experiments.md) defines the shared run
+contract.
+
 ## Quick start with Docker Compose
 
 Docker is the recommended path and supports Apple Silicon. It provides a pinned
