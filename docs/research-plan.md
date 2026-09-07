@@ -71,6 +71,8 @@ Every reported run must:
 - select checkpoints on validation data only;
 - keep held-out test evaluation separate from training and model selection;
 - log metrics and artifacts to MLflow from the reproducible Docker environment;
+- export a committed manifest or report for any result cited in repository
+  documentation; local MLflow run IDs alone are not reviewable evidence;
 - distinguish exploratory diagnostics from research claims; and
 - preserve failed runs when they affect interpretation.
 
@@ -108,7 +110,7 @@ claim.
 
 Package a fully reproducible Study 1 run that links the conditioning record,
 selected checkpoint, sealed-test report, representative audio artifacts, and
-MLflow run. Interpret the result as a same-singer baseline only.
+exported lineage metadata. Interpret the result as a same-singer baseline only.
 
 ## Study 2 plan
 
@@ -165,23 +167,18 @@ human-preference study would require suitable data, blinded evaluation,
 listener eligibility criteria, a power rationale, stopping rules, and a
 preregistered analysis.
 
-## Recorded exploratory milestones
+## Committed research records
 
-The following runs document implementation milestones, not confirmatory
-results:
-
-| Milestone | MLflow run |
-| --- | --- |
-| Score-conditioned mel baseline, 10 epochs | `1fd53daa1f7e494abe16ceccf7daa3c1` |
-| Reconstruction baseline, sealed-test diagnostic | `9610bc68f175431b96e99f9812ca3197` |
-| DPO-style aligned model, sealed-test diagnostic | `0aa5ffc003d84eaea82259b1f4e45e1d` |
-| Exploratory mel vocoder, 10 epochs | `421229b14e3043bfb3d89e3d6d2ca209` |
-| Synthetic KTO pilot, 10 epochs | `3c9de2f603d2419683f6bfe2502fdc9d` |
-
-The frozen pilot manifest is
+Repository documentation should cite only records that remote readers can
+inspect. The frozen pilot manifest is
 [`experiments/pilot-3s-10e-manifest.yaml`](../experiments/pilot-3s-10e-manifest.yaml).
 Its associated [analysis plan](../experiments/analysis-plan-v1.md) remains a
 draft; no external preregistration or confirmatory claim has been made.
+
+Local `.mlflow/` state, checkpoints, and generated reports are intentionally
+ignored. They do not count as remote evidence unless their relevant lineage,
+configuration, metrics, and interpretation are exported into a committed
+manifest or report.
 
 ## Future research
 
