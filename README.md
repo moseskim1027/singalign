@@ -243,8 +243,8 @@ Reports are written under `reports/evaluation/<run-id>/` and attached to the
 MLflow run. They include aggregate and per-example metrics, confidence
 intervals, latency, configuration, and data/checkpoint fingerprints.
 
-For the score-conditioned Study 1 model, use
-`configs/training/conditioned.yaml` with `singalign-conditioned-train`.
+This reconstruction run validates the shared data, checkpoint, and evaluation
+infrastructure. The score-conditioned Study 1 baseline is described below.
 
 ### 5. Run tests and open the UI
 
@@ -272,6 +272,32 @@ docker compose down
 
 Do not remove `.mlflow/` unless you intend to delete its local database and
 artifacts.
+
+## Study 1: score-conditioned synthesis baseline
+
+Study 1 uses aligned phoneme IDs and MusicXML/MIDI pitch and timing to predict
+mel-spectrogram frames for the PJS vocalist. The conditioning interface keeps
+crop offsets, duration, tempo, and acoustic frame rate explicit so a future
+acoustic model can replace the compact baseline without changing data parsing.
+
+Run the current conditioned mel model in Docker:
+
+```bash
+docker compose run --rm research \
+  singalign-conditioned-train \
+  --config configs/training/conditioned.yaml \
+  --index data/interim/pjs/index.jsonl \
+  --splits data/interim/pjs/splits.json
+```
+
+The run records training and validation loss, its resolved configuration, split
+fingerprint, and checkpoint lineage in MLflow. It validates the Study 1
+training contract, but does not yet produce a production-quality synthesized
+vocal: that requires a stronger acoustic model, a complete generation path, and
+a validated neural vocoder.
+
+The exact conditioning, replacement, and evaluation contracts are documented
+in [`docs/two-studies-experiments.md`](docs/two-studies-experiments.md#study-1-score-conditioned-synthesis).
 
 ## Study 2: deterministic transfer control
 
