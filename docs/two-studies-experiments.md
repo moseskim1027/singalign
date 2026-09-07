@@ -205,7 +205,7 @@ Lyrics / phonemes ──> phoneme and duration encoder ──┐
                                                      │
 MusicXML / MIDI ───> pitch and timing encoder ───────┤
                                                      │
-Singer ID/reference -> singer embedding (optional) ─┘
+Singer ID/reference -> singer embedding (optional) -─┘
                                                      │
                                                      v
                                       Sequence or diffusion
@@ -324,15 +324,15 @@ singer or timbre. Score-, beat-, or audio-derived alignment may replace declared
 transforms when it is registered as its own component.
 
 ```text
-Source vocal WAV ──> content / phoneme encoder ──────┐
+Source vocal WAV ──> content / phoneme encoder ──-────┐
        │                                              │
-       ├───────────> F0 / pitch extractor ───────────┤
+       ├───────────> F0 / pitch extractor ────────-───┤
        │                                              │
-       └───────────> timing / alignment ─────────────┤
+       └───────────> timing / alignment ───────────-──┤
                                                       │
 Target score / track -> target F0 and timing ─────────┤
                                                       │
-Target singer/reference -> singer embedding ─────────┘
+Target singer/reference -> singer embedding ────────-─┘
                                                       │
                                                       v
                                        Learned transfer model

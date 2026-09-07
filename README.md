@@ -89,20 +89,20 @@ Lyrics / phonemes ──> phoneme and duration encoder ──┐
                                                      │
 MusicXML / MIDI ───> pitch and timing encoder ───────┤
                                                      │
-Singer ID/reference -> singer embedding (optional) ─┘
+Singer ID/reference -> singer embedding (optional) -─┘
                                                      │
                                                      v
-                                      Sequence or diffusion
-                                         acoustic model
+                                           Sequence or diffusion
+                                               acoustic model
                                                      │
                                                      v
-                                        Mel spectrogram
+                                              Mel spectrogram
                                                      │
                                                      v
-                                         Neural vocoder
+                                               Neural vocoder
                                                      │
                                                      v
-                                     Synthesized vocal WAV
+                                            Synthesized vocal WAV
 ```
 
 The compact mel predictor currently occupies the acoustic-model stage. The
@@ -115,27 +115,27 @@ Study 2 starts with an existing vocal and separates source content from the
 target pitch, timing, and timbre requested by the experiment.
 
 ```text
-Source vocal WAV ──> content / phoneme encoder ──────┐
+Source vocal WAV ──> content / phoneme encoder ───-───┐
        │                                              │
-       ├───────────> F0 / pitch extractor ───────────┤
+       ├───────────> F0 / pitch extractor ────────--──┤
        │                                              │
-       └───────────> timing / alignment ─────────────┤
+       └───────────> timing / alignment ────-─────────┤
                                                       │
 Target score / track -> target F0 and timing ─────────┤
                                                       │
-Target singer/reference -> singer embedding ─────────┘
+Target singer/reference -> singer embedding ─────-────┘
                                                       │
                                                       v
-                                       Learned transfer model
+                                           Learned transfer model
                                                       │
                                                       v
-                                         Mel spectrogram
+                                               Mel spectrogram
                                                       │
                                                       v
-                                          Neural vocoder
+                                                Neural vocoder
                                                       │
                                                       v
-                                         Converted vocal WAV
+                                             Converted vocal WAV
 ```
 
 The deterministic pitch/tempo transform currently stands in for the learned
