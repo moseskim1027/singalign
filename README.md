@@ -11,6 +11,11 @@ listening measures support that analysis; they do not replace it.
 > scaffolds and research conclusions are provisional and are not production
 > systems.
 
+**Start here:** [workflow](#overview) · [study scope](#scope) ·
+[run and reproduce](#reproducible-environment-and-tracking) ·
+[repository map](#repository-structure) ·
+[implemented vs. future work](#implementation-status-and-future-work)
+
 ## Overview
 
 SingAlign focuses on two PJS-supported research directions: same-singer,
@@ -28,6 +33,24 @@ This repository is structured as a reproducible research artifact: experiment
 definitions, Dockerized execution, evaluation protocols, statistical analyses,
 MLflow tracking, playable outputs, and research documentation live alongside
 the model baselines and future-model scaffolds.
+
+```mermaid
+flowchart LR
+    PJS[(PJS corpus)] --> V[Validate, index, and split]
+    V --> C[Conditioning records<br/>phonemes, score, timing, F0]
+    C --> S1[Study 1<br/>score-conditioned synthesis]
+    C --> S2[Study 2<br/>content and melody transfer]
+    S1 --> E[Objective evaluation]
+    S2 --> E
+    E --> R[Reports, audio artifacts,<br/>and MLflow lineage]
+
+    classDef implemented fill:#dcfce7,stroke:#15803d,color:#14532d;
+    class V,C,S1,S2,E,R implemented;
+```
+
+The green path is implemented as a reproducible experimental sandbox. Neural
+diffusion sampling, a production vocoder, multi-singer transfer, and validated
+human-preference optimization are explicitly future work.
 
 <p align="center">
   <img src="docs/melody_content_transfer.gif" alt="Melody and content transfer workflow" width="900">
@@ -49,54 +72,25 @@ evaluation design exist.
 
 ## Scope
 
-The research scope has two focused directions. First, test same-singer,
-score-conditioned synthesis: lyrics, phonemes, MIDI/MusicXML note timing, and
-pitch are used to reconstruct the PJS vocalist. Second, test content-and-
-melody transfer: preserve a source vocal's words, phoneme timing, and melody
-while placing it over a different instrumental track.
+The current research scope has two focused, reproducible studies:
 
-Use a fixed, MIDI-rendered PJS instrumental so vocal alignment can be evaluated
-without introducing a second generation variable.
+| Study | Question | Implemented system | Primary outputs |
+| --- | --- | --- | --- |
+| **1. Score-conditioned synthesis** | Can lyrics, phonemes, score timing, and pitch reconstruct the PJS vocalist? | Conditioning parser, frame adapter, compact mel-model training, evaluation contracts | Checkpoints, mel/objective metrics, MLflow lineage |
+| **2. Content-and-melody transfer** | Can a source vocal remain intelligible and melodic over a different instrumental? | Deterministic pitch/tempo alignment, fixed MIDI-rendered accompaniment, mixing, controls, evaluation | Original vocal, aligned vocal, final mix, diagnostic report |
 
-The primary Study 2 control uses a deterministic MIDI/MusicXML-rendered
-instrumental so vocal-transfer effects can be evaluated independently of
-accompaniment generation. Future research using a diffusion-based accompaniment
-or vocal-transfer model would require an explicit alignment strategy—such as
-beat tracking, score conditioning, or differentiable time/pitch alignment—to
-ensure generated audio remains synchronized with the source vocal and target
-musical structure. That setting would be evaluated separately because diffusion
-sampling introduces an additional source of variation.
+Study 2 deliberately uses a fixed MIDI/MusicXML-rendered instrumental so vocal
+alignment can be evaluated without adding accompaniment generation as a second
+variable. The rendered target is an instrumental WAV, not another vocal. The
+source vocal remains the content and melody reference; the target accompaniment
+defines the destination musical context.
 
-The rendered target is a pure instrumental accompaniment, not a second vocal
-recording. Rendering converts the target score into a fixed WAV; it does not
-modify the source vocal. The source vocal remains the content and melody
-reference, while the target accompaniment defines the destination musical
-context. A future true vocal-transfer model would be required to transform the
-source vocal's pitch, timing, or timbre before mixing it with that accompaniment.
-
-The current Study 2 baseline applies deterministic pitch shifting and tempo
-alignment to the source vocal before mixing. Pitch alignment uses resampling to
-change the vocal's frequency by the declared semitone interval, followed by an
-inverse duration correction so the pitch shift does not change its length.
-Timing alignment then uses deterministic resampling with the declared tempo
-scale. The target score supplies the destination musical context; automatic
-beat or key estimation is not yet implemented. The pipeline preserves three
-distinct artifacts: the original
-vocal reference, the pitch/time-aligned vocal, and the final aligned-vocal plus
-instrumental mix. All control parameters and artifact lineage are recorded in
-MLflow. This is a transparent signal-processing baseline, not a trained neural
-vocal-transfer model.
-
-For a future single singing voice-conversion model, replace this remix control
-with a conditioned acoustic model: phonemes/content + target F0/timing + singer
-embedding → mel spectrogram → neural vocoder. Use multi-singer, song-disjoint
-data and evaluate content preservation, target-pitch accuracy, timing, timbre,
-and artifacts. Training remains an optional GPU-backed extension; this sandbox
-keeps the deterministic baseline for reproducible comparison. The future model
-contract is preserved in `configs/training/diffusion.yaml`,
-`experiments/diffusion-voice-conversion-v1.md`, and
-`SingingVoiceDiffusionSpec`; the PyTorch modules define forward-pass and loss
-contracts, but remain placeholders without trained weights or a sampler.
+The transfer baseline changes pitch by the declared semitone interval, corrects
+the resulting duration, then applies the declared tempo scale before mixing.
+Automatic beat and key estimation are not implemented. The pipeline preserves
+the original vocal, aligned vocal, and final mix separately and records all
+control parameters and artifact lineage in MLflow. It is a transparent
+signal-processing control, not a trained voice-conversion model.
 
 The initial studies use the PJS corpus. Experiments will operate on short
 mel-spectrogram segments so that data preparation, baseline development, and
@@ -137,6 +131,20 @@ data and evaluation.
 The implemented controls and scaffolds are intentionally separated from the
 future neural conversion stage. Any material methodological change should be
 documented in the research plan and experiment logs.
+
+```mermaid
+flowchart TD
+    A[Immutable raw PJS data] --> B[Validation and metadata index]
+    B --> C[Song-disjoint train / validation / test split]
+    C --> D[Versioned conditioning and experiment config]
+    D --> T[Train only on train split]
+    T --> V[Select checkpoint on validation split]
+    V --> H[Evaluate once on held-out test split]
+    H --> O[Audio, metrics, reports, and MLflow artifacts]
+
+    D --> X[Deterministic Study 2 controls]
+    X --> O
+```
 
 ### Score and lyric conditioning prototype
 
@@ -623,18 +631,27 @@ The detailed protocol will live in
 ## Repository structure
 
 ```text
-configs/       Versioned experiment and model configurations
-data/          Dataset documentation and local data conventions
-docs/          Research questions, protocols, and responsible-use analysis
-experiments/   Experiment manifests and reproducibility records
-reports/       Generated tables, figures, and research reports
-src/           Data, tracking, model, and research utilities
-ui/            Dockerized TypeScript comparison interface
+singalign/
+├── configs/             Versioned training, evaluation, and MLflow settings
+├── data/                Dataset provenance and local-data conventions
+├── docs/                Research plans, protocols, and responsible-use analysis
+├── experiments/         Registered experiment designs and manifests
+├── reports/             Generated audio, metrics, figures, and reports
+├── src/singalign/
+│   ├── data/            PJS validation and indexing
+│   ├── models/          Runnable baselines and future architecture scaffolds
+│   ├── conditioning.py  Score/phoneme event parsing and frame alignment
+│   ├── studies.py       Reproducible study orchestration
+│   ├── transfer.py      Deterministic Study 2 transfer control
+│   └── *_evaluate.py    Held-out and study-specific evaluation entry points
+├── tests/               Unit and integration tests without requiring the corpus
+└── ui/                  Dockerized TypeScript comparison interface
 ```
 
-Model code and training configurations will be introduced through separate
-reviewed changes after their research claims and evaluation contracts are
-registered.
+The separation is intentional: `configs/` and `experiments/` register what a
+run means; `src/singalign/` executes it; `reports/` contains generated evidence;
+and `docs/` records the interpretation and limitations. Raw data, checkpoints,
+and local MLflow state are ignored rather than treated as source artifacts.
 
 ## Reproducibility principles
 
@@ -663,33 +680,71 @@ copyright, and misleading synthetic media. SingAlign will therefore:
 See [`docs/responsible-research.md`](docs/responsible-research.md) for the
 evolving risk assessment.
 
-## Scope and status
+## Implementation status and future work
 
-This repository is a finalized experimental engineering sandbox for two
-reproducible studies: same-singer, score-conditioned synthesis (Study 1), and
-content-and-melody transfer over a fixed rendered instrumental (Study 2). It
-includes the data contracts, deterministic baselines, MIDI renderer, Docker
-and MLflow experiment lineage, evaluation artifacts, UI workflows, optional
-vocoder contract, and an architecture-only conditional diffusion denoiser.
+The repository is a finalized experimental engineering sandbox, not a
+production singing synthesizer. The table below makes the implementation
+boundary explicit.
 
-The small `ScoreConditionedMelModel` remains the runnable Study 1 baseline.
-The same module also includes `ScoreConditionedMelDiffusion`, an architecture
-scaffold that combines phonemes, MIDI pitch, observed F0, and frame timing
- before conditional denoising. The generic `ConditionalMelDiffusion` is the
-corresponding Study 2/future voice-conversion denoiser. These are runnable
-PyTorch forward-pass scaffolds, not trained voice-conversion software. A real
-system would need song-disjoint multi-singer data, alignment and conditioning
-encoders, a diffusion training/sampling loop, and a neural vocoder. Training
-those components would require a CUDA-capable GPU (often multiple GPUs for
-practical experiments); no weights are included here. The studies also do not
+| Area | Status | What exists | What remains |
+| --- | --- | --- | --- |
+| Data and conditioning | **Implemented** | PJS validation/indexing, immutable splits, score/phoneme/F0 contracts, frame alignment | Broader datasets and multi-singer conditioning |
+| Study 1 baseline | **Implemented baseline** | Runnable `ScoreConditionedMelModel`, training/checkpointing, objective evaluation | A validated mel decoder and playable neural synthesis pipeline |
+| Study 2 control | **Implemented baseline** | MIDI rendering, declared pitch/tempo transform, mixing, misalignment controls, evaluation | Learned content-and-melody transfer and automatic alignment |
+| Reproducibility | **Implemented** | Docker, MLflow lineage, configs, manifests, tests, UI comparisons | Large-scale experiment execution |
+| Diffusion models | **Scaffold only** | Forward-pass denoisers, schedules, loss and configuration contracts | Trained weights, sampling loop, vocoder connection, quality evaluation |
+| Preference alignment | **Exploratory infrastructure** | Candidate, reward-model, reranking, DPO/KTO utilities | Suitable preference data and validated human evaluation |
+| Generalization | **Deferred** | Same-singer diagnostics on PJS | Multi-singer, song-disjoint data and unseen-singer claims |
+
+```mermaid
+flowchart LR
+    subgraph Current[Implemented and reproducible]
+        D[Data contracts] --> B[Runnable baselines]
+        B --> M[Objective metrics]
+        M --> L[Reports and MLflow]
+    end
+
+    subgraph Scaffold[Research scaffolding in this repository]
+        DS[Diffusion specifications]
+        PS[Preference-learning utilities]
+        VC[Vocoder contract]
+    end
+
+    subgraph Future[Future research required]
+        MW[Multi-singer data and trained weights]
+        SL[Sampling and decoder/vocoder integration]
+        HE[Human evaluation and generalization study]
+    end
+
+    D -. contracts inform .-> DS
+    B -. comparison baseline .-> PS
+    DS --> MW
+    VC --> SL
+    PS --> HE
+    MW --> SL
+
+    classDef done fill:#dcfce7,stroke:#15803d,color:#14532d;
+    classDef scaffold fill:#fef3c7,stroke:#b45309,color:#78350f;
+    classDef future fill:#e0e7ff,stroke:#4338ca,color:#312e81;
+    class D,B,M,L done;
+    class DS,PS,VC scaffold;
+    class MW,SL,HE future;
+```
+
+The diffusion code is retained to make later research interfaces concrete,
+without implying results that do not exist. `ScoreConditionedMelDiffusion`
+combines phonemes, MIDI pitch, observed F0, and frame timing for Study 1;
+`ConditionalMelDiffusion` is the corresponding Study 2 voice-conversion
+denoiser. `DiffusionSchedule` implements noisy-mel construction and the
+noise-prediction loss expected by a future training loop. These components have
+runnable PyTorch forward passes but no trained weights or sampler.
+
+A complete neural system still requires song-disjoint multi-singer data,
+alignment and conditioning encoders, a diffusion training and sampling loop,
+and a neural vocoder. Practical training requires a CUDA-capable GPU, often
+multiple GPUs. The `GET /capabilities` API exposes this boundary so tooling can
+distinguish runnable features from placeholders. The project does not currently
 make participant-listening or unseen-singer generalization claims.
-
-`DiffusionSchedule` provides the standard noisy-mel construction and
-noise-prediction loss used by a future training loop. The API's
-`GET /capabilities` endpoint exposes this boundary for tooling: MLflow can
-record the future model's parameters, losses, checkpoints, generated audio,
-and evaluation metrics, but sampling and vocoder connection remain explicit
-follow-up work until a trained checkpoint is available.
 
 ### Architecture references
 
