@@ -1,337 +1,107 @@
 # SingAlign
 
-SingAlign is a reproducible music-synthesis sandbox for training and evaluating
-singing-voice systems. Its primary evidence is objective signal-processing
-analysis: pitch and F0 accuracy, timing, spectral/mel similarity, content
-preservation, clipping, and audio artifacts. Common ML metrics and optional
-listening measures support that analysis; they do not replace it.
+SingAlign is a reproducible sandbox for training and evaluating singing-voice
+systems on the PJS corpus. It focuses on objective signal analysis, traceable
+experiments, and clear separation between working baselines and future research.
 
 > [!IMPORTANT]
-> The reproducible sandbox implementation is finalized, but its neural model
-> scaffolds and research conclusions are provisional and are not production
-> systems.
+> The experimental sandbox is implemented, but the neural-model scaffolds and
+> research conclusions are provisional. This is not a production singing
+> synthesizer.
 
-## Overview
+## Project at a glance
 
-SingAlign focuses on two PJS-supported research directions: same-singer,
-score-conditioned singing synthesis, and preservation of vocal content and
-melody when a source vocal is placed over a different instrumental track. Each
-study produces reproducible audio artifacts, MLflow lineage, and objective
-signal-processing reports. It is an engineering and simulation environment
-rather than a confirmatory human-subjects study.
+SingAlign supports two studies:
 
-Reward modeling, candidate reranking, supervised fine-tuning, DPO, and KTO are
-retained as exploratory alignment infrastructure. They are not currently the
-primary research claim because PJS is small and contains one vocalist.
+| Study | Goal | Current approach |
+| --- | --- | --- |
+| **1. Score-conditioned synthesis** | Reconstruct the PJS vocalist from phonemes, score timing, and pitch | Compact mel-model baseline |
+| **2. Content-and-melody transfer** | Preserve a source vocal over a different instrumental | Deterministic pitch/tempo alignment and mixing |
 
-This repository is structured as a reproducible research artifact: experiment
-definitions, Dockerized execution, evaluation protocols, statistical analyses,
-MLflow tracking, playable outputs, and research documentation live alongside
-the model baselines and future-model scaffolds.
+Both studies follow the same evidence pipeline: prepare immutable PJS splits,
+build conditioning records, run a study-specific baseline, evaluate it with
+objective measurements, and preserve the reports, audio, and MLflow lineage.
 
-<p align="center">
-  <img src="docs/melody_content_transfer.gif" alt="Melody and content transfer workflow" width="900">
-</p>
+![SingAlign research workflow](docs/melody_content_transfer.gif)
 
-## Research questions
+The held-out test split is not available to training. Checkpoints are selected
+on validation data and evaluated separately.
 
-SingAlign is organized around two primary questions:
+## What is implemented?
 
-1. Can a compact model synthesize the PJS vocalist from lyrics, phonemes,
-   musical score, timing, and pitch conditioning?
-2. Can source vocal content, phoneme timing, and melody be preserved when the
-   vocal is transferred onto a different instrumental track?
+| Status | Scope |
+| --- | --- |
+| **Implemented** | PJS data pipeline, conditioning contracts, compact mel baseline, deterministic transfer, objective evaluation, Docker, MLflow, and UI |
+| **Scaffolded** | Diffusion denoisers and schedules, vocoder contract, and preference-learning utilities |
+| **Future research** | Trained diffusion weights, sampling, validated neural vocoder, human evaluation, and multi-singer studies |
 
-Reward-model and preference-optimization experiments remain optional
-engineering diagnostics. Human-preference prediction and unseen-singer
-generalization are deferred until a suitable multi-singer dataset and
-evaluation design exist.
+The diffusion and preference-learning code makes later interfaces concrete; it
+does not imply trained voice conversion, human preference alignment, or
+unseen-singer generalization. PJS contains one vocalist. See
+[`experiments/diffusion-voice-conversion-v1.md`](experiments/diffusion-voice-conversion-v1.md)
+for the future model contract.
 
-## Scope
+## Quick start with Docker Compose
 
-The research scope has two focused directions. First, test same-singer,
-score-conditioned synthesis: lyrics, phonemes, MIDI/MusicXML note timing, and
-pitch are used to reconstruct the PJS vocalist. Second, test content-and-
-melody transfer: preserve a source vocal's words, phoneme timing, and melody
-while placing it over a different instrumental track.
+Docker is the recommended path and supports Apple Silicon. It provides a pinned
+Python 3.11 environment and local MLflow tracking.
 
-Use a fixed, MIDI-rendered PJS instrumental so vocal alignment can be evaluated
-without introducing a second generation variable.
-
-The primary Study 2 control uses a deterministic MIDI/MusicXML-rendered
-instrumental so vocal-transfer effects can be evaluated independently of
-accompaniment generation. Future research using a diffusion-based accompaniment
-or vocal-transfer model would require an explicit alignment strategy—such as
-beat tracking, score conditioning, or differentiable time/pitch alignment—to
-ensure generated audio remains synchronized with the source vocal and target
-musical structure. That setting would be evaluated separately because diffusion
-sampling introduces an additional source of variation.
-
-The rendered target is a pure instrumental accompaniment, not a second vocal
-recording. Rendering converts the target score into a fixed WAV; it does not
-modify the source vocal. The source vocal remains the content and melody
-reference, while the target accompaniment defines the destination musical
-context. A future true vocal-transfer model would be required to transform the
-source vocal's pitch, timing, or timbre before mixing it with that accompaniment.
-
-The current Study 2 baseline applies deterministic pitch shifting and tempo
-alignment to the source vocal before mixing. Pitch alignment uses resampling to
-change the vocal's frequency by the declared semitone interval, followed by an
-inverse duration correction so the pitch shift does not change its length.
-Timing alignment then uses deterministic resampling with the declared tempo
-scale. The target score supplies the destination musical context; automatic
-beat or key estimation is not yet implemented. The pipeline preserves three
-distinct artifacts: the original
-vocal reference, the pitch/time-aligned vocal, and the final aligned-vocal plus
-instrumental mix. All control parameters and artifact lineage are recorded in
-MLflow. This is a transparent signal-processing baseline, not a trained neural
-vocal-transfer model.
-
-For a future single singing voice-conversion model, replace this remix control
-with a conditioned acoustic model: phonemes/content + target F0/timing + singer
-embedding → mel spectrogram → neural vocoder. Use multi-singer, song-disjoint
-data and evaluate content preservation, target-pitch accuracy, timing, timbre,
-and artifacts. Training remains an optional GPU-backed extension; this sandbox
-keeps the deterministic baseline for reproducible comparison. The future model
-contract is preserved in `configs/training/diffusion.yaml`,
-`experiments/diffusion-voice-conversion-v1.md`, and
-`SingingVoiceDiffusionSpec`; the PyTorch modules define forward-pass and loss
-contracts, but remain placeholders without trained weights or a sampler.
-
-The initial studies use the PJS corpus. Experiments will operate on short
-mel-spectrogram segments so that data preparation, baseline development, and
-pilot studies remain practical on Apple Silicon. They will address:
-
-- vocal naturalness
-- pitch and rhythm accuracy
-- lyric intelligibility
-- expressiveness
-- audio fidelity
-
-Singer similarity is not a generalization target because PJS contains one
-vocalist; it is only a same-singer reconstruction diagnostic.
-
-The first version will intentionally favor controlled, interpretable
-experiments over model scale.
-
-## Methodology
-
-The shared research pipeline consists of:
-
-1. Validate PJS phonemes, scores, lyrics, and deterministic song-disjoint
-   splits.
-2. Extract observed F0 and construct versioned conditioning records.
-3. Train and evaluate a same-singer score-conditioned synthesis baseline.
-4. Render reproducible target instrumentals from PJS MIDI/MusicXML.
-5. Implement original-vocal content-and-melody remix controls, including
-   tempo/key alignment and intentionally misaligned controls.
-6. Compare the deterministic Study 2 control with a future synthesized-vocal
-   transfer model.
-7. Report lyric, pitch, timing, audio-quality, and mix diagnostics with full
-   provenance.
-
-Reward modeling, reranking, DPO, and KTO are optional exploratory extensions;
-they should not be used to imply human preference alignment without suitable
-data and evaluation.
-
-The implemented controls and scaffolds are intentionally separated from the
-future neural conversion stage. Any material methodological change should be
-documented in the research plan and experiment logs.
-
-### Score and lyric conditioning prototype
-
-The repository includes a dependency-light conditioning interface in
-`singalign.conditioning`. It parses PJS MusicXML into deterministic note events
-and phoneme label files into timed phoneme intervals. This parser and frame
-adapter are implemented and tested, but they are not themselves a trained
-synthesizer or a candidate generator and do not alter the immutable corpus.
-
-Each conditioning record contains note events as `(onset, duration, MIDI
-pitch)` tuples, with `MIDI pitch = null` for rests, plus phoneme intervals as
-`(start, end, symbol)` tuples in the source label timebase. This schema is
-deliberately model-independent so later candidate-generation experiments can
-compare conditioning encoders without changing corpus parsing.
-The next alignment layer expands these events to acoustic frames using explicit
-frame rate, duration, and tempo inputs; no timing is inferred implicitly.
-Windowed crops pass an explicit song-time offset so score and phoneme events are
-aligned to the same crop rather than implicitly restarting at time zero.
-The experimental `ScoreConditionedMelModel` consumes those frame-level MIDI
-pitch and phoneme IDs and predicts mel frames. It is a small runnable
-architectural baseline; `ScoreConditionedMelDiffusion` defines the future
-diffusion alternative using phonemes, MIDI pitch, observed F0, and frame
-timing. Neither currently produces a playable synthesized vocal without a
-decoder and vocoder.
-Its proposed training specification is frozen in
-`configs/training/conditioned.yaml`: 16 kHz audio, 80-bin log-mel targets,
-100-frame-per-second conditioning, a 3-second window, and a 10-epoch
-exploratory budget. The training command is implemented and tested in Docker;
-held-out synthesis evaluation remains intentionally limited until a
-decoder/candidate-generation protocol is specified.
-The frame adapter emits integer MIDI pitch IDs with `0` for rests and integer
-phoneme IDs with `0` reserved for unknown/padding symbols.
-The exploratory conditioned-model trainer is available in Docker:
-
-```bash
-docker compose run --rm research \
-  singalign-conditioned-train \
-  --config configs/training/conditioned.yaml \
-  --index data/interim/pjs/index.jsonl \
-  --splits data/interim/pjs/splits.json
-```
-
-It logs training/validation loss and a checkpoint to MLflow. This is an architectural
-baseline, not yet a candidate-generation or confirmatory experiment.
-The run also records the immutable split fingerprint through the shared MLflow
-tracking contract.
-The `PJSConditionedDataset` adapter pairs these tensors with deterministic
-3-second mel targets using the same crop offset, tempo, and frame-count
-convention. The first Docker run completed 10 exploratory epochs and logged
-MLflow run `1fd53daa1f7e494abe16ceccf7daa3c1` in experiment
-`singalign-score-conditioned-baseline`; it produced a checkpoint but no
-reported synthesis result.
-Exported records also include deterministic pitch metadata: note/rest counts and
-the minimum, maximum, and mean voiced MIDI pitch. Score pitch is an intended
-conditioning signal; observed performance F0 remains a training target or
-diagnostic to avoid leaking the reference performance at inference time.
-
-Export one conditioning record for inspection inside the reproducible Docker
-environment:
-
-```bash
-docker compose run --rm research \
-  singalign-data conditioning \
-  --musicxml /workspace/data/raw/pjs/PJS_corpus_ver1.1/pjs001/pjs001.musicxml \
-  --labels /workspace/data/raw/pjs/PJS_corpus_ver1.1/pjs001/pjs001.lab \
-  --output /workspace/reports/conditioning/pjs001.json
-```
-
-## Dataset plan
-
-The initial dataset is the PJS phoneme-balanced Japanese singing voice corpus.
-PJS is an approximately 0.26 GB public dataset containing 100 short singing
-recordings, their spoken counterparts, MIDI and MusicXML scores, phoneme
-labels, and supporting metadata. This compact, paired design supports
-score-conditioned modeling and low-resource preference experiments on a local
-M1 machine.
+### 1. Get the data
 
 Download PJS version 1.1 from the
-[official corpus page](https://sites.google.com/site/shinnosuketakamichi/research-topics/pjs_corpus).
+[official corpus page](https://sites.google.com/site/shinnosuketakamichi/research-topics/pjs_corpus)
+and place it at:
+
+```text
+data/raw/pjs/PJS_corpus_ver1.1/
+```
+
 The corpus is licensed under
-[CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/), which requires
-attribution and ShareAlike distribution of adapted material.
+[CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/). Dataset files
+remain local and are ignored by Git. See [`data/README.md`](data/README.md) for
+provenance, verification, and licensing details.
 
-Before training begins, the project will document:
-
-- the dataset version and retrieval procedure
-- applicable access conditions and licensing terms
-- allowed uses and redistribution restrictions
-- singer- and song-level split construction
-- known demographic, linguistic, and recording limitations
-
-Dataset files will not be committed to this repository. The raw corpus must
-remain unchanged in the ignored local data directory, and any distributed
-adaptations must comply with the corpus license.
-
-See [`data/README.md`](data/README.md) for download, installation, verification,
-and provenance instructions.
-
-### Validate and index PJS
-
-SingAlign provides a dependency-light CLI for validating the local corpus,
-building a metadata-only index, and creating deterministic song-disjoint
-splits. With Python 3.11 and
-[`uv`](https://docs.astral.sh/uv/) installed, run:
-
-```bash
-uv sync
-uv run singalign-data validate \
-  --root data/raw/pjs/PJS_corpus_ver1.1
-uv run singalign-data index \
-  --root data/raw/pjs/PJS_corpus_ver1.1 \
-  --output data/interim/pjs/index.jsonl
-uv run singalign-data split \
-  --index data/interim/pjs/index.jsonl \
-  --output data/interim/pjs/splits.json \
-  --seed 2026
-```
-
-The generated index and split files remain local and are ignored by Git. Run
-the test suite without accessing the real corpus:
-
-```bash
-uv run python -m unittest discover -v
-```
-
-## Reproducible environment and tracking
-
-The Docker workflow provides the same Python 3.11 environment for data
-validation, future training, evaluation, and MLflow experiment tracking. It
-supports Apple Silicon natively.
-
-Build the research image and start the local tracking server:
+### 2. Build and start tracking
 
 ```bash
 SINGALIGN_GIT_REVISION="$(git rev-parse HEAD)" \
 SINGALIGN_GIT_DIRTY="$(test -n "$(git status --porcelain --untracked-files=no)" \
   && echo true || echo false)" \
 docker compose build
+
 docker compose up -d mlflow
 docker compose ps
 ```
 
-Passing the revision at build time lets containerized runs retain their exact
-source identity without copying repository Git metadata into the image.
+MLflow is available at [http://localhost:5001](http://localhost:5001). Local
+tracking data persists in the ignored `.mlflow/` directory.
 
-MLflow is available at [http://localhost:5001](http://localhost:5001). Its
-SQLite database and
-artifacts persist in the ignored local directory `.mlflow/`.
-
-Validate the locally mounted PJS corpus and run all tests inside Docker:
+### 3. Validate, index, and split PJS
 
 ```bash
 docker compose run --rm research \
   singalign-data validate \
   --root /workspace/data/raw/pjs/PJS_corpus_ver1.1
+
 docker compose run --rm research \
-  python -m unittest discover -v
-```
+  singalign-data index \
+  --root /workspace/data/raw/pjs/PJS_corpus_ver1.1 \
+  --output /workspace/data/interim/pjs/index.jsonl
 
-Verify experiment tracking end to end with a minimal run:
-
-```bash
 docker compose run --rm research \
-  singalign-track smoke \
-  --experiment singalign-smoke
+  singalign-data split \
+  --index /workspace/data/interim/pjs/index.jsonl \
+  --output /workspace/data/interim/pjs/splits.json \
+  --seed 2026
 ```
 
-### Train the reconstruction baseline
+The generated metadata remains local and ignored by Git.
 
-The first baseline is a compact convolutional autoencoder trained on short
-log-mel segments from the PJS singing recordings. It validates the training,
-checkpointing, and experiment-tracking pipeline; it is not yet a
-score-conditioned singing synthesizer.
+### 4. Run the baseline workflow
 
-The trainer uses the training split for parameter updates and the validation
-split for checkpoint selection. It deliberately cannot load the held-out test
-split, which is reserved for the separate evaluation workflow.
-
-Run locally on MPS when available, with CPU as the automatic fallback:
+Train the reconstruction baseline:
 
 ```bash
-uv run singalign-train \
-  --config configs/training/baseline.yaml \
-  --index data/interim/pjs/index.jsonl \
-  --splits data/interim/pjs/splits.json
-```
-
-Local MPS execution requires an ARM64 build of Python and `uv`. The Docker
-workflow below is the portable fallback when host tooling runs through Rosetta
-or otherwise resolves incompatible wheels.
-
-Start MLflow and run the same experiment in Docker:
-
-```bash
-docker compose up -d mlflow
 docker compose run --rm research \
   singalign-train \
   --config configs/training/baseline.yaml \
@@ -339,64 +109,10 @@ docker compose run --rm research \
   --splits data/interim/pjs/splits.json
 ```
 
-Set the training and UI listening-window duration to any positive value up to
-30 seconds with `--segment-seconds N`. The resolved value is logged to MLflow and
-embedded in every checkpoint. For example, an M1-friendly three-second run is:
+Select `checkpoints/baseline/best.pt` using validation loss, then evaluate it on
+the immutable test split:
 
 ```bash
-docker compose run --rm research \
-  singalign-train \
-  --config configs/training/baseline.yaml \
-  --index data/interim/pjs/index.jsonl \
-  --splits data/interim/pjs/splits.json \
-  --segment-seconds 3 \
-  --epochs 1 \
-  --max-validation-items 2
-```
-
-Post-training inherits the resolved duration from this baseline checkpoint.
-The comparison command also defaults to the checkpoint duration, so the UI
-shows matching training and listening windows. Set
-`comparison.audio_segment_seconds` only when intentionally inspecting a
-different inference duration.
-
-For a short end-to-end smoke run, add `--epochs 1 --max-train-items 4
---max-validation-items 2`. Checkpoints are written beneath the ignored
-`checkpoints/` directory and also attached to the MLflow run.
-
-Build and run the test target, whose dependencies are installed by the pinned
-version of `uv` from the committed lockfile:
-
-```bash
-docker compose build test
-docker compose run --rm lint
-docker compose run --rm test
-```
-
-The root `Dockerfile` uses shared multi-stage targets. Production dependencies,
-including PyTorch and MLflow, are installed once in `runtime-dependencies`;
-the `research` and `test` targets inherit that layer. The test target adds only
-development tools. Source-only edits therefore reuse the large locked
-dependency layer instead of reinstalling it for every service.
-
-### Evaluate the selected baseline
-
-Held-out evaluation is a separate command so that test examples cannot be
-loaded by the trainer. Select `best.pt` using validation loss, then evaluate it
-once against the immutable test partition:
-
-```bash
-uv run singalign-evaluate \
-  --config configs/evaluation/baseline.yaml \
-  --checkpoint checkpoints/baseline/best.pt \
-  --index data/interim/pjs/index.jsonl \
-  --splits data/interim/pjs/splits.json
-```
-
-Run the same evaluation through the tracked Docker environment:
-
-```bash
-docker compose up -d mlflow
 docker compose run --rm research \
   singalign-evaluate \
   --config configs/evaluation/baseline.yaml \
@@ -405,319 +121,112 @@ docker compose run --rm research \
   --splits data/interim/pjs/splits.json
 ```
 
-Each run writes an ignored report beneath `reports/evaluation/<run-id>/` and
-attaches the report to MLflow. The report contains aggregate metrics with
-bootstrap confidence intervals, per-example metrics, latency, checkpoint and
-split fingerprints, and the exact evaluation configuration.
+Reports are written under `reports/evaluation/<run-id>/` and attached to the
+MLflow run. They include aggregate and per-example metrics, confidence
+intervals, latency, configuration, and data/checkpoint fingerprints.
 
-### Run proxy preference alignment
+For the score-conditioned Study 1 model, use
+`configs/training/conditioned.yaml` with `singalign-conditioned-train`.
 
-The first post-training study constructs deterministic synthetic preference
-pairs from training and validation log-mel segments. A chosen candidate has a
-milder controlled degradation than its rejected counterpart. The trainer uses
-a DPO-style energy objective relative to a frozen baseline and a reconstruction
-anchor that limits fidelity loss:
+### 5. Run tests and open the UI
 
 ```bash
-docker compose run --rm research \
-  singalign-align \
-  --config configs/training/alignment.yaml \
-  --checkpoint checkpoints/baseline/best.pt \
-  --index data/interim/pjs/index.jsonl \
-  --splits data/interim/pjs/splits.json
+docker compose build test
+docker compose run --rm lint
+docker compose run --rm test
+docker compose up --build -d api ui
 ```
 
-For a smoke run, add `--epochs 1 --max-train-items 4
---max-validation-items 2`. The best validation checkpoint is written beneath
-`checkpoints/aligned/` and attached to MLflow. The test split remains sealed
-during post-training.
+- Comparison UI: [http://localhost:4173](http://localhost:4173)
+- API: [http://localhost:8000](http://localhost:8000)
+- MLflow: [http://localhost:5001](http://localhost:5001)
 
-This is an energy-based DPO proxy for controlled experimentation, not standard
-autoregressive DPO and not evidence of alignment with human preferences.
+The UI organizes work into **Training**, **Evaluation**, and **Comparison**.
+Generated comparison audio uses approximate Griffin-Lim reconstruction and is
+an inspection aid, not evidence of production audio quality or a blinded
+listening study. See [`ui/README.md`](ui/README.md).
 
-### Compare baseline and aligned checkpoints
-
-Generate paired validation metrics and local listening artifacts without using
-the held-out test split:
-
-```bash
-docker compose run --rm research \
-  singalign-compare \
-  --config configs/evaluation/comparison.yaml \
-  --baseline-checkpoint checkpoints/baseline/best.pt \
-  --aligned-checkpoint checkpoints/aligned/best.pt \
-  --index data/interim/pjs/index.jsonl \
-  --splits data/interim/pjs/splits.json
-```
-
-Reports are written beneath `reports/comparisons/<run-id>/`. They contain
-paired deltas, bootstrap confidence intervals, win/tie/loss counts, and a
-manifest referencing local reference, baseline, and aligned WAV files.
-Generated model audio uses approximate mel pseudoinversion and Griffin-Lim and
-must not be treated as a production-quality vocoder result.
-
-The repository also includes `MelVocoder`, a trainable mel-to-waveform decoder
-with an explicit frame hop length. It is the first differentiable vocoder
-baseline for future generation experiments; it is untrained until a dedicated
-vocoder dataset/training protocol is added, so Griffin-Lim remains the current
-fallback for existing comparison reports.
-
-Its reproducible exploratory trainer is available in Docker:
-
-```bash
-docker compose run --rm research \
-  singalign-vocoder-train \
-  --config configs/training/vocoder.yaml \
-  --index data/interim/pjs/index.jsonl \
-  --splits data/interim/pjs/splits.json
-```
-
-This trains only on the training split, logs validation loss and the checkpoint
-to MLflow, and is an engineering baseline rather than a production vocoder.
-The first 10-epoch Docker pilot is MLflow run
-`421229b14e3043bfb3d89e3d6d2ca209` in `singalign-mel-vocoder`.
-
-Evaluate that checkpoint diagnostically on the sealed test split only after
-the pilot is complete:
-
-```bash
-docker compose run --rm research \
-  singalign-vocoder-evaluate \
-  --config configs/training/vocoder.yaml \
-  --checkpoint checkpoints/vocoder/last.pt \
-  --index data/interim/pjs/index.jsonl \
-  --splits data/interim/pjs/splits.json
-```
-
-The report prints the split fingerprint, waveform MSE, and generated peak
-level. These are engineering diagnostics, not perceptual-quality claims.
-
-The default comparison duration is read from the checkpoints, matching the
-training window. An optional positive `comparison.audio_segment_seconds` value
-up to 30 seconds can override it for deliberate out-of-window inspection.
-Both durations and any mismatch are recorded in the report. Longer clips
-increase inversion time and memory use.
-
-For audible inspection, each clip is selected as the highest-RMS reference
-window on the configured deterministic time grid. Selection never examines
-model outputs. Reports record the method, grid spacing, and selected offset for
-every example.
-
-Changing the configured split to `test` additionally requires
-`--confirm-test-use`. Test evaluation should occur only after the comparison
-metrics and decision rules have been preregistered.
-
-### Inspect a comparison in the UI
-
-Start the minimal TypeScript comparison interface after generating a report:
-
-```bash
-docker compose up --build -d ui
-```
-
-Open [http://localhost:4173](http://localhost:4173), enter the comparison run
-ID printed by `singalign-compare`, and select **Load comparison**. When no run
-is specified, the latest successfully completed local comparison loads by
-default. The report
-directory is mounted read-only. The interface displays aggregate paired
-metrics and side-by-side reference, baseline, and aligned audio for each
-available example.
-
-The listening view is an inspection aid, not a blinded perceptual study. Its
-generated audio is approximate Griffin-Lim reconstruction and must not be used
-alone to support claims about perceptual quality. See [`ui/README.md`](ui/README.md)
-for development and troubleshooting instructions.
-
-The UI still has deferred work around richer candidate selection, conditioning
-metadata, cross-condition uncertainty summaries, and a separate blinded
-listening-study interface.
-
-The UI now includes a training interface for the implemented baseline, aligned,
-conditioned, vocoder, and KTO experiments with default parameters. The
-Docker-backed API is started with `docker compose up --build api`; it exposes
-`POST /training` for allowlisted jobs and `GET /training/<job_id>` for status.
-MLflow remains available at port 5001. The browser still displays the generated
-command as a reproducibility fallback.
-Launch requests forward only numeric allowlisted parameters and automatically
-attach the supervised checkpoint for aligned/KTO jobs.
-When the API is running, submitting the form launches the Docker job and shows
-its container ID; if the API is unavailable, the same command remains visible
-for manual execution.
-
-The UI workflow is organized sequentially into separate tabs: **Training** for
-launching model jobs, **Evaluation** for loading and inspecting evaluation
-reports, and **Comparison** for paired or multi-condition result review.
-Downstream tabs remain unavailable until the relevant upstream run or report is
-loaded, making the dependency order visible during reproducible experiments.
-
-### Candidate-generation sandbox
-
-Candidate generation is supporting infrastructure for the two primary studies.
-It creates deterministic variants of a synthesis or transfer condition so we
-can compare pitch, timing, lyric intelligibility, audio quality, and alignment
-failures. Each candidate records its seed, method, input condition, and output
-provenance.
-
-The sandbox can also apply transparent proxy scores and stable reranking, but
-these scores are engineering diagnostics—not human-preference models. DPO, KTO,
-and reward-model code remains optional exploratory infrastructure and is not a
-primary research direction.
-
-Example Docker invocation:
-
-```bash
-docker compose run --rm research \
-  singalign-candidates \
-  --input input.pt \
-  --output reports/candidates/example.json
-```
-
-Candidate reports can be logged to MLflow with their condition metadata so
-results remain reproducible.
-
-Run the exploratory KTO condition from Docker with:
-
-```bash
-docker compose run --rm research \
-  singalign-kto-train \
-  --config configs/training/kto.yaml \
-  --checkpoint checkpoints/baseline/best.pt \
-  --index data/interim/pjs/index.jsonl \
-  --splits data/interim/pjs/splits.json
-```
-
-Stop the services without removing tracked runs:
+Stop services without deleting tracked runs:
 
 ```bash
 docker compose down
 ```
 
-Do not remove `.mlflow/` unless you intend to permanently delete the local
-MLflow database and artifacts. See
-[`configs/mlflow/README.md`](configs/mlflow/README.md) for storage and network
-details.
+Do not remove `.mlflow/` unless you intend to delete its local database and
+artifacts.
 
-## Objective evaluation plan
+## Study 2: deterministic transfer control
 
-Evaluation is led by objective signal-processing analysis, with perceptual
-evidence treated as complementary. Metrics are interpreted against the study's
-reference and control conditions rather than as a single universal quality
-score.
+Study 2 uses a fixed MIDI/MusicXML-rendered instrumental so vocal alignment can
+be measured without adding accompaniment generation as another variable.
 
-| Dimension | Candidate measurements |
+The pipeline preserves the original vocal, aligned vocal, and final mix as
+separate artifacts. It does not estimate key or beat automatically and is not a
+trained voice-conversion model. The exact experiment controls and required
+lineage are documented in
+[`docs/two-studies-experiments.md`](docs/two-studies-experiments.md).
+
+## Evaluation
+
+Objective signal-processing analysis is the primary evidence:
+
+| Dimension | Examples |
 | --- | --- |
-| Pitch accuracy | F0 error, voiced/unvoiced error, note-level deviation |
-| Rhythm accuracy | onset and duration deviation |
-| Intelligibility | ASR error rate and human lyric recognition |
-| Singer similarity | embedding similarity and human judgments |
-| Audio quality | learned quality estimators and artifact analysis |
-| Preference | blinded pairwise human comparisons |
+| Pitch | F0 error, voiced/unvoiced error, note deviation |
+| Timing | Onset and duration deviation |
+| Content | ASR error and lyric recognition |
+| Audio | Spectral/mel similarity, clipping, artifact analysis |
+| Transfer | Content preservation and alignment against controls |
 
-Reported experiments will include confidence intervals, effect sizes, and
-statistical tests where appropriate. Metrics will be treated as imperfect
-proxies rather than interchangeable substitutes for human judgments.
-
-The detailed protocol will live in
+Metrics are imperfect proxies and are interpreted against explicit references
+and controls. Human listening measures are complementary and must not be
+implied by proxy preference experiments. See
 [`docs/evaluation-protocol.md`](docs/evaluation-protocol.md).
 
-## Repository structure
+## Repository map
 
 ```text
-configs/       Versioned experiment and model configurations
-data/          Dataset documentation and local data conventions
-docs/          Research questions, protocols, and responsible-use analysis
-experiments/   Experiment manifests and reproducibility records
-reports/       Generated tables, figures, and research reports
-src/           Data, tracking, model, and research utilities
-ui/            Dockerized TypeScript comparison interface
+configs/          versioned training and evaluation settings
+data/             dataset provenance and local-data conventions
+docs/             research plans, protocols, and limitations
+experiments/      registered experiment designs and manifests
+reports/          generated evidence (mostly ignored)
+src/singalign/    data, models, studies, evaluation, and tracking code
+tests/            corpus-independent unit and integration tests
+ui/               Dockerized experiment and comparison interface
 ```
 
-Model code and training configurations will be introduced through separate
-reviewed changes after their research claims and evaluation contracts are
-registered.
+Configuration says what a run means, source code executes it, MLflow records
+its lineage, and reports hold its evidence. Raw data, checkpoints, generated
+reports, and local MLflow state are not source artifacts.
 
-## Reproducibility principles
+## Research boundaries
 
-The project will follow these practices:
+SingAlign does not currently claim:
 
-- version all reported experiment configurations
-- record random seeds, software versions, and hardware assumptions
-- keep evaluation splits immutable after they are registered
-- identify every reported result with an experiment manifest
-- distinguish exploratory results from confirmatory results
-- preserve failed experiments when they inform a conclusion
-- report uncertainty instead of relying only on point estimates
+- production-quality singing synthesis or voice conversion
+- human preference alignment
+- unseen-singer or population-level generalization
+- confirmatory listening-study results
 
-## Responsible research
+Future work requires multi-singer song-disjoint data, trained diffusion models,
+a sampling pipeline, a validated neural vocoder, automatic alignment, and an
+appropriate human-evaluation design. Architecture references and detailed next
+steps are in [`docs/research-plan.md`](docs/research-plan.md).
 
-Singing voice generation creates risks involving consent, impersonation,
-copyright, and misleading synthetic media. SingAlign will therefore:
-
-- use only datasets with documented research permissions
-- avoid presenting generated voices as real performances
-- disclose synthetic audio in demonstrations
-- document model and dataset limitations
-- avoid releasing tools intended for unauthorized voice impersonation
-- preserve dataset-specific attribution and usage restrictions
-
-See [`docs/responsible-research.md`](docs/responsible-research.md) for the
-evolving risk assessment.
-
-## Scope and status
-
-This repository is a finalized experimental engineering sandbox for two
-reproducible studies: same-singer, score-conditioned synthesis (Study 1), and
-content-and-melody transfer over a fixed rendered instrumental (Study 2). It
-includes the data contracts, deterministic baselines, MIDI renderer, Docker
-and MLflow experiment lineage, evaluation artifacts, UI workflows, optional
-vocoder contract, and an architecture-only conditional diffusion denoiser.
-
-The small `ScoreConditionedMelModel` remains the runnable Study 1 baseline.
-The same module also includes `ScoreConditionedMelDiffusion`, an architecture
-scaffold that combines phonemes, MIDI pitch, observed F0, and frame timing
- before conditional denoising. The generic `ConditionalMelDiffusion` is the
-corresponding Study 2/future voice-conversion denoiser. These are runnable
-PyTorch forward-pass scaffolds, not trained voice-conversion software. A real
-system would need song-disjoint multi-singer data, alignment and conditioning
-encoders, a diffusion training/sampling loop, and a neural vocoder. Training
-those components would require a CUDA-capable GPU (often multiple GPUs for
-practical experiments); no weights are included here. The studies also do not
-make participant-listening or unseen-singer generalization claims.
-
-`DiffusionSchedule` provides the standard noisy-mel construction and
-noise-prediction loss used by a future training loop. The API's
-`GET /capabilities` endpoint exposes this boundary for tooling: MLflow can
-record the future model's parameters, losses, checkpoints, generated audio,
-and evaluation metrics, but sampling and vocoder connection remain explicit
-follow-up work until a trained checkpoint is available.
-
-### Architecture references
-
-The scaffold follows the general conditional denoising pattern used by
-[DiffWave](https://arxiv.org/abs/2009.09761) for audio diffusion, the
-conditioning and mel-spectrogram score-decoder framing of
-[Grad-TTS](https://arxiv.org/abs/2105.06337), and the score-conditioned
-singing synthesis motivation in
-[DiffSinger](https://arxiv.org/abs/2105.02446). These papers are references
-for future research—not claims that this sandbox reproduces their full
-architectures or results.
+Singing-voice generation also raises consent, impersonation, copyright, and
+synthetic-media risks. See
+[`docs/responsible-research.md`](docs/responsible-research.md) for the project's
+use and disclosure principles.
 
 ## Contributing
 
-Research contributions should state the hypothesis being tested, describe the
-experimental controls, and include a reproducible evaluation plan. See
-[`CONTRIBUTING.md`](CONTRIBUTING.md) before proposing a change.
+Contributions should state the hypothesis, controls, and reproducible evaluation
+plan. See [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
-## Citation
+## Citation and license
 
-Citation metadata is provided in [`CITATION.cff`](CITATION.cff). Until the
-project has a formal release, cite the repository and the exact commit used.
-
-## License
-
-Repository code and original documentation are licensed under the
-[Apache License 2.0](LICENSE).
-
+Citation metadata is in [`CITATION.cff`](CITATION.cff). Repository code and
+original documentation are licensed under the [Apache License 2.0](LICENSE).
 Datasets, pretrained models, third-party implementations, and generated
-artifacts may be governed by separate terms. The Apache-2.0 license does not
-override those terms.
+artifacts may have separate terms.
