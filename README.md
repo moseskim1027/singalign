@@ -79,6 +79,70 @@ and learned transfer requires replacing or extending these stages:
 | Study 2 transfer | Aligned source vocal mixed with a fixed instrumental; no learned timbre conversion | A trained conversion or synthesis model conditioned on content, target F0/timing, and target singer/timbre |
 | Quality evidence | Objective engineering diagnostics | Stable audio outputs, ablations, failure analysis, and a separate blinded listening protocol for perceptual claims |
 
+### Study 1: complete synthesis path
+
+Study 1 synthesizes from symbolic inputs. The reference vocal supplies training
+targets and diagnostics, but it is not an inference input.
+
+```text
+Lyrics / phonemes ──> phoneme and duration encoder ──┐
+                                                     │
+MusicXML / MIDI ───> pitch and timing encoder ───────┤
+                                                     │
+Singer ID/reference -> singer embedding (optional) ─┘
+                                                     │
+                                                     v
+                                      Sequence or diffusion
+                                         acoustic model
+                                                     │
+                                                     v
+                                        Mel spectrogram
+                                                     │
+                                                     v
+                                         Neural vocoder
+                                                     │
+                                                     v
+                                     Synthesized vocal WAV
+```
+
+The compact mel predictor currently occupies the acoustic-model stage. The
+repository does not yet provide a trained production acoustic model, complete
+diffusion sampler, or validated neural vocoder for this path.
+
+### Study 2: complete learned-transfer path
+
+Study 2 starts with an existing vocal and separates source content from the
+target pitch, timing, and timbre requested by the experiment.
+
+```text
+Source vocal WAV ──> content / phoneme encoder ──────┐
+       │                                              │
+       ├───────────> F0 / pitch extractor ───────────┤
+       │                                              │
+       └───────────> timing / alignment ─────────────┤
+                                                      │
+Target score / track -> target F0 and timing ─────────┤
+                                                      │
+Target singer/reference -> singer embedding ─────────┘
+                                                      │
+                                                      v
+                                       Learned transfer model
+                                                      │
+                                                      v
+                                         Mel spectrogram
+                                                      │
+                                                      v
+                                          Neural vocoder
+                                                      │
+                                                      v
+                                         Converted vocal WAV
+```
+
+The deterministic pitch/tempo transform currently stands in for the learned
+transfer and alignment stages. It produces a reproducible control, but it does
+not perform learned content encoding, target-singer conversion, or neural vocal
+generation.
+
 The fixed MIDI instrumental and deterministic transfer remain useful controls
 after learned models are added. They isolate whether an apparent improvement
 comes from vocal generation, alignment, or accompaniment variation.
