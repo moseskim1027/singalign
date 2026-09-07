@@ -27,6 +27,43 @@ objective measurements, and preserve the reports, audio, and MLflow lineage.
 The held-out test split is not available to training. Checkpoints are selected
 on validation data and evaluated separately.
 
+## Study 1: score-conditioned synthesis baseline
+
+Study 1 uses aligned phoneme IDs and MusicXML/MIDI pitch and timing to predict
+mel-spectrogram frames for the PJS vocalist. The conditioning interface keeps
+crop offsets, duration, tempo, and acoustic frame rate explicit so a future
+acoustic model can replace the compact baseline without changing data parsing.
+
+Run the current conditioned mel model in Docker:
+
+```bash
+docker compose run --rm research \
+  singalign-conditioned-train \
+  --config configs/training/conditioned.yaml \
+  --index data/interim/pjs/index.jsonl \
+  --splits data/interim/pjs/splits.json
+```
+
+The run records training and validation loss, its resolved configuration, split
+fingerprint, and checkpoint lineage in MLflow. It validates the Study 1
+training contract, but does not yet produce a production-quality synthesized
+vocal: that requires a stronger acoustic model, a complete generation path, and
+a validated neural vocoder.
+
+The exact conditioning, replacement, and evaluation contracts are documented
+in [`docs/two-studies-experiments.md`](docs/two-studies-experiments.md#study-1-score-conditioned-synthesis).
+
+## Study 2: deterministic transfer control
+
+Study 2 uses a fixed MIDI/MusicXML-rendered instrumental so vocal alignment can
+be measured without adding accompaniment generation as another variable.
+
+The pipeline preserves the original vocal, aligned vocal, and final mix as
+separate artifacts. It does not estimate key or beat automatically and is not a
+trained voice-conversion model. The exact experiment controls and required
+lineage are documented in
+[`docs/two-studies-experiments.md`](docs/two-studies-experiments.md).
+
 ## What is implemented?
 
 | Status | Scope |
@@ -40,6 +77,124 @@ does not imply trained voice conversion, human preference alignment, or
 unseen-singer generalization. PJS contains one vocalist. See
 [`experiments/diffusion-voice-conversion-v1.md`](experiments/diffusion-voice-conversion-v1.md)
 for the future model contract.
+
+## What the sandbox is for
+
+The sandbox is the reusable experimental spine, not a component that must be
+discarded before building a real system. It already provides the controls
+needed to replace a baseline with a stronger model and compare both versions
+under the same conditions.
+
+| Reusable layer | What it provides |
+| --- | --- |
+| Data | Provenance checks, immutable song-disjoint splits, and model-independent conditioning records |
+| Run definitions | Versioned training/evaluation configs, seeds, manifests, and checkpoint selection rules |
+| Execution | The same pinned Docker environment for training, evaluation, API, UI, and MLflow |
+| Tracking | Code, data, configuration, metric, checkpoint, and artifact lineage |
+| Evaluation | Shared objective metrics, deterministic controls, held-out evaluation, and report formats |
+| Inspection | APIs and a UI for launching runs and comparing outputs without changing the experiment contract |
+
+A new acoustic model, vocoder, or alignment method should enter through the
+existing data and configuration contracts, produce the expected versioned
+artifacts, and run beside the current baseline. This makes model development
+repeatable and makes comparisons attributable to the changed component rather
+than to a different split, preprocessing path, or evaluation procedure.
+
+## Gap to an end-to-end vocal system
+
+The current repository proves that the experimental workflow runs; it does not
+yet prove that the generated vocal is useful. Reaching actual vocal synthesis
+and learned transfer requires replacing or extending these stages:
+
+| Workflow stage | Current component | Needed for an end-to-end system |
+| --- | --- | --- |
+| Training data | Small, single-vocalist PJS corpus | A suitably licensed multi-singer corpus with singer- and song-disjoint splits for generalization |
+| Inference conditioning | Parsed phonemes, score events, timing, and frame contracts | Target phoneme durations and pitch/timing available without reference-performance leakage; singer/timbre conditioning when required |
+| Study 1 acoustic model | Compact convolutional mel baseline | A trained sequence or diffusion acoustic model with a complete generation/sampling path |
+| Waveform generation | Approximate Griffin-Lim output and an exploratory `MelVocoder` | A trained, validated neural vocoder compatible with the generated mel representation |
+| Study 2 alignment | User-declared semitone and tempo transforms implemented with deterministic resampling | Score-, beat-, or audio-derived alignment plus higher-quality time/pitch transformation where inputs are not already aligned |
+| Study 2 transfer | Aligned source vocal mixed with a fixed instrumental; no learned timbre conversion | A trained conversion or synthesis model conditioned on content, target F0/timing, and target singer/timbre |
+| Quality evidence | Objective engineering diagnostics | Stable audio outputs, ablations, failure analysis, and a separate blinded listening protocol for perceptual claims |
+
+### Study 1: complete synthesis path
+
+Study 1 synthesizes from symbolic inputs. The reference vocal supplies training
+targets and diagnostics, but it is not an inference input.
+
+```text
+Lyrics / phonemes ──> phoneme and duration encoder ──┐
+                                                     │
+MusicXML / MIDI ───> pitch and timing encoder ───────┤
+                                                     │
+Singer ID/reference -> singer embedding (optional) -─┘
+                                                     │
+                                                     v
+                                           Sequence or diffusion
+                                               acoustic model
+                                                     │
+                                                     v
+                                              Mel spectrogram
+                                                     │
+                                                     v
+                                               Neural vocoder
+                                                     │
+                                                     v
+                                            Synthesized vocal WAV
+```
+
+The compact mel predictor currently occupies the acoustic-model stage. The
+repository does not yet provide a trained production acoustic model, complete
+diffusion sampler, or validated neural vocoder for this path.
+
+### Study 2: complete learned-transfer path
+
+Study 2 starts with an existing vocal and separates source content from the
+target pitch, timing, and timbre requested by the experiment.
+
+```text
+Source vocal WAV ──> content / phoneme encoder ───-───┐
+       │                                              │
+       ├───────────> F0 / pitch extractor ────────--──┤
+       │                                              │
+       └───────────> timing / alignment ────-─────────┤
+                                                      │
+Target score / track -> target F0 and timing ─────────┤
+                                                      │
+Target singer/reference -> singer embedding ─────-────┘
+                                                      │
+                                                      v
+                                           Learned transfer model
+                                                      │
+                                                      v
+                                               Mel spectrogram
+                                                      │
+                                                      v
+                                                Neural vocoder
+                                                      │
+                                                      v
+                                             Converted vocal WAV
+```
+
+The deterministic pitch/tempo transform currently stands in for the learned
+transfer and alignment stages. It produces a reproducible control, but it does
+not perform learned content encoding, target-singer conversion, or neural vocal
+generation.
+
+The fixed MIDI instrumental and deterministic transfer remain useful controls
+after learned models are added. They isolate whether an apparent improvement
+comes from vocal generation, alignment, or accompaniment variation.
+
+In practice, development should replace one stage at a time:
+
+1. register the new component and configuration;
+2. run it on the same training and validation partitions;
+3. select its checkpoint using the same declared rule;
+4. compare it with the deterministic or compact baseline; and
+5. export a reviewable report before making a claim.
+
+The [research plan](docs/research-plan.md) describes the evidence milestones and
+the [two-study protocol](docs/two-studies-experiments.md) defines the shared run
+contract.
 
 ## Quick start with Docker Compose
 
@@ -125,8 +280,8 @@ Reports are written under `reports/evaluation/<run-id>/` and attached to the
 MLflow run. They include aggregate and per-example metrics, confidence
 intervals, latency, configuration, and data/checkpoint fingerprints.
 
-For the score-conditioned Study 1 model, use
-`configs/training/conditioned.yaml` with `singalign-conditioned-train`.
+This reconstruction run validates the shared data, checkpoint, and evaluation
+infrastructure. The score-conditioned Study 1 baseline is described below.
 
 ### 5. Run tests and open the UI
 
@@ -154,17 +309,6 @@ docker compose down
 
 Do not remove `.mlflow/` unless you intend to delete its local database and
 artifacts.
-
-## Study 2: deterministic transfer control
-
-Study 2 uses a fixed MIDI/MusicXML-rendered instrumental so vocal alignment can
-be measured without adding accompaniment generation as another variable.
-
-The pipeline preserves the original vocal, aligned vocal, and final mix as
-separate artifacts. It does not estimate key or beat automatically and is not a
-trained voice-conversion model. The exact experiment controls and required
-lineage are documented in
-[`docs/two-studies-experiments.md`](docs/two-studies-experiments.md).
 
 ## Evaluation
 
