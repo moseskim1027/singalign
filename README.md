@@ -18,47 +18,22 @@ SingAlign supports two studies:
 | **1. Score-conditioned synthesis** | Reconstruct the PJS vocalist from phonemes, score timing, and pitch | Compact mel-model baseline |
 | **2. Content-and-melody transfer** | Preserve a source vocal over a different instrumental | Deterministic pitch/tempo alignment and mixing |
 
-Both studies follow the same evidence pipeline:
+Both studies follow the same evidence pipeline: prepare immutable PJS splits,
+build conditioning records, run a study-specific baseline, evaluate it with
+objective measurements, and preserve the reports, audio, and MLflow lineage.
 
-```text
-PJS corpus
-    |
-    v
-validate -> index -> song-disjoint split
-    |
-    v
-conditioning records (phonemes + score + timing + F0)
-    |
-    +-----------------------------+
-    |                             |
-    v                             v
-Study 1                       Study 2
-mel-model baseline            deterministic transfer control
-    |                             |
-    +--------------+--------------+
-                   |
-                   v
-       objective evaluation
-                   |
-                   v
-      reports + audio + MLflow lineage
-```
+![SingAlign research workflow](docs/melody_content_transfer.gif)
 
 The held-out test split is not available to training. Checkpoints are selected
 on validation data and evaluated separately.
 
 ## What is implemented?
 
-```text
-IMPLEMENTED                  SCAFFOLDED                   FUTURE RESEARCH
------------                  ----------                   ---------------
-PJS data pipeline            diffusion denoisers    ---> trained weights
-conditioning contracts       diffusion schedules    ---> sampling loop
-compact mel baseline         vocoder contract        ---> neural vocoder
-deterministic transfer       preference utilities   ---> human evaluation
-objective evaluation                                  multi-singer study
-Docker + MLflow + UI
-```
+| Status | Scope |
+| --- | --- |
+| **Implemented** | PJS data pipeline, conditioning contracts, compact mel baseline, deterministic transfer, objective evaluation, Docker, MLflow, and UI |
+| **Scaffolded** | Diffusion denoisers and schedules, vocoder contract, and preference-learning utilities |
+| **Future research** | Trained diffusion weights, sampling, validated neural vocoder, human evaluation, and multi-singer studies |
 
 The diffusion and preference-learning code makes later interfaces concrete; it
 does not imply trained voice conversion, human preference alignment, or
@@ -184,21 +159,6 @@ artifacts.
 
 Study 2 uses a fixed MIDI/MusicXML-rendered instrumental so vocal alignment can
 be measured without adding accompaniment generation as another variable.
-
-```text
-source vocal --------------------+
-    |                             |
-    v                             |
-declared pitch shift              |
-    |                             |
-declared tempo alignment          |
-    |                             |
-    v                             v
-aligned vocal + rendered target instrumental
-                    |
-                    v
-             final mix + report
-```
 
 The pipeline preserves the original vocal, aligned vocal, and final mix as
 separate artifacts. It does not estimate key or beat automatically and is not a
